@@ -1,73 +1,75 @@
-# React + TypeScript + Vite
+# why-it-rose — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+주식 급등락 이벤트의 원인을 탐색하고 학습 기록을 남기는 서비스의 프론트엔드 레포.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 기술 스택
 
-## React Compiler
+| 구분 | 라이브러리 |
+|---|---|
+| 빌드 | Vite 8 |
+| UI | React 19 + TypeScript 5.9 (strict) |
+| 스타일 | Tailwind CSS v4 |
+| 서버 상태 | TanStack Query v5 |
+| 라우팅 | React Router v7 (SPA) |
+| HTTP | Axios |
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 시작하기
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+pnpm install
+pnpm dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 폴더 구조
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+src/
+├── app/
+│   ├── router/       # 라우트 트리 정의 (react-router v7)
+│   └── providers/    # 전역 Provider 조합 (QueryClient 등)
+├── pages/            # 페이지 진입점 + 페이지 전용 레이아웃 컴포넌트
+│   ├── Home/
+│   ├── StockDetail/
+│   ├── AlertCenter/
+│   └── MyPage/
+├── features/         # 도메인별 API·컴포넌트·훅·타입
+│   ├── auth/         # 로그인, 소셜 로그인, 로그인 유도
+│   ├── stock/        # 종목 검색, 종목 상세, 관심종목
+│   ├── event/        # 급등락 이벤트, 스크랩, 메모, 예측
+│   ├── news/         # 이벤트 연관 뉴스, 오늘의 뉴스
+│   └── alert/        # 알림센터, 읽음 처리, 알림 설정
+└── shared/
+    ├── api/          # axios 인스턴스, 공통 에러 처리
+    ├── components/
+    │   ├── common/   # 범용 UI (Button, Badge 등)
+    │   └── layout/   # GNB, PageWrapper 등
+    ├── constants/    # 라우트 경로 등 공통 상수
+    ├── hooks/        # useDebounce, useDisclosure 등 범용 훅
+    ├── types/        # ApiResponse<T> 등 공통 타입
+    └── utils/        # 날짜·숫자 포맷 등 순수 유틸
+```
+
+### 컴포넌트 배치 기준
+
+| 위치 | 기준 | 예시 |
+|---|---|---|
+| `pages/XXX/components/` | 해당 페이지 전용 레이아웃·조합 | `StockDetailLayout` |
+| `features/xxx/components/` | 비즈니스 로직 포함 컴포넌트 | `ScrapButton`, `NewsCard` |
+| `shared/components/common/` | 여러 페이지에서 재사용되는 범용 UI | `Button`, `Badge` |
+
+---
+
+## 주요 기능 (MVP)
+
+- **종목 탐색** — 종목 검색, 코스피/코스닥 리스트, 관심종목 추가·해제
+- **이벤트 탐색** — 급등락 이벤트 핀 차트, 이벤트 상세(요약·뉴스·메모 탭), 오늘의 뉴스 핀
+- **학습 기록** — 스크랩, 메모 작성·수정·삭제, 방향 예측, 예측 복기
+- **알림센터** — 관심종목 뉴스 모아보기, 종목·태그·날짜·읽음 필터링
+- **마이페이지** — 알림 on/off, 보관함, 예측·복기, 계정 관리(로그아웃·탈퇴)
+- **인증** — 카카오·네이버·구글 소셜 로그인, 비로그인 접근 시 로그인 유도 팝업
