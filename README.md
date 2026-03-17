@@ -65,6 +65,46 @@ src/
 
 ---
 
+## 환경변수 설정
+
+`.env.example`을 복사해서 `.env.local`을 만들고 값을 채운다.
+
+```bash
+cp .env.example .env.local
+```
+
+| 변수 | 설명 | 기본값 |
+|---|---|---|
+| `VITE_API_BASE_URL` | 백엔드 서버 주소 | `http://localhost:8080` |
+
+---
+
+## API 요청 방법
+
+`src/shared/api/axios.ts`의 인스턴스를 import해서 사용한다.
+인스턴스가 로컬스토리지의 `accessToken`을 `Authorization: Bearer` 헤더에 자동으로 첨부한다.
+
+```ts
+import apiClient from '@/shared/api/axios';
+
+const { data } = await apiClient.get('/stocks/search', { params: { q: '삼성' } });
+```
+
+---
+
+## React Query 설정
+
+`src/app/providers/QueryProvider.tsx`에 설정됨.
+
+| 옵션 | 값 |
+|---|---|
+| `staleTime` | 1분 (1000 * 60) |
+| `retry` | 1회 |
+
+`App.tsx`에서 `QueryProvider`로 앱 전체를 감싸서 사용한다.
+
+---
+
 ## 주요 기능 (MVP)
 
 - **종목 탐색** — 종목 검색, 코스피/코스닥 리스트, 관심종목 추가·해제

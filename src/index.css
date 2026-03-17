@@ -1,4 +1,28 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
 @import "tailwindcss";
+
+:root {
+  /* 브랜드 */
+  --color-primary: #014D9D;
+  --color-primary-hover: #013d7d;
+
+  /* 주가 등락 */
+  --color-surge: #EF4444;
+  --color-plunge: #3B82F6;
+  --color-neutral: #6B7280;
+
+  /* 배경 */
+  --color-bg-base: #FFFFFF;
+  --color-bg-subtle: #F9FAFB;
+
+  /* 텍스트 */
+  --color-text-primary: #111827;
+  --color-text-secondary: #6B7280;
+  --color-text-disabled: #D1D5DB;
+
+  /* 보더 */
+  --color-border: #E5E7EB;
+}
 
 :root {
   --text: #6b6375;
@@ -66,6 +90,8 @@
 
 body {
   margin: 0;
+  font-family: 'Pretendard Variable', Pretendard, sans-serif;
+  font-weight: 400;
 }
 
 h1,
