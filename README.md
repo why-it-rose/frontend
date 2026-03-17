@@ -105,6 +105,47 @@ const { data } = await apiClient.get('/stocks/search', { params: { q: '삼성' }
 
 ---
 
+## 라우트 구조
+
+| 경로 | 컴포넌트 | 설명 | 로그인 필요 |
+|---|---|---|---|
+| `/` | `HomePage` | 메인 홈 | |
+| `/stocks/:stockCode` | `StockDetailPage` | 종목 상세 | |
+| `/alerts` | `AlertCenterPage` | 알림센터 | ✓ |
+| `/my` | `MyPage` | 마이페이지 | ✓ |
+| `/my/archive` | `ArchivePage` | 보관함 | ✓ |
+| `/my/prediction` | `PredictionPage` | 예측·복기 | ✓ |
+| `*` | `NotFoundPage` | 404 | |
+
+`/alerts`, `/my`, `/my/*` 경로는 `ProtectedRoute`로 감싸져 있어 로그인 필수.
+비로그인 접근 시 현재는 콘솔 경고 출력 (로그인 유도 팝업은 추후 구현 예정).
+
+---
+
+## 라우트 경로 관리
+
+경로는 `src/shared/constants/routes.ts`에서 상수로 관리한다.
+경로 추가·수정 시 `routes.ts`만 수정하면 앱 전체에 반영된다.
+
+```ts
+import { ROUTES, toStockDetail } from '@/shared/constants/routes';
+
+// 사용 예시
+navigate(ROUTES.ALERTS);
+navigate(toStockDetail('005930'));  // /stocks/005930
+```
+
+---
+
+## 페이지 추가 방법
+
+1. `src/pages/` 하위에 페이지 컴포넌트 생성
+2. `src/shared/constants/routes.ts`에 경로 상수 추가
+3. `src/app/router/AppRouter.tsx`에 라우트 추가
+   (로그인 필요 페이지면 `ProtectedRoute`의 `children`에 추가)
+
+---
+
 ## 주요 기능 (MVP)
 
 - **종목 탐색** — 종목 검색, 코스피/코스닥 리스트, 관심종목 추가·해제
