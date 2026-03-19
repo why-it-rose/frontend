@@ -1,7 +1,10 @@
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router';
 import { ROUTES } from '@/shared/constants/routes';
+import RootLayout from '@/shared/components/layout/RootLayout';
 import HomePage from '@/pages/Home';
 import StockDetailPage from '@/pages/StockDetail';
+import InterestStockPage from '@/pages/InterestStock';
+import NewsPage from '@/pages/News';
 import AlertCenterPage from '@/pages/AlertCenter';
 import MyPage from '@/pages/MyPage';
 import ArchivePage from '@/pages/MyPage/ArchivePage';
@@ -19,37 +22,50 @@ function ProtectedRoute() {
 
 const router = createBrowserRouter([
   {
-    path: ROUTES.HOME,
-    element: <HomePage />,
-  },
-  {
-    path: ROUTES.STOCK_DETAIL,
-    element: <StockDetailPage />,
-  },
-  {
-    element: <ProtectedRoute />,
+    element: <RootLayout />,
     children: [
       {
-        path: ROUTES.ALERTS,
-        element: <AlertCenterPage />,
+        path: ROUTES.HOME,
+        element: <HomePage />,
       },
       {
-        path: ROUTES.MY,
-        element: <MyPage />,
+        path: ROUTES.STOCK_DETAIL,
+        element: <StockDetailPage />,
       },
       {
-        path: ROUTES.MY_ARCHIVE,
-        element: <ArchivePage />,
+        path: ROUTES.INTEREST_STOCK,
+        element: <InterestStockPage />,
       },
       {
-        path: ROUTES.MY_PREDICTION,
-        element: <PredictionPage />,
+        path: ROUTES.NEWS,
+        element: <NewsPage />,
+      },
+      {
+        element: <ProtectedRoute />,
+        children: [
+          {
+            path: ROUTES.ALERTS,
+            element: <AlertCenterPage />,
+          },
+          {
+            path: ROUTES.MY,
+            element: <MyPage />,
+          },
+          {
+            path: ROUTES.MY_ARCHIVE,
+            element: <ArchivePage />,
+          },
+          {
+            path: ROUTES.MY_PREDICTION,
+            element: <PredictionPage />,
+          },
+        ],
+      },
+      {
+        path: '*',
+        element: <NotFoundPage />,
       },
     ],
-  },
-  {
-    path: '*',
-    element: <NotFoundPage />,
   },
 ]);
 

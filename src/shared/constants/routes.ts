@@ -1,6 +1,8 @@
 export const ROUTES = {
   HOME: '/',
   STOCK_DETAIL: '/stocks/:stockCode',
+  INTEREST_STOCK: '/intereststock',
+  NEWS: '/news',
   ALERTS: '/alerts',
   MY: '/my',
   MY_ARCHIVE: '/my/archive',
