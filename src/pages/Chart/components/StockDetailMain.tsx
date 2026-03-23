@@ -1,12 +1,15 @@
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router";
 import type { StockDetailMainProps } from "../types";
-import { useChartPeriod, useOhlcData, useOhlcSummary, useStockInfo, useTickerData } from "../hook";
+import { useChartPeriod, useOhlcData, useOhlcSummary, useStockInfo } from "../hook";
 import { CandlestickChart } from "./CandlestickChart";
 import { StockInfoBar } from "./StockInfoBar";
 import { PeriodTabs } from "./PeriodTabs";
 import { OhlcSummaryBar } from "./OhlcSummaryBar";
-import { MOCK_STOCK_INFO, MOCK_TICKERS } from "../api";
+import { MOCK_STOCK_INFO } from "../api";
 import MarketIndexBar from "@/pages/widgets/MarketIndexBar/MarketIndexBar";
 import { MOCK_PINS } from "../api/mockData";
+
 export interface StockDetailMainAllProps extends StockDetailMainProps {
   code?: string;
   useMock?: boolean;
@@ -15,48 +18,126 @@ export interface StockDetailMainAllProps extends StockDetailMainProps {
 export function StockDetailMain({
   stock: stockProp,
   bars: barsProp,
-  tickers: tickersProp,
   pins: pinsProp,
+  onPinClick,
   code = "005930",
   useMock = true,
   className = "",
 }: StockDetailMainAllProps) {
-  const { activePeriod, setActivePeriod } = useChartPeriod("3개월");
-  const { stock: fetchedStock }           = useStockInfo(code, useMock);
-  const { bars: fetchedBars }             = useOhlcData(code, activePeriod, useMock);
-  const { tickers: fetchedTickers }       = useTickerData(useMock);
-
-  const stock   = stockProp   ?? fetchedStock   ?? MOCK_STOCK_INFO;
-  const bars    = barsProp    ?? fetchedBars;
-  const tickers = tickersProp ?? fetchedTickers ?? MOCK_TICKERS;
-  const pins    = pinsProp    ?? (useMock ? MOCK_PINS : []);
+  const navigate = useNavigate();
+  const { activePeriod, setActivePeriod } = useChartPeriod("월");
+  const [mobileTab, setMobileTab] = useState<"차트" | "이벤트" | "메모">("차트");
+  const { stock: fetchedStock } = useStockInfo(code, useMock);
+  const { bars: fetchedBars } = useOhlcData(code, activePeriod, useMock);
+  const stock = stockProp ?? fetchedStock ?? MOCK_STOCK_INFO;
+  const bars = barsProp ?? fetchedBars;
+  const pins = pinsProp ?? (useMock ? MOCK_PINS : []);
 
   const summary = useOhlcSummary(bars);
+  const mobileEventChips = useMemo(() => {
+    const chips: { label: string; positive: boolean; date: string }[] = [];
+    bars.forEach((bar) => {
+      if (!bar.event) return;
+      chips.push({
+        label: bar.event.label,
+        positive: bar.event.positive,
+        date: "최근",
+      });
+    });
+    return chips.slice(-3);
+  }, [bars]);
 
   return (
-    <div className={`flex flex-col h-full bg-white overflow-hidden ${className}`}>
+    <div
+      className={`flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f4f6fb] ${className}`}
+    >
+      {/* 모바일 레이아웃 */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-white md:hidden">
+        <div className="shrink-0 bg-white px-4 py-2.5">
+          <StockInfoBar
+            stock={stock}
+            onBack={() => navigate("/home")}
+            onAddWatchlist={() => {}}
+          />
+        </div>
 
-      {/* 종목 정보 헤더 */}
-      <div className="shrink-0">
-        <StockInfoBar stock={stock} />
+        <div className="grid grid-cols-3 border-b border-[#e5e7eb]">
+          {(["차트", "이벤트", "메모"] as const).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={`border-b-2 py-3 text-sm font-medium ${
+                mobileTab === tab
+                  ? "border-[#014d9d] text-[#014d9d]"
+                  : "border-transparent text-[#9ca3af]"
+              }`}
+              onClick={() => setMobileTab(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        <div className="scrollbar-subtle flex gap-2 overflow-x-auto border-b border-[#eef2f7] px-4 py-3">
+          {mobileEventChips.length > 0 ? (
+            mobileEventChips.map((chip, idx) => (
+              <div
+                key={`${chip.label}-${idx}`}
+                className={`shrink-0 rounded-2xl border px-3 py-1.5 text-xs font-medium ${
+                  chip.positive
+                    ? "border-[#fecdd3] bg-[#fff1f2] text-[#e11d48]"
+                    : "border-[#bfdbfe] bg-[#eff6ff] text-[#1d4ed8]"
+                }`}
+              >
+                {chip.positive ? "↑" : "↓"} {chip.label} · {chip.date}
+              </div>
+            ))
+          ) : (
+            <div className="text-xs text-[#9ca3af]">이벤트 핀 데이터가 없습니다.</div>
+          )}
+        </div>
+
+        <div className="shrink-0 bg-white px-4 py-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <PeriodTabs active={activePeriod} onChange={setActivePeriod} />
+            {summary && <OhlcSummaryBar summary={summary} />}
+          </div>
+        </div>
+
+        {mobileTab === "차트" ? (
+          <div className="h-[360px] px-1 pb-2 pt-2">
+            <CandlestickChart bars={bars} pins={pins} onPinClick={onPinClick} />
+          </div>
+        ) : (
+          <div className="px-4 py-10 text-center text-sm text-[#9ca3af]">
+            {mobileTab} 탭은 추후 연동 예정입니다.
+          </div>
+        )}
       </div>
 
-      {/* 기간 탭 + OHLC 요약 */}
-      <div className="shrink-0 border-b border-gray-100 px-4 flex items-center justify-between gap-3 h-[44px]">
-        <PeriodTabs active={activePeriod} onChange={setActivePeriod} />
-        {summary && <OhlcSummaryBar summary={summary} />}
-      </div>
+      {/* 데스크톱 레이아웃 */}
+      <div className="hidden min-h-0 flex-1 flex-col md:flex">
+        <div className="shrink-0 bg-white px-5 py-2.5">
+          <StockInfoBar
+            stock={stock}
+            onBack={() => navigate("/home")}
+            onAddWatchlist={() => {}}
+          />
 
-      {/* 캔들스틱 차트 — flex-1로 나머지 높이 전부 차지 */}
-      <div className="flex-1 min-h-0 w-full">
-        <CandlestickChart bars={bars} pins={pins} />
-      </div>
+          <div className="mt-2.5 flex flex-wrap items-center justify-between gap-3 border-t border-[#eff1f8] pt-2.5">
+            <PeriodTabs active={activePeriod} onChange={setActivePeriod} />
+            {summary && <OhlcSummaryBar summary={summary} />}
+          </div>
+        </div>
 
-      {/* 하단 시세 티커 */}
-      <div className="shrink-0">
-        <MarketIndexBar />
-      </div>
+        <main className="min-h-0 flex-1 overflow-hidden border-t border-[#eff1f8] bg-white">
+          <CandlestickChart bars={bars} pins={pins} onPinClick={onPinClick} />
+        </main>
 
+        <div className="shrink-0 border-t border-[#eff1f8] bg-[#f9fafc]">
+          <MarketIndexBar />
+        </div>
+      </div>
     </div>
   );
 }

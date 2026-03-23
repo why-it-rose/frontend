@@ -16,13 +16,15 @@ export default function WebSplitLayout({
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Header />
 
-      <div style={{ display: 'flex', flex: 1 }}>
+      <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <section
           style={{
             width: leftWidth,
-            borderRight: '1px solid #ddd',
-            padding: '24px',
-            overflow: 'auto',
+            minWidth: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            borderRight: '1px solid #eff1f8',
+            overflow: 'hidden',
           }}
         >
           {left}
