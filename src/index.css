@@ -38,6 +38,11 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  height: 100%;
+}
+
 body {
   margin: 0;
   font-family: "Pretendard Variable", Pretendard, sans-serif;
@@ -58,6 +63,14 @@ body {
 
 #root {
   min-height: 100svh;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+#root > * {
+  flex: 1 1 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
@@ -70,6 +83,65 @@ body {
   grid-template-columns: repeat(4, 1fr);
   height: 89px;
   padding: 0 8px;
+}
+
+.scrollbar-subtle {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+}
+
+.scrollbar-subtle:hover {
+  scrollbar-color: rgba(148, 163, 184, 0.55) transparent;
+}
+
+.scrollbar-subtle::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.scrollbar-subtle::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-subtle::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.28);
+  border-radius: 9999px;
+}
+
+.scrollbar-subtle:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.48);
+}
+
+.scrollbar-subtle:hover::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(148, 163, 184, 0.68);
+}
+
+/* 홈 하단 시장 지수 티커 */
+@keyframes market-index-marquee {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.market-index-marquee {
+  display: inline-flex;
+  width: max-content;
+  animation: market-index-marquee 70s linear infinite;
+  will-change: transform;
+}
+
+.market-index-marquee:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .market-index-marquee {
+    animation: none;
+    transform: none;
+  }
 }
 
 /* ============================================================
