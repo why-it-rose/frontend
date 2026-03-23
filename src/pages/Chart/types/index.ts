@@ -50,7 +50,7 @@ export interface OhlcSummary {
 }
 
 // ─── 기간 탭 ───────────────────────────────────────────────────────────────────
-export type PeriodTab = "1개월" | "3개월" | "6개월" | "1년";
+export type PeriodTab = "일" | "주" | "월" | "년";
 
 // ─── 컴포넌트 Props ────────────────────────────────────────────────────────────
 export interface StockDetailMainProps {
@@ -58,6 +58,8 @@ export interface StockDetailMainProps {
   bars?: OhlcBar[];
   tickers?: TickerItem[];
   pins?: ChartPin[];
+  /** 핀 클릭 시 (예: 우측 패널 전환) */
+  onPinClick?: (pin: ChartPin) => void;
   className?: string;
 }
 
@@ -79,6 +81,7 @@ export interface OhlcSummaryBarProps {
 
 export interface StockInfoBarProps {
   stock: StockInfo;
+  onBack?: () => void;
   onAddWatchlist?: () => void;
 }
 

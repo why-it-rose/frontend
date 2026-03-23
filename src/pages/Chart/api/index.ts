@@ -11,7 +11,7 @@ export async function fetchStockInfo(code: string): Promise<StockInfo> {
 }
 
 // ─── OHLCV 데이터 조회 ─────────────────────────────────────────────────────────
-export type PeriodParam = "1m" | "3m" | "6m" | "1y";
+export type PeriodParam = "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
 
 export async function fetchOhlcData(
   code: string,
