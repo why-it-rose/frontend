@@ -346,7 +346,7 @@ export default function HomeLayout({
           <MarketIndexBar />
         </div>
 
-        <InterestStockAside />
+
       </section>
     </main>
   );

@@ -13,16 +13,19 @@ export default function WebSplitLayout({
   rightWidth?: string;
 }) {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <Header />
 
-      <div style={{ display: 'flex', flex: 1 }}>
+      <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
         <section
           style={{
             width: leftWidth,
             borderRight: '1px solid #ddd',
-            padding: '24px',
-            overflow: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: 0,
+            overflow: 'hidden',
+            // padding 제거 ← 여기가 원인
           }}
         >
           {left}
@@ -31,8 +34,11 @@ export default function WebSplitLayout({
         <section
           style={{
             width: rightWidth,
-            padding: '24px',
-            overflow: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: 0,
+            overflow: 'hidden',
+            // padding 제거
           }}
         >
           {right}
