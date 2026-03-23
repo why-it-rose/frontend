@@ -8,7 +8,6 @@ import NotFoundPage from '@/pages/NotFound';
 import MobileLayout from '@/shared/components/layout/MobileLayout';
 import { StockDetailMain } from '@/pages/Chart/components/StockDetailMain';
 import InterestStockAside from '@/pages/InterestStock/components/InterestStockAside';
-import HomePageWrapper from '@/pages/Home/components/HomePageWrapper';
 import StockDetailAside from '@/pages/StockDetail/components/StockDetailaside';
 const router = createBrowserRouter([
   {
@@ -30,7 +29,7 @@ const router = createBrowserRouter([
     path: '/home/interest-stock',
     element: (
       <SplitRoute
-        left={<HomePageWrapper />}
+        left={<HomePage />}
         right={<InterestStockAside />}
         mobile={<InterestStockAside />}
       />
