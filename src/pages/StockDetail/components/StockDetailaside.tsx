@@ -1,6 +1,5 @@
 import { useState } from 'react';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 interface PerformanceRow {
   year: string;
   revenue: string; revenueGrowth: string;
@@ -23,9 +22,8 @@ interface CompanyInfo {
   investorTrends: InvestorTrend[];
 }
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
 const MOCK_COMPANY: CompanyInfo = {
-  name: '삼성전자', code: '005930', market: '코스피',
+  name: '삼성전자', code: '005930', market: 'KOSPI',
   badgeText: '삼', badgeColor: '#1d4ed8',
   categories: ['스마트폰', '차세대이동통신', '자율주행', '반도체', 'OLED'],
   stats: {
@@ -45,12 +43,8 @@ const MOCK_COMPANY: CompanyInfo = {
   ],
 };
 
-// ─── StatCell: export 없이 파일 최상단에 정의 → Fast Refresh 안전 ─────────────
 interface StatCellProps {
-  label: string;
-  value: string;
-  accent?: boolean;
-  right?: boolean;
+  label: string; value: string; accent?: boolean; right?: boolean;
 }
 
 function StatCell({ label, value, accent = false, right = false }: StatCellProps) {
@@ -64,26 +58,26 @@ function StatCell({ label, value, accent = false, right = false }: StatCellProps
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
 interface StockDetailAsideProps { company?: CompanyInfo; }
 
 export default function StockDetailAside({ company = MOCK_COMPANY }: StockDetailAsideProps) {
-  const [activeCategory, setCategory] = useState(company.categories[0]);
   const [expanded, setExpanded]       = useState(false);
   const latestPerf                    = company.performance.at(-1)!;
   const maxAbs = Math.max(...company.investorTrends.map(t => Math.abs(t.amount)), 1);
 
+  // 더보기 표시 여부: 4줄 초과 시에만 버튼 표시 (약 280자 기준)
+  const isLongText = company.overview.length > 100;
+
   return (
     <aside className="flex h-full w-full flex-col overflow-hidden bg-[#f4f6fb]">
 
-      {/* ── 헤더 ── */}
+      {/* ── 헤더: 탭 선택 제거, 텍스트만 + 전체 너비 파란 하단 선 ── */}
       <div className="shrink-0 bg-white">
         <div className="flex h-[48px] items-center justify-center">
           <span className="text-[13px] font-bold text-[#111827]">기업 정보</span>
         </div>
-        <div className="h-[2px] w-full bg-[#eff1f8]">
-          <div className="mx-auto h-full w-16 bg-[#014d9d]" />
-        </div>
+        {/* 전체 너비 파란 선 */}
+        <div className="h-[2px] w-full bg-[#014d9d]" />
       </div>
 
       {/* ── 스크롤 바디 ── */}
@@ -100,25 +94,23 @@ export default function StockDetailAside({ company = MOCK_COMPANY }: StockDetail
             </div>
             <div>
               <p className="text-[15px] font-bold text-[#111827]">{company.name}</p>
+              {/* 코스피 · 005930 순서 */}
               <p className="text-[11px] text-[#9ca3af]">
-                {company.market}
-                <span className="mx-1 text-[#d1d5db]">·</span>
                 {company.code}
+                <span className="mx-1 text-[#d1d5db]">·</span>
+                {company.market}
               </p>
             </div>
           </div>
 
-          {/* 카테고리 칩 */}
+          {/* 카테고리 칩: 선택 기능 제거, 스타일만 */}
           <div className="mt-3 flex flex-wrap gap-1.5">
             {company.categories.map(cat => (
               <button
                 key={cat}
                 type="button"
-                onClick={() => setCategory(cat)}
                 className={`rounded-full px-2.5 py-[3px] text-[11px] font-medium whitespace-nowrap transition-colors ${
-                  activeCategory === cat
-                    ? 'bg-[#014d9d] text-white'
-                    : 'bg-[#f0f2f8] text-[#6b7280] hover:bg-[#e0e7ef]'
+                    'bg-[#f0f2f8] text-[#6b7280] hover:bg-[#e0e7ef]'
                 }`}
               >
                 {cat}
@@ -156,19 +148,26 @@ export default function StockDetailAside({ company = MOCK_COMPANY }: StockDetail
         <div className="mt-2 bg-white px-4 py-4">
           <p className="mb-3 text-[12px] font-bold text-[#4b5563]">기업 개요</p>
           <div className="rounded-xl bg-[#f4f6fb] px-3 py-3">
-            <p className={`text-[12px] leading-[1.75] text-[#4b5563] ${!expanded ? 'line-clamp-4' : ''}`}>
+            <p className={`text-[12px] leading-[1.75] text-[#4b5563] ${!expanded ? 'line-clamp-3' : ''}`}>
               {company.overview}
             </p>
           </div>
-          <div className="mt-2 flex justify-end">
-            <button
-              type="button"
-              onClick={() => setExpanded(v => !v)}
-              className="text-[11px] font-semibold text-[#014d9d] hover:underline"
-            >
-              {expanded ? '접기' : '더 보기 ›'}
-            </button>
-          </div>
+          {/* 긴 텍스트일 때만 버튼 표시 */}
+          {isLongText && (
+            <div className="mt-2 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setExpanded(v => !v)}
+                className="flex items-center gap-0.5 text-[11px] font-semibold text-[#014d9d] hover:underline"
+              >
+                {expanded ? (
+                  <>접기 <span className="text-[10px]">↑</span></>
+                ) : (
+                  <>더 보기 <span className="text-[10px]">→</span></>
+                )}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* ── 실적 현황 ── */}
