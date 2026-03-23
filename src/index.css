@@ -144,6 +144,61 @@ body {
   }
 }
 
+/* 헤더 검색 드롭다운 */
+.search-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  z-index: 200;
+  width: min(620px, calc(100vw - 48px));
+  transform: translateX(-50%);
+  overflow: hidden;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.13);
+}
+
+/* 인기 검색 순위: 홈 종목 리스트와 동일하게 body(Pretendard) 상속 + 굵기 유지 */
+.search-popular-rank {
+  flex-shrink: 0;
+  min-width: 16px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #9ca3af;
+}
+
+.search-tag {
+  display: inline-flex;
+  cursor: pointer;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  border-radius: 20px;
+  background: #f3f4f6;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.search-tag:hover {
+  background: #e5e7eb;
+}
+
+.popup-item {
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 16px;
+}
+
+.popup-item:hover {
+  background: #f9fafb;
+}
+
 /* ============================================================
    Typography
    ============================================================ */

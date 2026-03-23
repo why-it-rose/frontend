@@ -6,8 +6,10 @@ import StockDetailPage from '@/pages/StockDetail';
 import HomePage from '@/pages/Home';
 import NotFoundPage from '@/pages/NotFound';
 import MobileLayout from '@/shared/components/layout/MobileLayout';
-import InterestStockPage from '@/pages/InterestStock';
 import { StockDetailMain } from '@/pages/Chart/components/StockDetailMain';
+import InterestStockAside from '@/pages/InterestStock/components/InterestStockAside';
+import HomePageWrapper from '@/pages/Home/components/HomePageWrapper';
+import StockDetailAside from '@/pages/StockDetail/components/StockDetailaside';
 const router = createBrowserRouter([
   {
     path: '/',
@@ -15,15 +17,26 @@ const router = createBrowserRouter([
   },
 
   {
-    path: '/chart/interest-stock',
+    path: '/chart/stock-detail',
     element: (
       <SplitRoute
         left={<StockDetailMain />}
-        right={<InterestStockPage />}
-        mobile={<InterestStockPage />}
+        right={<StockDetailAside />}
+        mobile={<StockDetailAside />}
       />
     ),
   },
+    {
+    path: '/home/interest-stock',
+    element: (
+      <SplitRoute
+        left={<HomePageWrapper />}
+        right={<InterestStockAside />}
+        mobile={<InterestStockAside />}
+      />
+    ),
+  },
+  
   {
     path: '/chart/news',
     element: (
@@ -55,7 +68,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/interest-stock',
-    element: <MobileLayout content={<InterestStockPage />} />,
+    element: <MobileLayout content={<InterestStockAside />} />,
   },
   {
     path: '/stock-detail',
