@@ -1,0 +1,36 @@
+export type EventType = 'SURGE' | 'PLUNGE';
+
+export interface StockMemo {
+  memoId: number;
+  eventType: EventType;
+  stockName: string;
+  changeRate: number; // e.g. +19.47 or -8.23
+  date: string; // e.g. "03.16"
+  text: string;
+}
+
+export type VoteType = '상승' | '횡보' | '하락' | null;
+
+export interface RelatedNews {
+  newsId: number;
+  title: string;
+  body: string;
+  source: string;
+  publishedAt: string; // ISO string
+  url: string;
+  tag: string;
+}
+
+export interface StockEvent {
+  eventId: number;
+  stockCode: string;
+  stockName: string;
+  eventType: EventType;
+  occurredAt: string; // ISO string
+  changeRate: number; // e.g. 17.2
+  priceBefore: number;
+  priceAfter: number;
+  aiSummary: string;
+  relatedNews: RelatedNews[];
+  isScrapped: boolean;
+}
