@@ -4,6 +4,7 @@ import favoriteIco from '@/assets/favorite.svg';
 import favoriteClickIco from '@/assets/favorite_click.svg';
 import InterestStockAside from '@/pages/InterestStock/components/InterestStockAside';
 import MarketIndexBar from '@/pages/widgets/MarketIndexBar/MarketIndexBar';
+import { useNavigate } from 'react-router';
 
 interface HomeLayoutProps {
   market: StockMarket;
@@ -93,6 +94,7 @@ export default function HomeLayout({
   onChangeSort,
   onChangePeriod,
 }: HomeLayoutProps) {
+  const navigate = useNavigate();
   const marketOptions: StockMarket[] = ['ALL', 'KOSPI', 'KOSDAQ'];
   const sortOptions: StockSort[] = ['TRADING_AMOUNT', 'TRADING_VOLUME', 'SURGE', 'DROP'];
   /** 리스트 등락률 기준 기간(스톡 프라이스 차트 기간과 다름) */
@@ -233,7 +235,7 @@ export default function HomeLayout({
             ref={listScrollRef}
             className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white"
           >
-            <div className="hidden lg:block">
+            <div className="hidden lg:block" onClick={()=>{navigate('/chart/stock-detail')}}>
               {displayedStocks.map(stock => (
                 <div
                   key={`${stock.ticker}-${stock.rank}`}

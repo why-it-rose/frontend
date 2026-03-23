@@ -1,57 +1,77 @@
+import { useState } from "react";
 import type { StockInfoBarProps } from "../types";
+import favoriteSrc from "@/assets/favorite.svg";
+import favoriteClickSrc from "@/assets/favorite_click.svg";
 
-export function StockInfoBar({ stock, onAddWatchlist }: StockInfoBarProps) {
+export function StockInfoBar({ stock, onBack, onAddWatchlist }: StockInfoBarProps) {
   const changeColor = stock.positive ? "text-[#e03131]" : "text-[#1971c2]";
+  const arrow = stock.positive ? "▲" : "▼";
+  const [isFavorite, setIsFavorite] = useState(false);
 
   return (
-    <div className="border-b border-gray-200 px-5 flex items-center justify-between h-[40px] bg-white gap-4">
+    <div className="flex min-h-[44px] items-center gap-4 max-md:flex-wrap max-md:gap-x-3 max-md:gap-y-1.5">
+      {onBack && (
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#4b5563] transition-colors hover:bg-[#f3f4f6]"
+          aria-label="뒤로 가기"
+        >
+          <span className="text-lg leading-none">←</span>
+        </button>
+      )}
 
-      {/* 좌측: 종목명 · 가격 · 등락 · 코드 */}
-      <div className="flex items-center gap-2.5 min-w-0">
+      <span className="shrink-0 -ml-0.5 text-[18px] font-bold leading-none text-[#111827] max-md:order-1">{stock.name}</span>
 
-        {/* 종목명 */}
-        <span className="text-[15px] font-semibold text-[#333d4b] whitespace-nowrap shrink-0">
-          {stock.name}
-        </span>
+      <span className="shrink-0 self-center -translate-y-[-0.8px] text-[13px] leading-none text-[#6b7280] max-md:order-2">
+        {stock.code} · {stock.market}
+      </span>
 
-        {/* 현재가 */}
-        <span className="text-[22px] font-bold text-[#1a2236] tracking-tight whitespace-nowrap shrink-0 leading-none">
-          {stock.price}
-        </span>
+      <span className="hidden shrink-0 self-center text-[18px] font-bold tabular-nums leading-none tracking-tight text-[#1f4fc9] md:text-[20px] max-md:order-4 max-md:basis-full max-md:pl-9 md:inline">
+        {stock.price}
+      </span>
 
-        {/* 전일 종가 대비 + 등락률 */}
-        <div className="flex flex-col justify-center leading-none shrink-0 gap-[1px]">
-          <span className="text-[10px] text-[#8b95a1]">전일 종가 대비</span>
-          <span className={`text-[12px] font-semibold ${changeColor}`}>
-            {stock.changePercent}
+      <div className="ml-1.5 hidden shrink-0 flex-col items-center justify-center self-center leading-none max-md:order-5 max-md:ml-0 max-md:pl-9 md:flex">
+        <span className="text-[10px] leading-none text-[#8b95a1]">전일 종가 대비</span>
+        <span className={`mt-0.5 inline-flex items-center gap-1 text-[14px] font-medium leading-none ${changeColor}`}>
+          <span aria-hidden className="text-[12px] leading-none">
+            {arrow}
           </span>
-        </div>
-
-        {/* 종목코드 배지 */}
-        <span className="text-[10px] text-[#8b95a1] bg-[#f2f4f6] border border-[#e5e8eb] rounded px-1.5 py-[2px] whitespace-nowrap shrink-0 leading-none">
-          {stock.code} · {stock.market}
+          <span className="tabular-nums tracking-tight">{stock.changePercent}</span>
         </span>
       </div>
 
-      {/* 우측: 관심종목 추가 버튼 */}
+      <div className="hidden max-md:order-4 max-md:flex max-md:basis-full max-md:items-end max-md:gap-2 max-md:pl-9">
+        <span className="shrink-0 text-[22px] font-bold tabular-nums leading-none tracking-tight text-[#1f4fc9]">
+          {stock.price}
+        </span>
+        <span className={`inline-flex items-center gap-1 text-[12px] font-medium leading-none ${changeColor}`}>
+          <span aria-hidden className="text-[10px] leading-none">
+            {arrow}
+          </span>
+          <span className="tabular-nums tracking-tight">{stock.changePercent}</span>
+        </span>
+      </div>
+
+      <div className="hidden max-md:order-5 max-md:mb-[-15px] max-md:mt-0 max-md:block max-md:basis-full max-md:border-b max-md:border-[#eff1f8]" />
+
       <button
-        onClick={onAddWatchlist}
-        className="shrink-0 flex items-center gap-1 border border-[#e5e8eb] rounded-md px-2 h-[24px] text-[11px] text-[#4e5968] font-medium hover:bg-[#f2f4f6] transition-colors whitespace-nowrap leading-none"
+        type="button"
+        onClick={() => {
+          setIsFavorite((prev) => !prev);
+          onAddWatchlist?.();
+        }}
+        className="ml-auto flex h-9 shrink-0 items-center justify-center gap-1 rounded-lg border border-[#e5e7eb] bg-white px-3 text-[13px] font-medium text-[#374151] transition-colors hover:bg-[#f9fafb] max-[860px]:w-9 max-[860px]:px-0 max-md:order-3"
       >
-        <svg
-          className="w-2.5 h-2.5 text-[#e03131]"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          strokeWidth={2.5}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-          />
-        </svg>
-        관심종목 추가
+        <img
+          src={isFavorite ? favoriteClickSrc : favoriteSrc}
+          alt=""
+          className="h-4.5 w-4.5 shrink-0"
+          width={14}
+          height={14}
+          aria-hidden
+        />
+        <span className="max-[860px]:hidden">관심종목 추가</span>
       </button>
     </div>
   );

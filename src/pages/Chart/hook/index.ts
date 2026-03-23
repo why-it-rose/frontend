@@ -12,15 +12,15 @@ import {
 
 // ─── 기간 탭 → API 파라미터 매핑 ───────────────────────────────────────────────
 const PERIOD_MAP: Record<PeriodTab, PeriodParam> = {
-  "1개월": "1m",
-  "3개월": "3m",
-  "6개월": "6m",
-  "1년":   "1y",
+  "일": "DAILY",
+  "주": "WEEKLY",
+  "월": "MONTHLY",
+  "년": "YEARLY",
 };
 
 // ─── useChartPeriod ─────────────────────────────────────────────────────────────
 /** 활성 기간 탭 상태 관리 */
-export function useChartPeriod(initial: PeriodTab = "3개월") {
+export function useChartPeriod(initial: PeriodTab = "월") {
   const [activePeriod, setActivePeriod] = useState<PeriodTab>(initial);
   return { activePeriod, setActivePeriod };
 }

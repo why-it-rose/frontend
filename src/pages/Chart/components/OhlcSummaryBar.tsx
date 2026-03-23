@@ -10,13 +10,13 @@ const FIELDS = [
 
 export function OhlcSummaryBar({ summary }: OhlcSummaryBarProps) {
   return (
-    <div className="flex items-center gap-4 flex-wrap">
+    <div className="grid w-full grid-cols-5 gap-2 md:flex md:w-auto md:flex-wrap md:items-center md:gap-4">
       {FIELDS.map(({ key, label, color }) => (
         <div key={key} className="flex flex-col items-center">
-          <span className="text-[9px] uppercase tracking-wider text-gray-400 font-bold">
+          <span className="text-[10px] leading-none text-[#9ca3af] md:text-[9px] md:font-bold md:uppercase md:tracking-wider md:text-gray-400">
             {label}
           </span>
-          <span className={`font-semibold text-[11px] ${color}`}>
+          <span className={`mt-1 text-[13px] font-semibold leading-none ${color} md:mt-0 md:text-[11px]`}>
             {summary[key]}
           </span>
         </div>
