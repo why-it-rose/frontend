@@ -7,7 +7,7 @@ import HomePage from '@/pages/Home';
 import NotFoundPage from '@/pages/NotFound';
 import MobileLayout from '@/shared/components/layout/MobileLayout';
 import InterestStockPage from '@/pages/InterestStock';
-import Chart from '@/pages/Chart';
+import { StockDetailMain } from '@/pages/Chart/components/StockDetailMain';
 const router = createBrowserRouter([
   {
     path: '/',
@@ -18,7 +18,7 @@ const router = createBrowserRouter([
     path: '/chart/interest-stock',
     element: (
       <SplitRoute
-        left={<Chart />}
+        left={<StockDetailMain />}
         right={<InterestStockPage />}
         mobile={<InterestStockPage />}
       />
@@ -28,7 +28,7 @@ const router = createBrowserRouter([
     path: '/chart/news',
     element: (
       <SplitRoute
-        left={<Chart />}
+        left={<StockDetailMain />}
         right={<NewsPage />}
         mobile={<NewsPage />}
       />
@@ -38,7 +38,7 @@ const router = createBrowserRouter([
     path: '/chart/stock-detail',
     element: (
       <SplitRoute
-        left={<Chart />}
+        left={<StockDetailMain />}
         right={<StockDetailPage />}
         mobile={<StockDetailPage />}
       />
@@ -51,7 +51,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/chart',
-    element: <MobileLayout content={<Chart />} />,
+    element: <MobileLayout content={<StockDetailMain />} />,
   },
   {
     path: '/interest-stock',
