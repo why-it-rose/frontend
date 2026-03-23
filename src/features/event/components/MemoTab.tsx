@@ -28,7 +28,6 @@ function EditIcon() {
   );
 }
 
-// 연도별로 메모 그룹핑
 function groupByYear(memos: StockMemo[]) {
   const groups: Record<string, StockMemo[]> = {};
   memos.forEach((m) => {
@@ -41,6 +40,12 @@ function groupByYear(memos: StockMemo[]) {
 
 export default function MemoTab({ memos, onSave, onDelete }: MemoTabProps) {
   const [text, setText] = useState('');
+  const [confirmId, setConfirmId] = useState<number | null>(null);
+
+  const handleConfirm = () => {
+    if (confirmId !== null) onDelete?.(confirmId);
+    setConfirmId(null);
+  };
 
   const handleSave = () => {
     if (!text.trim()) return;
@@ -52,13 +57,35 @@ export default function MemoTab({ memos, onSave, onDelete }: MemoTabProps) {
 
   return (
     <div className="relative flex-1 min-h-0">
+
+      {/* 삭제 확인 토스트 */}
+      {confirmId !== null && (
+        <div className="absolute top-3 right-4 z-50 flex items-center gap-3 px-4 py-3 bg-white rounded-xl shadow-md" style={{ border: '1px solid #e5e7eb' }}>
+          <span className="text-sm text-text-primary font-medium">메모를 삭제할까요?</span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setConfirmId(null)}
+              className="px-3 py-1.5 rounded-[8px] text-xs font-semibold text-[#6b7280] bg-[#f3f4f6] hover:bg-[#e5e7eb] transition-colors"
+            >
+              취소
+            </button>
+            <button
+              onClick={handleConfirm}
+              className="px-3 py-1.5 rounded-[8px] text-xs font-semibold text-white transition-colors"
+              style={{ background: '#014d9d' }}
+            >
+              삭제
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 메모 목록 */}
       <div className="absolute inset-0 overflow-y-auto scrollbar-subtle pb-17 md:pb-43">
         {memos.length === 0 && (
           <p className="text-center text-sm text-[#9ca3af] mt-10">아직 작성한 메모가 없어요</p>
         )}
 
-        {/* 모바일: 연도 그룹 헤더 */}
         {Object.entries(groups).map(([year, list]) => (
           <div key={year}>
             <p className="md:hidden px-4 pt-2.5 pb-1 text-[13px] text-[#9ca3af] font-medium">{year}</p>
@@ -72,27 +99,23 @@ export default function MemoTab({ memos, onSave, onDelete }: MemoTabProps) {
               return (
                 <div
                   key={memo.memoId}
-                  className="mx-4 mb-2.5 bg-white rounded-[14px] p-[14px_16px]
-                             md:rounded-[10px]"
+                  className="mx-4 mb-2.5 bg-white rounded-[14px] p-[14px_16px] md:rounded-[10px]"
                   style={{ border: '1px solid #eeeeee' }}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span
-                        className="text-[11px] font-bold px-2 py-0.5"
-                        style={{ ...badgeStyle, borderRadius: 4 }}
-                      >
+                      <span className="text-[11px] font-bold px-2 py-0.5" style={{ ...badgeStyle, borderRadius: 4 }}>
                         {isSurge ? '급등' : '급락'}
                       </span>
                       <span className="text-[13px] font-semibold text-text-primary">
                         {memo.stockName} {sign}{Math.abs(memo.changeRate)}%
                       </span>
                     </div>
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-xs text-[#9ca3af]">{memo.date}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs leading-none text-[#9ca3af]">{memo.date}</span>
                       <button
-                        onClick={() => onDelete?.(memo.memoId)}
-                        className="flex items-center p-0.5 hover:opacity-60 transition-opacity"
+                        onClick={() => setConfirmId(memo.memoId)}
+                        className="flex items-center justify-center hover:opacity-60 transition-opacity"
                       >
                         <TrashIcon />
                       </button>
@@ -105,7 +128,6 @@ export default function MemoTab({ memos, onSave, onDelete }: MemoTabProps) {
           </div>
         ))}
 
-        {/* 데스크톱: 글자수 표시 위치 */}
         <div className="hidden md:block text-right px-5 py-0.5 text-[11px] text-[#9ca3af]">
           {text.length} / {MAX_LENGTH}
         </div>
@@ -113,8 +135,7 @@ export default function MemoTab({ memos, onSave, onDelete }: MemoTabProps) {
 
       {/* 입력 영역 — 항상 하단 고정 */}
       <div className="absolute bottom-0 left-0 right-0 border-t border-border bg-white">
-
-        {/* 모바일: 단줄 입력 + 파란 원형 버튼 */}
+        {/* 모바일 */}
         <div className="md:hidden relative px-4 py-2.5 pb-6">
           <input
             type="text"
@@ -132,7 +153,7 @@ export default function MemoTab({ memos, onSave, onDelete }: MemoTabProps) {
           </button>
         </div>
 
-        {/* 데스크톱: textarea + 저장 버튼 */}
+        {/* 데스크톱 */}
         <div className="hidden md:block">
           <div className="mx-5 mt-3">
             <textarea
@@ -157,7 +178,6 @@ export default function MemoTab({ memos, onSave, onDelete }: MemoTabProps) {
             </button>
           </div>
         </div>
-
       </div>
     </div>
   );

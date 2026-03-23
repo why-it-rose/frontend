@@ -65,12 +65,10 @@ export default function EventTab({ event, onScrap }: EventTabProps) {
           <p className="font-semibold text-sm text-[#374151] mb-2.5">관련 뉴스</p>
           <div className="space-y-2.5">
             {relatedNews.map((news) => (
-              <a
+              <div
                 key={news.newsId}
-                href={news.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block bg-white rounded-[10px] p-[12px_14px] hover:bg-bg-subtle transition-colors"
+                onClick={() => window.open(news.url, '_blank', 'width=800,height=600,noopener,noreferrer')}
+                className="block bg-white rounded-[10px] p-[12px_14px] hover:bg-bg-subtle transition-colors cursor-pointer"
                 style={{ border: '1px solid #e5e7eb' }}
               >
                 <p className="font-bold text-sm text-text-primary leading-[1.4] mb-1.5">{news.title}</p>
@@ -83,7 +81,7 @@ export default function EventTab({ event, onScrap }: EventTabProps) {
                     {news.tag}
                   </span>
                 </div>
-              </a>
+              </div>
             ))}
           </div>
           <div className="h-4" />

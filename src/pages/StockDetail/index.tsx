@@ -1,29 +1,18 @@
 import TabBar from '@/shared/components/common/TabBar';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import EventTab from '@/features/event/components/EventTab';
 import MemoTab from '@/features/event/components/MemoTab';
-import { StockDetailMain } from '@/pages/Chart/components/StockDetailMain';
 import type { StockEvent, StockMemo } from '@/features/event/types/event.types';
-
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, []);
-  return isMobile;
-}
 
 const mockEvent: StockEvent = {
   eventId: 1,
   stockCode: '005930',
   stockName: '삼성전자',
-  eventType: 'PLUNGE',
+  eventType: 'SURGE',
   occurredAt: '2025-11-26T09:00:00',
-  changeRate: 8.23,
-  priceBefore: 146500,
-  priceAfter: 125000,
+  changeRate: 17.2,
+  priceBefore: 125000,
+  priceAfter: 146500,
   aiSummary:
     '이 구간에서는 엔비디아 GTC 컨퍼런스 이후 HBM3E 공급 기대감이 급격히 확대되었습니다. 삼성전자의 AI 칩 납품 재개 가능성이 보도되며 외국인 매수세가 집중된 것으로 확인됩니다.',
   relatedNews: [
@@ -39,22 +28,14 @@ const mockMemos: StockMemo[] = [
   { memoId: 2, eventType: 'PLUNGE', stockName: '삼성전자', changeRate: -8.23, date: '03.02', text: '실적 하향과 납품 지연 우려가 겹치면 섹터 전체가 같이 흔들리는 패턴. 개별 종목 이슈처럼 보여도 섹터 체인으로 같이 봐야 함.' },
 ];
 
-const MOBILE_TABS = [
-  { label: '차트', value: 'chart' },
-  { label: '이벤트', value: 'event' },
-  { label: '메모', value: 'memo' },
-];
-const DESKTOP_TABS = [
+const TABS = [
   { label: '이벤트', value: 'event' },
   { label: '메모', value: 'memo' },
 ];
 
 export default function StockDetailPage() {
-  const mobile = useIsMobile();
   const [tab, setTab] = useState('event');
   const [memos, setMemos] = useState<StockMemo[]>(mockMemos);
-
-  const tabs = mobile ? MOBILE_TABS : DESKTOP_TABS;
 
   const handleSave = (text: string) => {
     setMemos((prev) => [
@@ -69,8 +50,7 @@ export default function StockDetailPage() {
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <TabBar tabs={tabs} value={tab} onChange={setTab} />
-      {tab === 'chart' && <StockDetailMain className="flex-1 min-h-0" />}
+      <TabBar tabs={TABS} value={tab} onChange={setTab} />
       {tab === 'event' && <EventTab event={mockEvent} onScrap={(id, s) => console.log(id, s)} />}
       {tab === 'memo' && <MemoTab memos={memos} onSave={handleSave} onDelete={handleDelete} />}
     </div>
