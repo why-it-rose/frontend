@@ -1,9 +1,9 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { StockMarket, StockPeriod, StockSort } from '@/features/stock/types';
 import favoriteIco from '@/assets/favorite.svg';
 import favoriteClickIco from '@/assets/favorite_click.svg';
 import InterestStockAside from '@/pages/InterestStock/components/InterestStockAside';
-import MarketIndexBar from './MarketIndexBar';
+import MarketIndexBar from '@/widgets/MarketIndexBar/MarketIndexBar';
 
 interface HomeLayoutProps {
   market: StockMarket;
@@ -47,14 +47,17 @@ const MOCK_STOCKS: HomeStockRow[] = [
   { rank: 5, ticker: '068270', name: '셀트리온', market: 'KOSPI', currentPrice: 178900, changeRate: 3.62, tradingAmount: '3,540억원', tradingVolume: '211만주', eventType: 'SURGE' },
   { rank: 6, ticker: '035720', name: '카카오', market: 'KOSPI', currentPrice: 45200, changeRate: -0.83, tradingAmount: '1,870억원', tradingVolume: '412만주' },
   { rank: 7, ticker: '207940', name: '삼성바이오로직스', market: 'KOSPI', currentPrice: 954000, changeRate: 0.52, tradingAmount: '1,192억원', tradingVolume: '13만주' },
+  { rank: 8, ticker: '012330', name: '현대모비스', market: 'KOSPI', currentPrice: 251000, changeRate: 0.31, tradingAmount: '920억원', tradingVolume: '37만주' },
   { rank: 9, ticker: '329180', name: 'HD현대중공업', market: 'KOSPI', currentPrice: 134200, changeRate: -2.41, tradingAmount: '887억원', tradingVolume: '63만주', eventType: 'DROP' },
-  { rank: 10, ticker: '329180', name: 'HD현대중공업', market: 'KOSPI', currentPrice: 134200, changeRate: -2.41, tradingAmount: '887억원', tradingVolume: '63만주', eventType: 'DROP' },
-  { rank: 11, ticker: '329180', name: 'HD현대중공업', market: 'KOSPI', currentPrice: 134200, changeRate: -2.41, tradingAmount: '887억원', tradingVolume: '63만주', eventType: 'DROP' },
-  { rank: 12, ticker: '329180', name: 'HD현대중공업', market: 'KOSPI', currentPrice: 134200, changeRate: -2.41, tradingAmount: '887억원', tradingVolume: '63만주', eventType: 'DROP' },
-  { rank: 13, ticker: '329180', name: 'HD현대중공업', market: 'KOSPI', currentPrice: 134200, changeRate: -2.41, tradingAmount: '887억원', tradingVolume: '63만주', eventType: 'DROP' },
-  { rank: 14, ticker: '329180', name: 'HD현대중공업', market: 'KOSPI', currentPrice: 134200, changeRate: -2.41, tradingAmount: '887억원', tradingVolume: '63만주', eventType: 'DROP' },
-  { rank: 15, ticker: '329180', name: 'HD현대중공업', market: 'KOSPI', currentPrice: 134200, changeRate: -2.41, tradingAmount: '887억원', tradingVolume: '63만주', eventType: 'DROP' },
+  { rank: 10, ticker: '000080', name: '하이트진로', market: 'KOSPI', currentPrice: 134200, changeRate: -2.41, tradingAmount: '887억원', tradingVolume: '63만주', eventType: 'DROP' },
+  { rank: 11, ticker: '030520', name: '한글과컴퓨터', market: 'KOSDAQ', currentPrice: 134200, changeRate: -2.41, tradingAmount: '887억원', tradingVolume: '63만주', eventType: 'DROP' },
+  { rank: 12, ticker: '035760', name: 'CJ ENM', market: 'KOSDAQ', currentPrice: 134200, changeRate: -2.41, tradingAmount: '887억원', tradingVolume: '63만주', eventType: 'DROP' },
+  { rank: 13, ticker: '058470', name: '리노공업', market: 'KOSDAQ', currentPrice: 134200, changeRate: -2.41, tradingAmount: '887억원', tradingVolume: '63만주', eventType: 'DROP' },
+  { rank: 14, ticker: '069080', name: '웹젠', market: 'KOSDAQ', currentPrice: 134200, changeRate: -2.41, tradingAmount: '887억원', tradingVolume: '63만주', eventType: 'DROP' },
+  { rank: 15, ticker: '095340', name: 'ISC', market: 'KOSDAQ', currentPrice: 134200, changeRate: -2.41, tradingAmount: '887억원', tradingVolume: '63만주', eventType: 'DROP' },
 ];
+
+const LIST_PAGE_SIZE = 5;
 
 function formatPrice(value: number) {
   return `${value.toLocaleString('ko-KR')}원`;
@@ -101,10 +104,53 @@ export default function HomeLayout({
     { value: 'SIX_MONTHS', label: '6개월' },
   ];
 
-  const filteredStocks = MOCK_STOCKS.filter(stock => {
-    if (market === 'ALL') return true;
-    return stock.market === market;
-  });
+  const filteredStocks = useMemo(
+    () =>
+      MOCK_STOCKS.filter(stock => {
+        if (market === 'ALL') return true;
+        return stock.market === market;
+      }),
+    [market],
+  );
+
+  const [listLoaded, setListLoaded] = useState(LIST_PAGE_SIZE);
+
+  useEffect(() => {
+    setListLoaded(LIST_PAGE_SIZE);
+  }, [market, sort, period]);
+
+  const displayedStocks = useMemo(
+    () => filteredStocks.slice(0, listLoaded),
+    [filteredStocks, listLoaded],
+  );
+
+  const listScrollRef = useRef<HTMLDivElement>(null);
+  const listSentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const root = listScrollRef.current;
+    const target = listSentinelRef.current;
+    if (!root || !target) return;
+
+    const observer = new IntersectionObserver(
+      entries => {
+        if (!entries[0]?.isIntersecting) return;
+        setListLoaded(c => Math.min(c + LIST_PAGE_SIZE, filteredStocks.length));
+      },
+      { root, rootMargin: '80px', threshold: 0 },
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [filteredStocks.length]);
+
+  useEffect(() => {
+    const root = listScrollRef.current;
+    if (!root || listLoaded >= filteredStocks.length) return;
+    if (root.scrollHeight <= root.clientHeight + 2) {
+      setListLoaded(c => Math.min(c + LIST_PAGE_SIZE, filteredStocks.length));
+    }
+  }, [listLoaded, filteredStocks.length]);
 
   const [favorites, setFavorites] = useState<Set<string>>(() => new Set());
 
@@ -118,7 +164,7 @@ export default function HomeLayout({
   }, []);
 
   return (
-    <main className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f4f6fb]">
+    <main className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f4f6fb]">
       <section className="flex min-h-0 flex-1 overflow-hidden">
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-r border-[#eff1f8]">
           <div className="border-b border-[#eff1f8] bg-white px-4 py-2.5">
@@ -183,9 +229,12 @@ export default function HomeLayout({
             <div className="text-center">이벤트</div>
           </div>
 
-          <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white">
+          <div
+            ref={listScrollRef}
+            className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white"
+          >
             <div className="hidden lg:block">
-              {filteredStocks.map(stock => (
+              {displayedStocks.map(stock => (
                 <div
                   key={`${stock.ticker}-${stock.rank}`}
                   className="grid grid-cols-[28px_44px_1fr_110px_88px_100px_100px_80px] items-center border-b border-[#eff1f8] px-4 py-2.5 transition-colors duration-150 hover:bg-[#f4f6fb]"
@@ -246,7 +295,7 @@ export default function HomeLayout({
                   <div className="text-[8.8px] font-normal text-[#c8cdd4]">거래대금</div>
                 </div>
               </div>
-              {filteredStocks.map(stock => (
+              {displayedStocks.map(stock => (
                 <div
                   key={`${stock.ticker}-${stock.rank}`}
                   className="grid min-h-[62px] grid-cols-[minmax(0,1fr)_82px_78px] items-center border-b border-[#eff1f8] px-4 py-2 transition-colors duration-150 hover:bg-[#f4f6fb]"
@@ -290,6 +339,8 @@ export default function HomeLayout({
               ))}
               <div className="border-t border-[#eff1f8] bg-[#f9fafc] px-4 py-3 text-center text-xs text-[#9ca3af]">순위 기준: 추후 API 기준 시각 연동 예정</div>
             </div>
+
+            <div ref={listSentinelRef} className="h-px w-full shrink-0" aria-hidden />
           </div>
 
           <MarketIndexBar />
