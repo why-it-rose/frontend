@@ -6,10 +6,10 @@ import StockDetailPage from '@/pages/StockDetail';
 import HomePage from '@/pages/Home';
 import NotFoundPage from '@/pages/NotFound';
 import MobileLayout from '@/shared/components/layout/MobileLayout';
-import InterestStockPage from '@/pages/InterestStock';
 import { StockDetailMain } from '@/pages/Chart/components/StockDetailMain';
-import HomePageWrapper from '@/pages/Home/components/HomepageWrapper';
 import InterestStockAside from '@/pages/InterestStock/components/InterestStockAside';
+import HomePageWrapper from '@/pages/Home/components/HomePageWrapper';
+import StockDetailAside from '@/pages/StockDetail/components/StockDetailaside';
 const router = createBrowserRouter([
   {
     path: '/',
@@ -17,12 +17,12 @@ const router = createBrowserRouter([
   },
 
   {
-    path: '/chart/interest-stock',
+    path: '/chart/stock-detail',
     element: (
       <SplitRoute
         left={<StockDetailMain />}
-        right={<InterestStockAside />}
-        mobile={<InterestStockAside />}
+        right={<StockDetailAside />}
+        mobile={<StockDetailAside />}
       />
     ),
   },
