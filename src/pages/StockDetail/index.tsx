@@ -39,7 +39,7 @@ export default function StockDetailPage() {
 
   const handleSave = (text: string) => {
     setMemos((prev) => [
-      { memoId: Date.now(), eventType: 'SURGE', stockName: '삼성전자', changeRate: 17.2, date: new Date().toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }).replace('. ', '.').replace('.', ''), text },
+      { memoId: Date.now(), eventType: 'SURGE', stockName: '삼성전자', changeRate: 17.2, date: new Date().toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').slice(0, -1), text },
       ...prev,
     ]);
   };

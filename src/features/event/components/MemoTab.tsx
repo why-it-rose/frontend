@@ -81,7 +81,7 @@ export default function MemoTab({ memos, onSave, onDelete }: MemoTabProps) {
       )}
 
       {/* 메모 목록 */}
-      <div className="absolute inset-0 overflow-y-auto scrollbar-subtle pb-17 md:pb-43">
+      <div className="absolute inset-0 overflow-y-auto scrollbar-subtle pb-20 md:pb-43">
         {memos.length === 0 && (
           <p className="text-center text-sm text-[#9ca3af] mt-10">아직 작성한 메모가 없어요</p>
         )}
@@ -136,7 +136,7 @@ export default function MemoTab({ memos, onSave, onDelete }: MemoTabProps) {
       {/* 입력 영역 — 항상 하단 고정 */}
       <div className="absolute bottom-0 left-0 right-0 border-t border-border bg-white">
         {/* 모바일 */}
-        <div className="md:hidden relative px-4 py-2.5 pb-6">
+        <div className="md:hidden relative px-4 pt-2.5 pb-5">
           <input
             type="text"
             value={text}
@@ -147,7 +147,7 @@ export default function MemoTab({ memos, onSave, onDelete }: MemoTabProps) {
           <button
             onClick={handleSave}
             disabled={!text.trim()}
-            className="absolute right-7 top-1/2 -translate-y-1/2 -mt-2 w-9.5 h-9.5 rounded-full bg-blue-600 flex items-center justify-center disabled:opacity-40 transition-opacity"
+            className="absolute right-7 top-1/2 -translate-y-1/2 w-9.5 h-9.5 rounded-full bg-blue-600 flex items-center justify-center disabled:opacity-40 transition-opacity active:opacity-60"
           >
             <EditIcon />
           </button>

@@ -18,11 +18,11 @@ export default function EventTab({ event, onScrap }: EventTabProps) {
 
   return (
     <div className="relative flex-1 min-h-0">
-      <div className="absolute inset-0 overflow-y-auto scrollbar-subtle pb-19 px-4">
+      <div className="absolute inset-0 overflow-y-auto scrollbar-subtle pb-22 px-4">
 
         {/* 이벤트 헤더 카드 */}
         <div
-          className="mt-3.5 mb-2.5 rounded-[14px] p-4"
+          className="mt-3 mb-2.5 rounded-[14px] p-4"
           style={isSurge
             ? { background: '#FFFBF7', border: '1px solid #F3E3CC' }
             : { background: '#F5F9FF', border: '1px solid #DBEAFE' }
@@ -35,8 +35,8 @@ export default function EventTab({ event, onScrap }: EventTabProps) {
             </span>
           </div>
           <div className="mb-1">
-            <span className="font-bold text-[22px] text-text-primary">{stockName} </span>
-            <span className="font-bold text-[22px]" style={{ color: rateColor }}>
+            <span className="font-bold text-[20px] md:text-[22px] text-text-primary">{stockName} </span>
+            <span className="font-bold text-[20px] md:text-[22px]" style={{ color: rateColor }}>
               {sign}{changeRate}%
             </span>
           </div>
@@ -68,7 +68,7 @@ export default function EventTab({ event, onScrap }: EventTabProps) {
               <div
                 key={news.newsId}
                 onClick={() => window.open(news.url, '_blank', 'width=800,height=600,noopener,noreferrer')}
-                className="block bg-white rounded-[10px] p-[12px_14px] hover:bg-bg-subtle transition-colors cursor-pointer"
+                className="block bg-white rounded-[10px] p-[12px_14px] active:bg-bg-subtle md:hover:bg-bg-subtle transition-colors cursor-pointer"
                 style={{ border: '1px solid #e5e7eb' }}
               >
                 <p className="font-bold text-sm text-text-primary leading-[1.4] mb-1.5">{news.title}</p>
@@ -90,10 +90,10 @@ export default function EventTab({ event, onScrap }: EventTabProps) {
       </div>
 
       {/* 스크랩 버튼 고정 하단 */}
-      <div className="absolute bottom-0 left-0 right-0 px-4 py-3 pb-6 border-t border-border bg-white">
+      <div className="absolute bottom-0 left-0 right-0 px-4 pt-3 pb-5 md:pb-6 border-t border-border bg-white">
         <button
           onClick={() => onScrap?.(eventId, isScrapped)}
-          className="w-full py-3.25 rounded-[10px] text-[15px] font-bold text-white transition-colors"
+          className="w-full py-3 md:py-3.25 rounded-[10px] text-[15px] font-bold text-white transition-colors active:opacity-80"
           style={{ background: isScrapped ? '#013d7d' : '#014d9d' }}
         >
           스크랩
