@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
+import { ROUTES } from "@/shared/constants/routes";
 import type { StockDetailMainProps } from "../types";
 import { useChartPeriod, useOhlcData, useOhlcSummary, useStockInfo } from "../hook";
 import { CandlestickChart } from "./CandlestickChart";
@@ -56,7 +57,7 @@ export function StockDetailMain({
         <div className="shrink-0 bg-white px-4 py-2.5">
           <StockInfoBar
             stock={stock}
-            onBack={() => navigate("/home")}
+            onBack={() => navigate(ROUTES.HOME)}
             onAddWatchlist={() => {}}
           />
         </div>
@@ -120,7 +121,7 @@ export function StockDetailMain({
         <div className="shrink-0 bg-white px-5 py-2.5">
           <StockInfoBar
             stock={stock}
-            onBack={() => navigate("/home")}
+            onBack={() => navigate(ROUTES.HOME)}
             onAddWatchlist={() => {}}
           />
 

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import MobileLayout from '@/shared/components/layout/MobileLayout';
+import { ROUTES } from '@/shared/constants/routes';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ export default function LoginPage() {
             type="button"
             onClick={() => {
               login();
-              navigate('/home', { replace: true });
+              navigate(ROUTES.HOME, { replace: true });
             }}
             className="rounded-lg bg-primary px-8 py-3 text-sm font-semibold text-white"
           >

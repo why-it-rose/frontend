@@ -15,7 +15,7 @@ import SignupPage from '@/pages/Signup';
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Navigate to="/home" replace />,
+    element: <Navigate to="/home/interest-stock" replace />,
   },
 
   {
@@ -59,7 +59,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/home',
-    element: <MobileLayout content={<HomePage />} />,
+    element: <Navigate to="/home/interest-stock" replace />,
   },
   {
     path: '/chart',

@@ -1,5 +1,6 @@
 export const ROUTES = {
-  HOME: '/',
+  /** 앱 진입 시 기본 홈(좌: 홈 / 우: 관심종목) */
+  HOME: '/home/interest-stock',
   STOCK_DETAIL: '/stocks/:stockCode',
   INTEREST_STOCK: '/intereststock',
   NEWS: '/news',
