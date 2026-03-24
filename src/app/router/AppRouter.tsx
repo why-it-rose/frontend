@@ -9,6 +9,9 @@ import MobileLayout from '@/shared/components/layout/MobileLayout';
 import { StockDetailMain } from '@/pages/Chart/components/StockDetailMain';
 import InterestStockAside from '@/pages/InterestStock/components/InterestStockAside';
 import StockDetailAside from '@/pages/StockDetail/components/StockDetailaside';
+import LoginPage from '@/pages/Login';
+import SignupPage from '@/pages/Signup';
+
 const router = createBrowserRouter([
   {
     path: '/',
@@ -21,7 +24,7 @@ const router = createBrowserRouter([
       <SplitRoute
         left={<StockDetailMain />}
         right={<StockDetailAside />}
-        mobile={<StockDetailAside />}
+        mobile={<StockDetailMain />}
       />
     ),
   },
@@ -47,16 +50,13 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/chart/stock-detail',
-    element: (
-      <SplitRoute
-        left={<StockDetailMain />}
-        right={<StockDetailPage />}
-        mobile={<StockDetailPage />}
-      />
-    ),
+    path: '/login',
+    element: <LoginPage />,
   },
-
+  {
+    path: '/signup',
+    element: <SignupPage />,
+  },
   {
     path: '/home',
     element: <MobileLayout content={<HomePage />} />,
