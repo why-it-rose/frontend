@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 
 interface AuthState {
@@ -19,14 +19,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [nickname, setNickname] = useState('');
 
+  useEffect(() => {
+    const accessToken = localStorage.getItem('accessToken');
+    const savedNickname = localStorage.getItem('nickname');
+
+    if (accessToken && savedNickname) {
+      setNickname(savedNickname);
+      setIsLoggedIn(true);
+    }
+  }, []);
+
   const login = (nextNickname: string) => {
-    setNickname(nextNickname.trim());
+    const trimmed = nextNickname.trim();
+    setNickname(trimmed);
     setIsLoggedIn(true);
+    localStorage.setItem('nickname', trimmed);
   };
 
   const logout = () => {
     setNickname('');
     setIsLoggedIn(false);
+    localStorage.removeItem('nickname');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
   };
 
   return (
