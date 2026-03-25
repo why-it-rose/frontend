@@ -9,11 +9,13 @@ import MobileLayout from '@/shared/components/layout/MobileLayout';
 import { StockDetailMain } from '@/pages/Chart/components/StockDetailMain';
 import InterestStockAside from '@/pages/InterestStock/components/InterestStockAside';
 import StockDetailAside from '@/pages/StockDetail/components/StockDetailaside';
+import LoginPage from '@/pages/Login';
+import SignupPage from '@/pages/Signup';
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Navigate to="/home" replace />,
+    element: <Navigate to="/home/interest-stock" replace />,
   },
 
   // ── Split (웹) ──────────────────────────────────────────────────────────────
@@ -23,7 +25,7 @@ const router = createBrowserRouter([
       <SplitRoute
         left={<StockDetailMain />}
         right={<StockDetailAside />}
-        mobile={<StockDetailAside />}
+        mobile={<StockDetailMain />}
       />
     ),
   },
@@ -48,6 +50,14 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: '/login',
+    element: <LoginPage />,
+  },
+  {
+    path: '/signup',
+    element: <SignupPage />,
+  },
+  {
     path: '/home/interest-stock',
     element: (
       <SplitRoute
@@ -61,7 +71,7 @@ const router = createBrowserRouter([
   // ── Mobile ──────────────────────────────────────────────────────────────────
   {
     path: '/home',
-    element: <MobileLayout content={<HomePage />} />,
+    element: <Navigate to="/home/interest-stock" replace />,
   },
   {
     path: '/chart',

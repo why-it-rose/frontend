@@ -1,6 +1,19 @@
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
 @import "tailwindcss";
 
+@font-face {
+  font-family: "OneShinhan Medium";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./assets/fonts/OneShinhanMedium.ttf") format("truetype");
+}
+
+.header-profile-initial {
+  font-family: "OneShinhan Medium", "Pretendard Variable", Pretendard, sans-serif;
+  font-weight: 600;
+}
+
 /* ============================================================
    Design Tokens
    ============================================================ */

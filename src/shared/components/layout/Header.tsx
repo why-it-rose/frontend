@@ -9,14 +9,26 @@ export default function Header() {
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
 
-  const rightActions = isLoggedIn ? (
-    <button
-      onClick={() => navigate(ROUTES.ALERTS)}
-      className="flex items-center justify-center"
-    >
-      <img src={bellSrc} alt="알림" className="w-8.5 h-8.5" />
-    </button>
-  ) : (
+  const loggedInActions = (
+    <div className="flex items-center gap-2.5">
+      <div className="relative">
+        <button
+          onClick={() => navigate(ROUTES.ALERTS)}
+          className="h-[34px] w-[34px] bg-transparent p-0 flex items-center justify-center border-none cursor-pointer"
+        >
+          <img src={bellSrc} alt="알림" className="h-[34px] w-[34px]" />
+        </button>
+      </div>
+      <button
+        onClick={() => navigate(ROUTES.MY)}
+        className="header-profile-initial h-[34px] w-[34px] rounded-full flex items-center justify-center bg-primary text-white text-xs font-bold"
+      >
+        신
+      </button>
+    </div>
+  );
+
+  const rightActions = isLoggedIn ? loggedInActions : (
     <div className="flex items-center gap-1.5">
       <button
         onClick={() => navigate('/login')}
@@ -55,20 +67,7 @@ export default function Header() {
 
         <div className="flex items-center justify-end gap-2.5">
           {isLoggedIn ? (
-            <>
-              <button
-                onClick={() => navigate(ROUTES.ALERTS)}
-                className="w-8.5 h-8.5 flex items-center justify-center"
-              >
-                <img src={bellSrc} alt="알림" className="w-8.5 h-8.5" />
-              </button>
-              <button
-                onClick={() => navigate(ROUTES.MY)}
-                className="w-8.5 h-8.5 rounded-full flex items-center justify-center text-white text-xs font-bold bg-primary"
-              >
-                신
-              </button>
-            </>
+            <>{loggedInActions}</>
           ) : (
             <>{rightActions}</>
           )}
