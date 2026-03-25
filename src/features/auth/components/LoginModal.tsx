@@ -12,6 +12,7 @@ export default function LoginModal({ onClose, onSignup, onLogin }: LoginModalPro
     const [password, setPassword] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const backendOrigin = import.meta.env.VITE_API_BASE_URL?.trim() || 'http://localhost:8080';
 
     const handleLogin = async () => {
         if (!email.trim() || !password) {
@@ -37,6 +38,14 @@ export default function LoginModal({ onClose, onSignup, onLogin }: LoginModalPro
         } finally {
             setIsSubmitting(false);
         }
+    };
+
+    const handleGoogleLogin = () => {
+        window.location.href = `${backendOrigin}/oauth2/authorization/google`;
+    };
+
+    const handleKakaoLogin = () => {
+        window.location.href = `${backendOrigin}/oauth2/authorization/kakao`;
     };
 
     return (
@@ -167,8 +176,8 @@ export default function LoginModal({ onClose, onSignup, onLogin }: LoginModalPro
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
-                    <button type="button" className="btn-social">Google로 로그인</button>
-                    <button type="button" className="btn-social">
+                    <button type="button" className="btn-social" onClick={handleGoogleLogin}>Google로 로그인</button>
+                    <button type="button" className="btn-social" onClick={handleKakaoLogin}>
                         <span style={{ color: '#3A1D1D' }}>카카오로 로그인</span>
                     </button>
                 </div>
