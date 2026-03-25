@@ -9,12 +9,14 @@ import MobileLayout from '@/shared/components/layout/MobileLayout';
 import { StockDetailMain } from '@/pages/Chart/components/StockDetailMain';
 import InterestStockAside from '@/pages/InterestStock/components/InterestStockAside';
 import StockDetailAside from '@/pages/StockDetail/components/StockDetailaside';
+
 const router = createBrowserRouter([
   {
     path: '/',
     element: <Navigate to="/home" replace />,
   },
 
+  // ── Split (웹) ──────────────────────────────────────────────────────────────
   {
     path: '/chart/stock-detail',
     element: (
@@ -25,17 +27,16 @@ const router = createBrowserRouter([
       />
     ),
   },
-    {
-    path: '/home/interest-stock',
+  {
+    path: '/chart/event',
     element: (
       <SplitRoute
-        left={<HomePage />}
-        right={<InterestStockAside />}
-        mobile={<InterestStockAside />}
+        left={<StockDetailMain />}
+        right={<StockDetailPage />}
+        mobile={<StockDetailMain />}
       />
     ),
   },
-  
   {
     path: '/chart/news',
     element: (
@@ -47,16 +48,17 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/chart/stock-detail',
+    path: '/home/interest-stock',
     element: (
       <SplitRoute
-        left={<StockDetailMain />}
-        right={<StockDetailPage />}
-        mobile={<StockDetailPage />}
+        left={<HomePage />}
+        right={<InterestStockAside />}
+        mobile={<InterestStockAside />}
       />
     ),
   },
 
+  // ── Mobile ──────────────────────────────────────────────────────────────────
   {
     path: '/home',
     element: <MobileLayout content={<HomePage />} />,
@@ -66,12 +68,16 @@ const router = createBrowserRouter([
     element: <MobileLayout content={<StockDetailMain />} />,
   },
   {
-    path: '/interest-stock',
-    element: <MobileLayout content={<InterestStockAside />} />,
+    path: '/stock-detail',
+    element: <MobileLayout content={<StockDetailAside />} />,
   },
   {
-    path: '/stock-detail',
+    path: '/event',
     element: <MobileLayout content={<StockDetailPage />} />,
+  },
+  {
+    path: '/interest-stock',
+    element: <MobileLayout content={<InterestStockAside />} />,
   },
 
   {

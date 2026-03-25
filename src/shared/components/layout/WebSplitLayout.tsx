@@ -37,7 +37,6 @@ export default function WebSplitLayout({
             flexDirection: 'column',
             minHeight: 0,
             overflow: 'hidden',
-            // padding 제거
           }}
         >
           {right}
