@@ -10,7 +10,6 @@ export type {
   PeriodTabsProps,
   OhlcSummaryBarProps,
   StockInfoBarProps,
-  TickerBarProps,
 } from "./types";
 
 // API
@@ -38,6 +37,5 @@ export { CandlestickChart } from "./components/CandlestickChart";
 export { StockInfoBar     } from "./components/StockInfoBar";
 export { PeriodTabs       } from "./components/PeriodTabs";
 export { OhlcSummaryBar   } from "./components/OhlcSummaryBar";
-export { TickerBar        } from "./components/TickerBar";
 
 // 조합 컴포넌트 (좌측 패널에 바로 삽입)

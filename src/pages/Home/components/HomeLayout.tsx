@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { StockMarket, StockPeriod, StockSort } from '@/features/stock/types';
 import favoriteIco from '@/assets/favorite.svg';
 import favoriteClickIco from '@/assets/favorite_click.svg';
-import InterestStockAside from '@/pages/InterestStock/components/InterestStockAside';
 import MarketIndexBar from '@/pages/widgets/MarketIndexBar/MarketIndexBar';
 import { useNavigate } from 'react-router';
 
