@@ -63,7 +63,7 @@ const router = createBrowserRouter([
       <SplitRoute
         left={<HomePage />}
         right={<InterestStockAside />}
-        mobile={<InterestStockAside />}
+        mobile={<HomePage />}
       />
     ),
   },
