@@ -184,6 +184,14 @@ body {
   background-color: rgba(148, 163, 184, 0.42);
 }
 
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
 
 .scrollbar-overlay-right {
   --scrollbar-overlay-width: 16px;

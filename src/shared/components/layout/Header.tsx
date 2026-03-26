@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { ROUTES } from '@/shared/constants/routes';
+import { AlertCenter } from '@/features/alert/AlertCenter';
+import { alertCenterListHasUnread } from '@/features/alert/AlertCenter/alertCenter.mock';
 import logoSrc from '@/assets/logo.svg';
 import bellSrc from '@/assets/bell.svg';
+import bellNotSrc from '@/assets/bell_not.svg';
 import SearchDropdown from '@/pages/widgets/SearchDropdown/SearchDropdown';
 import MyPagePanel from '@/pages/MyPage/components/MyPagePanel';
 
@@ -16,17 +19,52 @@ export default function Header({ onMyPageOpen, disableMyPagePanel }: HeaderProps
   const { isLoggedIn, logout } = useAuth();
   const navigate = useNavigate();
   const [myPageOpen, setMyPageOpen] = useState(false);
+  const [alertCenterOpen, setAlertCenterOpen] = useState(false);
+  const [alertAllListMarkedRead, setAlertAllListMarkedRead] = useState(false);
+  const [alertDetailFullyReadIds, setAlertDetailFullyReadIds] = useState(() => new Set<number>());
+  const alertCenterWrapRef = useRef<HTMLDivElement>(null);
   const openMyPage = onMyPageOpen ?? (() => setMyPageOpen(true));
+
+  const hasUnreadNotifications = useMemo(
+    () => alertCenterListHasUnread(alertAllListMarkedRead, alertDetailFullyReadIds),
+    [alertAllListMarkedRead, alertDetailFullyReadIds],
+  );
+
+  const onNotificationDetailFullyRead = useCallback((id: number) => {
+    setAlertDetailFullyReadIds((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }, []);
 
   const loggedInActions = (
     <div className="flex items-center gap-2.5">
-      <div className="relative">
+      <div ref={alertCenterWrapRef} className="relative">
         <button
-          onClick={() => navigate(ROUTES.ALERTS)}
-          className="h-[34px] w-[34px] bg-transparent p-0 flex items-center justify-center border-none cursor-pointer"
+          type="button"
+          onClick={() => setAlertCenterOpen((v) => !v)}
+          className="flex h-[34px] w-[34px] cursor-pointer items-center justify-center border-none bg-transparent p-0"
+          aria-expanded={alertCenterOpen}
+          aria-haspopup="dialog"
         >
-          <img src={bellSrc} alt="알림" className="h-[34px] w-[34px]" />
+          <img
+            src={hasUnreadNotifications ? bellSrc : bellNotSrc}
+            alt="알림"
+            className="h-[34px] w-[34px]"
+          />
         </button>
+        {alertCenterOpen && (
+          <AlertCenter
+            containerRef={alertCenterWrapRef}
+            onClose={() => setAlertCenterOpen(false)}
+            allListMarkedRead={alertAllListMarkedRead}
+            onAllListMarkedRead={() => setAlertAllListMarkedRead(true)}
+            detailFullyReadIds={alertDetailFullyReadIds}
+            onNotificationDetailFullyRead={onNotificationDetailFullyRead}
+          />
+        )}
       </div>
       <button
         type="button"
