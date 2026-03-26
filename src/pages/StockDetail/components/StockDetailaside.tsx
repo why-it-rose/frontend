@@ -74,7 +74,7 @@ export default function StockDetailAside({ company = MOCK_COMPANY }: StockDetail
       {/* ── 헤더: 탭 선택 제거, 텍스트만 + 전체 너비 파란 하단 선 ── */}
       <div className="shrink-0 bg-white">
         <div className="flex h-[48px] items-center justify-center">
-          <span className="text-[13px] font-bold text-[#111827]">기업 정보</span>
+          <span className="text-[13px] font-bold text-[#014d9d]">기업 정보</span>
         </div>
         {/* 전체 너비 파란 선 */}
         <div className="h-[2px] w-full bg-[#014d9d]" />
@@ -138,8 +138,8 @@ export default function StockDetailAside({ company = MOCK_COMPANY }: StockDetail
               </div>
             </div>
             <div className="grid grid-cols-2 divide-x divide-[#f3f4f6] pt-4">
-              <StatCell label="52W 저" value={company.stats.low52w} />
-              <StatCell label="52W 고" value={company.stats.high52w} accent right />
+              <StatCell label="52W 저" value={company.stats.low52w}  />
+              <StatCell label="52W 고" value={company.stats.high52w} right />
             </div>
           </div>
         </div>
