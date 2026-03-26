@@ -18,6 +18,14 @@
 }
 
 @font-face {
+  font-family: "Noto Sans KR Black";
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url("./assets/fonts/NotoSansKR-Black.ttf") format("truetype");
+}
+
+@font-face {
   font-family: "Noto Sans KR";
   font-style: normal;
   font-weight: 400;
@@ -353,7 +361,7 @@ body {
   height: 42px;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
-  background: #fff;
+  background: #fafafa;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -362,5 +370,10 @@ body {
   font-weight: 600;
   color: #374151;
   cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.btn-social:hover {
+  background: #f3f4f6;
 }
 

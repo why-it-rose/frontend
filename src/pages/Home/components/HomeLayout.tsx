@@ -228,7 +228,7 @@ export default function HomeLayout({
             <div className="text-right">현재가</div>
             <div className="text-right">등락률</div>
             <div className="text-right">거래대금</div>
-            <div className="text-right">거래량</div>
+            <div className="pr-[6px] text-right">거래량</div>
             <div className="translate-x-[6px] text-center">이벤트</div>
           </div>
 
@@ -275,7 +275,7 @@ export default function HomeLayout({
                   <div className="pr-[5px] text-right text-sm font-semibold text-[#111827]">{formatPrice(stock.currentPrice)}</div>
                   <div className={`pr-[5px] text-right text-xs font-semibold ${changeColor(stock.changeRate)}`}>{changeText(stock.changeRate)}</div>
                   <div className="pr-[5px] text-right text-xs text-[#4b5563]">{stock.tradingAmount}</div>
-                  <div className="pr-[5px] text-right text-xs text-[#4b5563]">{stock.tradingVolume}</div>
+                  <div className="pr-[9px] text-right text-xs text-[#4b5563]">{stock.tradingVolume}</div>
                   <div className="translate-x-[6px] text-center">
                     {stock.eventType ? (
                       <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${stock.eventType === 'SURGE' ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-blue-500'}`}>
