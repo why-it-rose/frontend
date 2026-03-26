@@ -81,7 +81,7 @@ export default function StockDetailAside({ company = MOCK_COMPANY }: StockDetail
       </div>
 
       {/* ── 스크롤 바디 ── */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+      <div className="scrollbar-subtle flex-1 overflow-y-auto overflow-x-hidden">
 
         {/* 배지 + 종목명 */}
         <div className="bg-white px-4 pb-3 pt-4">

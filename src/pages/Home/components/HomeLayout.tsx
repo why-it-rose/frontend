@@ -170,7 +170,7 @@ export default function HomeLayout({
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-r border-[#eff1f8]">
           <div className="border-b border-[#eff1f8] bg-white px-4 py-2.5">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex rounded-lg bg-[#f0f2f8] p-1">
+              <div className="flex rounded-lg bg-[#f0f2f8] p-1 max-[451px]:-translate-x-[2px]">
                 {marketOptions.map(option => (
                   <button
                     key={option}
@@ -185,9 +185,9 @@ export default function HomeLayout({
                 ))}
               </div>
 
-              <div className="h-4 w-px bg-[#d8e2f8]" />
+              <div className="h-4 w-px bg-[#d8e2f8] max-[451px]:hidden" />
 
-              <div className="flex rounded-lg bg-[#f0f2f8] p-1">
+              <div className="flex rounded-lg bg-[#f0f2f8] p-1 max-[451px]:hidden">
                 {sortOptions.map(option => (
                   <button
                     key={option}
@@ -202,13 +202,15 @@ export default function HomeLayout({
                 ))}
               </div>
 
-              <div className="ml-auto flex flex-wrap items-center justify-end gap-1">
+              <div className="hidden h-px basis-full bg-[#d8e2f8] max-[451px]:relative max-[451px]:left-1/2 max-[451px]:block max-[451px]:w-screen max-[451px]:-translate-x-1/2" />
+
+              <div className="ml-auto flex flex-wrap items-center justify-end gap-1 max-[451px]:ml-0 max-[451px]:basis-full max-[451px]:justify-start">
                 {periodOptions.map(option => (
                   <button
                     key={option.value}
                     type="button"
                     onClick={() => onChangePeriod(option.value)}
-                    className={`rounded-md px-2 py-1 text-[11px] font-semibold ${
+                    className={`inline-flex min-w-[44px] justify-center rounded-md px-2 py-1 text-[11px] font-semibold ${
                       period === option.value ? 'bg-[#014d9d] text-white' : 'text-[#9ca3af]'
                     }`}
                   >
@@ -219,7 +221,7 @@ export default function HomeLayout({
             </div>
           </div>
 
-          <div className="hidden grid-cols-[28px_44px_1fr_110px_88px_100px_100px_80px] items-center border-b border-[#eff1f8] bg-[#f0f4f9] px-4 py-2 text-[11px] font-semibold text-[#9ca3af] lg:grid">
+          <div className="hidden grid-cols-[28px_44px_1fr_110px_88px_100px_100px_112px] items-center border-b border-[#eff1f8] bg-[#f0f4f9] px-4 py-2 text-[11px] font-semibold text-[#9ca3af] lg:grid">
             <div />
             <div className="text-center" />
             <div />
@@ -227,29 +229,32 @@ export default function HomeLayout({
             <div className="text-right">등락률</div>
             <div className="text-right">거래대금</div>
             <div className="text-right">거래량</div>
-            <div className="text-center">이벤트</div>
+            <div className="translate-x-[6px] text-center">이벤트</div>
           </div>
 
           <div
             ref={listScrollRef}
             className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white"
           >
-            <div className="hidden lg:block" onClick={()=>{navigate('/chart/stock-detail')}}>
+            <div className="hidden lg:block" onClick={()=>{navigate('/chart')}}>
               {displayedStocks.map(stock => (
                 <div
                   key={`${stock.ticker}-${stock.rank}`}
-                  className="grid grid-cols-[28px_44px_1fr_110px_88px_100px_100px_80px] items-center border-b border-[#eff1f8] px-4 py-2.5 transition-colors duration-150 hover:bg-[#f4f6fb]"
+                  className="grid grid-cols-[28px_44px_1fr_110px_88px_100px_100px_92px] items-center border-b border-[#eff1f8] px-4 py-2.5 transition-colors duration-150 hover:bg-[#f4f6fb]"
                 >
                   <button
                     type="button"
-                    onClick={() => toggleFavorite(stock.ticker)}
-                    className="pl-1 text-gray-300"
+                    onClick={e => {
+                      e.stopPropagation();
+                      toggleFavorite(stock.ticker);
+                    }}
+                    className="pl-1 translate-x-1 text-gray-300"
                     aria-pressed={favorites.has(stock.ticker)}
                   >
                     <img
                       src={favorites.has(stock.ticker) ? favoriteClickIco : favoriteIco}
                       alt="관심 종목"
-                      className="h-4 w-4"
+                      className="h-[18px] w-[18px]"
                     />
                   </button>
                   <div className="text-center text-xs font-bold text-[#9ca3af]">{stock.rank}</div>
@@ -267,11 +272,11 @@ export default function HomeLayout({
                       </p>
                     </div>
                   </div>
-                  <div className="text-right text-sm font-semibold text-[#111827]">{formatPrice(stock.currentPrice)}</div>
-                  <div className={`text-right text-xs font-semibold ${changeColor(stock.changeRate)}`}>{changeText(stock.changeRate)}</div>
-                  <div className="text-right text-xs text-[#4b5563]">{stock.tradingAmount}</div>
-                  <div className="text-right text-xs text-[#4b5563]">{stock.tradingVolume}</div>
-                  <div className="text-center">
+                  <div className="pr-[5px] text-right text-sm font-semibold text-[#111827]">{formatPrice(stock.currentPrice)}</div>
+                  <div className={`pr-[5px] text-right text-xs font-semibold ${changeColor(stock.changeRate)}`}>{changeText(stock.changeRate)}</div>
+                  <div className="pr-[5px] text-right text-xs text-[#4b5563]">{stock.tradingAmount}</div>
+                  <div className="pr-[5px] text-right text-xs text-[#4b5563]">{stock.tradingVolume}</div>
+                  <div className="translate-x-[6px] text-center">
                     {stock.eventType ? (
                       <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${stock.eventType === 'SURGE' ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-blue-500'}`}>
                         {stock.eventType === 'SURGE' ? '▲ 급등' : '▼ 급락'}
@@ -299,22 +304,28 @@ export default function HomeLayout({
               {displayedStocks.map(stock => (
                 <div
                   key={`${stock.ticker}-${stock.rank}`}
+                  onClick={() => {
+                    navigate('/chart');
+                  }}
                   className="grid min-h-[62px] grid-cols-[minmax(0,1fr)_82px_78px] items-center border-b border-[#eff1f8] px-4 py-2 transition-colors duration-150 hover:bg-[#f4f6fb]"
                 >
                   <div className="flex min-w-0 items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => toggleFavorite(stock.ticker)}
-                      className="shrink-0 text-gray-300"
+                      onClick={e => {
+                        e.stopPropagation();
+                        toggleFavorite(stock.ticker);
+                      }}
+                      className="shrink-0 -translate-x-0.8 text-gray-300"
                       aria-pressed={favorites.has(stock.ticker)}
                     >
                       <img
                         src={favorites.has(stock.ticker) ? favoriteClickIco : favoriteIco}
                         alt="관심 종목"
-                        className="h-4 w-4"
+                        className="h-[18px] w-[18px]"
                       />
                     </button>
-                    <span className="w-4 shrink-0 text-center text-xs font-semibold text-[#9ca3af]">{stock.rank}</span>
+                    <span className="w-4 shrink-0 -translate-x-0.5 text-center text-xs font-semibold text-[#9ca3af]">{stock.rank}</span>
                     <div
                       className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[11px] font-bold text-white"
                       style={{ backgroundColor: logoSeedColor(stock.ticker) }}
@@ -333,7 +344,7 @@ export default function HomeLayout({
                     <div className="text-[10px] text-[#6b7280]">{stock.tradingVolume}</div>
                   </div>
                   <div className="text-right">
-                    <div className={`text-[11px] font-bold ${changeColor(stock.changeRate)}`}>{changeText(stock.changeRate)}</div>
+                    <div className={`text-[12px] font-bold ${changeColor(stock.changeRate)}`}>{changeText(stock.changeRate)}</div>
                     <div className="text-[10px] text-[#6b7280]">{stock.tradingAmount}</div>
                   </div>
                 </div>
