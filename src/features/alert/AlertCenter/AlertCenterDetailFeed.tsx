@@ -144,7 +144,7 @@ export default function AlertCenterDetailFeed({
                     return (
                       <>
                         <div className="relative z-10 border-b border-[#f3f4f6] last:border-b-0">
-                          <div className="flex items-center gap-3 pt-3 pb-3">
+                          <div className="-mx-[18px] flex w-[calc(100%+36px)] items-center gap-3 px-[18px] py-3 transition-colors hover:bg-[#F0F2F8]">
                             <div className="relative shrink-0">
                               <AlertStockAvatar color={group.color} ini={group.ini} />
                               {!isRead && (
