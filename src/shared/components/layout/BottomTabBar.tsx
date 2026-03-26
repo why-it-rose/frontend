@@ -9,6 +9,11 @@ import newsClickIco from '@/assets/today-news-click.svg';
 import mypageIco from '@/assets/mypage.svg';
 import mypageClickIco from '@/assets/mypage_click.svg';
 
+export interface BottomTabBarProps {
+  onMyPageOpen?: () => void;
+  myPageActive?: boolean;
+}
+
 const TABS = [
   { label: '홈', icon: homeIco, iconActive: homeClickIco, path: ROUTES.HOME },
   { label: '관심 종목', icon: favoriteIco, iconActive: favoriteClickIco, path: ROUTES.INTEREST_STOCK },
@@ -16,28 +21,25 @@ const TABS = [
   { label: '마이페이지', icon: mypageIco, iconActive: mypageClickIco, path: ROUTES.MY },
 ] as const;
 
-const MY_PATHS = [ROUTES.MY, ROUTES.MY_ARCHIVE, ROUTES.MY_PREDICTION];
-
-export default function BottomTabBar() {
+export default function BottomTabBar({ onMyPageOpen, myPageActive }: BottomTabBarProps) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
-  const getActivePath = () => {
-    if (MY_PATHS.some(p => pathname.startsWith(p))) return ROUTES.MY;
-    return pathname;
-  };
-
-  const activePath = getActivePath();
+  const activePath = pathname;
 
   return (
     <nav className="bottom-tab-bar grid lg:hidden shrink-0 bg-white border-t border-[#f0f2f8]">
       {TABS.map(({ label, icon, iconActive, path }) => {
-        const isActive = activePath === path;
+        const isMyPage = path === ROUTES.MY;
+        const isActive = isMyPage ? !!myPageActive : activePath === path;
         return (
           <button
             key={path}
             type="button"
-            onClick={() => navigate(path)}
+            onClick={() => {
+              if (isMyPage) onMyPageOpen?.();
+              else navigate(path);
+            }}
             className="flex flex-col items-center justify-start pt-2.5"
           >
             <img

@@ -1,13 +1,22 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { ROUTES } from '@/shared/constants/routes';
 import logoSrc from '@/assets/logo.svg';
 import bellSrc from '@/assets/bell.svg';
 import SearchDropdown from '@/pages/widgets/SearchDropdown/SearchDropdown';
+import MyPagePanel from '@/pages/MyPage/components/MyPagePanel';
 
-export default function Header() {
-  const { isLoggedIn } = useAuth();
+export interface HeaderProps {
+  onMyPageOpen?: () => void;
+  disableMyPagePanel?: boolean;
+}
+
+export default function Header({ onMyPageOpen, disableMyPagePanel }: HeaderProps) {
+  const { isLoggedIn, logout } = useAuth();
   const navigate = useNavigate();
+  const [myPageOpen, setMyPageOpen] = useState(false);
+  const openMyPage = onMyPageOpen ?? (() => setMyPageOpen(true));
 
   const loggedInActions = (
     <div className="flex items-center gap-2.5">
@@ -20,8 +29,10 @@ export default function Header() {
         </button>
       </div>
       <button
-        onClick={() => navigate(ROUTES.MY)}
-        className="header-profile-initial h-[34px] w-[34px] rounded-full flex items-center justify-center bg-primary text-white text-xs font-bold"
+        type="button"
+        onClick={openMyPage}
+        className="header-profile-initial flex h-[34px] w-[34px] items-center justify-center rounded-full bg-primary text-xs font-bold text-white"
+        aria-label="마이페이지"
       >
         신
       </button>
@@ -48,6 +59,7 @@ export default function Header() {
   );
 
   return (
+    <>
     <header className="shrink-0 bg-white border-b border-[#d8e2f8]">
       {/* 모바일 헤더 (~ md) */}
       <div className="flex md:hidden items-center justify-between h-[55px] px-4">
@@ -74,5 +86,15 @@ export default function Header() {
         </div>
       </div>
     </header>
+    {!disableMyPagePanel && isLoggedIn && myPageOpen && (
+      <MyPagePanel
+        onClose={() => setMyPageOpen(false)}
+        onLogout={() => {
+          logout();
+          setMyPageOpen(false);
+        }}
+      />
+    )}
+    </>
   );
 }
