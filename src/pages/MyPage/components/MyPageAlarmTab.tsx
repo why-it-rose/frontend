@@ -20,23 +20,19 @@ function groupAlarmsByDate(rows: AlarmGroup[]): { date: string; isToday: boolean
     }));
 }
 
+/** 알림센터 세부(`AlertCenterDetailFeed` TagChip)와 동일 */
 function AlarmTagChip({ tag }: { tag: AlarmTag }) {
   if (tag.variant === 'outline') {
     return (
-      <span className="rounded-md border border-[#e5e7eb] bg-white px-2 py-0.5 text-[10px] text-[#6b7280]">
+      <span className="rounded-md border border-[#C7DBFF] bg-[#F4F6FB] px-2 py-0.5 text-[10px] text-[#014D9D]">
         {tag.label}
       </span>
     );
   }
-  const tone = tag.tone ?? 'red';
-  const toneClass =
-    tone === 'blue'
-      ? 'bg-blue-100 text-blue-800'
-      : tone === 'neutral'
-        ? 'bg-gray-100 text-gray-700'
-        : 'bg-red-100 text-red-700';
   return (
-    <span className={`rounded-md px-2 py-0.5 text-[10px] font-medium ${toneClass}`}>{tag.label}</span>
+    <span className="rounded-md border border-[#C7DBFF] bg-[#F4F6FB] px-2 py-0.5 text-[10px] font-medium text-[#014D9D]">
+      {tag.label}
+    </span>
   );
 }
 
@@ -125,7 +121,9 @@ export default function MyPageAlarmTab() {
                       return next;
                     })
                   }
-                  className="shrink-0 border-0 bg-transparent p-0 text-[12px] font-bold text-[#014d9d]"
+                  className={`shrink-0 border-0 bg-transparent p-0 text-[12px] font-bold ${
+                    isAllRead ? 'text-[#9ca3af]' : 'text-[#014d9d]'
+                  }`}
                 >
                   {isAllRead ? '전체 읽음' : '전체 읽음 처리'}
                 </button>
@@ -141,7 +139,7 @@ export default function MyPageAlarmTab() {
                     return (
                       <>
                   <div className="relative z-10 border-b border-[#f3f4f6] last:border-b-0">
-                    <div className="flex items-center gap-3 pt-3 pb-3">
+                    <div className="-mx-[21px] flex w-[calc(100%+42px)] items-center gap-3 px-[21px] py-3 transition-colors hover:bg-[#F0F2F8]">
                       <div className="relative shrink-0">
                         <MyPageStockAvatar color={group.color} ini={group.ini} />
                         {!isRead && (
@@ -179,13 +177,16 @@ export default function MyPageAlarmTab() {
                       isRead ? 'bg-[#F0F2F8]' : 'bg-white'
                     }`}
                   >
-                    <div className="relative flex flex-col py-2.5">
-                      <div className="absolute top-0 bottom-0 left-[-2px] w-[2px] bg-[#D8E2F8]" aria-hidden />
+                    <div className="relative flex flex-col">
+                      <div className="absolute top-0 bottom-0 left-[-2px] z-30 w-[2px] bg-[#D8E2F8]" aria-hidden />
                       {group.items.map((item, idx) => (
-                        <div key={`${group.code}-${idx}`} className="relative flex items-stretch gap-2.5 pb-4 last:pb-0">
+                        <div
+                          key={`${group.code}-${idx}`}
+                          className="relative -mx-[21px] flex w-[calc(100%+42px)] items-stretch gap-2.5 px-[21px] py-2 transition-colors hover:bg-[#F0F2F8]"
+                        >
                           <div className="flex w-4 shrink-0 flex-col items-center">
                             <span
-                              className="relative z-10 -ml-[17px] mt-1 h-1.5 w-1.5 shrink-0 rounded-full ring-3 ring-white"
+                              className="relative z-30 -ml-[17px] mt-1 h-1.5 w-1.5 shrink-0 rounded-full ring-3 ring-white"
                               style={{ backgroundColor: item.dotColor }}
                               aria-hidden
                             />
@@ -207,7 +208,9 @@ export default function MyPageAlarmTab() {
                           [groupKey]: true,
                         }))
                       }
-                      className="shrink-0 border-0 bg-transparent p-0 text-[12px] font-bold text-[#014d9d]"
+                      className={`shrink-0 border-0 bg-transparent p-0 text-[12px] font-bold ${
+                        isRead ? 'text-[#9ca3af]' : 'text-[#014d9d]'
+                      }`}
                     >
                       {isRead ? '읽음' : '읽음 처리'}
                     </button>
