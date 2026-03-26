@@ -86,8 +86,8 @@ const MOCK_COMPANY: CompanyInfo = {
     },
   ],
   investorTrends: [
-    { label: '개인', amount: 65 },
-    { label: '외국인', amount: -40 },
+    { label: '개인', amount: 100 },
+    { label: '외국인', amount: -100 },
     { label: '기관', amount: -25 },
   ],
 };
@@ -320,30 +320,44 @@ export default function StockDetailAside({
             투자자별 매매 동향
           </p>
 
-          <div className="flex items-end gap-4" style={{ height: 120 }}>
+          <div className="flex items-end gap-4" style={{ height: 160 }}>
             {company.investorTrends.map(({ label, amount }) => {
-              const isPos = amount >= 0;
-              const barH = (Math.abs(amount) / maxAbs) * 56;
+            const isPos = amount >= 0;
+            const barH = (Math.abs(amount) / maxAbs) * 56;
 
-              return (
+            return (
+              <div
+                key={label}
+                className="flex flex-1 flex-col items-center"
+              >
                 <div
-                  key={label}
-                  className="flex flex-1 flex-col items-center gap-1"
+                  className="relative flex w-full flex-col items-center"
+                  style={{ height: 82 }}
                 >
-                  <span
-                    className={`text-[10px] font-semibold ${
-                      isPos ? 'text-[#d92d20]' : 'text-[#1971c2]'
-                    }`}
-                  >
-                    {isPos ? '+' : ''}
-                    {amount}억
-                  </span>
-
                   <div
-                    className="relative flex w-full items-center justify-center"
-                    style={{ height: 56 }}
+                    className="absolute left-0 right-0 flex items-center justify-center"
+                    style={{ top: 22, height: 56 }}
                   >
                     <div className="absolute left-0 right-0 top-1/2 h-px bg-[#e5e7eb]" />
+
+                    <div
+                      className="absolute flex justify-center"
+                      style={{
+                        width: '100%',
+                        top: '50%',
+                        transform: `translateY(${isPos ? `calc(-100% - ${barH}px - 6px)` : `calc(${barH}px + 6px)`})`,
+                      }}
+                    >
+                      <span
+                        className={`text-[10px] font-semibold leading-none ${
+                          isPos ? 'text-[#d92d20]' : 'text-[#1971c2]'
+                        }`}
+                      >
+                        {isPos ? '+' : ''}
+                        {amount}억
+                      </span>
+                    </div>
+
                     <div
                       style={{
                         height: barH,
@@ -355,11 +369,12 @@ export default function StockDetailAside({
                       }}
                     />
                   </div>
-
-                  <span className="text-[10px] text-[#98a2b3]">{label}</span>
                 </div>
-              );
-            })}
+
+                <span className="mt-10 text-[10px] text-[#98a2b3]">{label}</span>
+              </div>
+            );
+          })}
           </div>
         </div>
       </div>
