@@ -291,7 +291,7 @@ export default function InterestStockAside() {
                 <button
                   key={row.code}
                   type="button"
-                  className="flex h-auto w-full shrink-0 cursor-pointer items-center justify-between border-b border-[#eff1f8] px-4 py-3 text-left transition-colors hover:bg-[#f9fafb]"
+                  className="flex h-auto w-full shrink-0 cursor-pointer items-center justify-between border-b border-[#eff1f8] px-4 py-3 text-left transition-colors hover:bg-[#f4f5f7]"
                 >
                   <div className="flex items-center gap-2.5">
                     <div

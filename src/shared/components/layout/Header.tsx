@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { ROUTES } from '@/shared/constants/routes';
+import { AlertCenter } from '@/features/alert/AlertCenter';
+import { alertCenterListHasUnread } from '@/features/alert/AlertCenter/alertCenter.mock';
 import logoSrc from '@/assets/logo.svg';
 import bellSrc from '@/assets/bell.svg';
+import bellNotSrc from '@/assets/bell_not.svg';
 import SearchDropdown from '@/pages/widgets/SearchDropdown/SearchDropdown';
 import LoginModal from '@/features/auth/components/LoginModal';
 import SignupModal from '@/features/auth/components/SignupModal';
@@ -71,13 +74,12 @@ export default function Header() {
                     </Link>
                     {rightActions}
                 </div>
-
                 {/* 데스크톱 헤더 (md ~) */}
                 <div className="hidden md:grid header-grid items-center h-[68px] px-4">
                     <Link to={ROUTES.HOME}>
                         <img src={logoSrc} alt="왜 올랐지?" style={{ height: '72px', width: 'auto', maxWidth: '320px', objectFit: 'contain' }} />
                     </Link>
-
+]
                     <SearchDropdown />
 
                     <div className="flex items-center justify-end gap-2.5">
@@ -102,7 +104,6 @@ export default function Header() {
                     </div>
                 </div>
             </header>
-
             {modal === 'login' && (
                 <LoginModal
                     onClose={() => setModal(null)}
@@ -122,4 +123,5 @@ export default function Header() {
             )}
         </>
     );
+
 }

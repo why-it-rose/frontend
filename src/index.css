@@ -9,6 +9,30 @@
   src: url("./assets/fonts/OneShinhanMedium.ttf") format("truetype");
 }
 
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("./assets/fonts/Inter-VariableFont_opsz,wght.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Noto Sans KR";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/NotoSansKR-Regular.ttf") format("truetype");
+}
+
+.mypage-inter {
+  font-family: "Inter", "Pretendard Variable", Pretendard, sans-serif;
+}
+
+.mypage-scrap-kr {
+  font-family: "Noto Sans KR", "Pretendard Variable", Pretendard, sans-serif;
+}
+
 .header-profile-initial {
   font-family: "OneShinhan Medium", "Pretendard Variable", Pretendard, sans-serif;
   font-weight: 600;
@@ -127,6 +151,52 @@ body {
 
 .scrollbar-subtle:hover::-webkit-scrollbar-thumb:hover {
   background-color: rgba(148, 163, 184, 0.68);
+}
+
+.scrollbar-faint {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.18) transparent;
+}
+
+.scrollbar-faint:hover {
+  scrollbar-color: rgba(148, 163, 184, 0.34) transparent;
+}
+
+.scrollbar-faint::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+}
+
+.scrollbar-faint::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-faint::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.12);
+  border-radius: 9999px;
+}
+
+.scrollbar-faint:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.28);
+}
+
+.scrollbar-faint:hover::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(148, 163, 184, 0.42);
+}
+
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-overlay-right {
+  --scrollbar-overlay-width: 16px;
+  padding-right: var(--scrollbar-overlay-width);
+  margin-right: calc(var(--scrollbar-overlay-width) * -1);
 }
 
 /* 홈 하단 시장 지수 티커 */
