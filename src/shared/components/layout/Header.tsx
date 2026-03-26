@@ -92,7 +92,6 @@ export default function Header() {
               }}
             />
           </Link>
-          ]
           <SearchDropdown />
           <div className="flex items-center justify-end gap-2.5">
             {isLoggedIn ? (
