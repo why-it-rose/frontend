@@ -33,7 +33,7 @@ export default function MyPageSettingsTab({
             role="switch"
             aria-checked={notificationsEnabled}
             onClick={() => onNotificationsChange(!notificationsEnabled)}
-            className="relative h-6 w-11 shrink-0 rounded-full transition-colors"
+            className="relative h-6 w-11 shrink-0 overflow-hidden rounded-full transition-colors"
             style={{ backgroundColor: notificationsEnabled ? '#014d9d' : '#d1d5db' }}
           >
             <span

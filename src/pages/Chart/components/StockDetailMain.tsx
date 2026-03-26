@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { ROUTES } from "@/shared/constants/routes";
-import type { StockDetailMainProps } from "../types";
+import type { ChartPin, StockDetailMainProps } from "../types";
 import { useChartPeriod, useOhlcData, useOhlcSummary, useStockInfo } from "../hook";
 import { CandlestickChart } from "./CandlestickChart";
 import { StockInfoBar } from "./StockInfoBar";
@@ -35,6 +35,14 @@ const MOCK_EVENT: StockEvent = {
 const INITIAL_MEMOS: StockMemo[] = [
   { memoId: 1, eventType: "SURGE", stockName: "삼성전자", changeRate: 19.47, date: "03.16", text: "HBM 납품 기대감으로 외국인 매수세가 강하게 붙은 구간." },
 ];
+
+/** 목업 `MOCK_PINS` 등 — 초록 이벤트 핀 (`#059669`) */
+const GREEN_EVENT_PIN_HEX = "059669";
+
+function isGreenEventPin(pin: ChartPin): boolean {
+  const hex = (pin.color ?? "").replace(/^#/, "").trim().toLowerCase();
+  return hex === GREEN_EVENT_PIN_HEX;
+}
 
 export interface StockDetailMainAllProps extends StockDetailMainProps {
   code?: string;
@@ -72,6 +80,13 @@ export function StockDetailMain({
   const pins = pinsProp ?? (useMock ? MOCK_PINS : []);
 
   const summary = useOhlcSummary(bars);
+  const handlePinClick = (pin: ChartPin) => {
+    if (isGreenEventPin(pin)) {
+      navigate("/chart/event");
+      return;
+    }
+    onPinClick?.(pin);
+  };
   const mobileEventChips = useMemo(() => {
     const chips: { label: string; positive: boolean; date: string }[] = [];
     bars.forEach((bar) => {
@@ -145,7 +160,7 @@ export function StockDetailMain({
             </div>
 
             <div className="min-h-0 flex-1 px-1 pb-2 pt-2">
-              <CandlestickChart bars={bars} pins={pins} onPinClick={onPinClick} />
+              <CandlestickChart bars={bars} pins={pins} onPinClick={handlePinClick} />
             </div>
           </>
         )}
@@ -175,7 +190,7 @@ export function StockDetailMain({
         </div>
 
         <main className="min-h-0 flex-1 overflow-hidden border-t border-[#eff1f8] bg-white">
-          <CandlestickChart bars={bars} pins={pins} onPinClick={onPinClick} />
+          <CandlestickChart bars={bars} pins={pins} onPinClick={handlePinClick} />
         </main>
 
         <div className="shrink-0 border-t border-[#eff1f8] bg-[#f9fafc]">
