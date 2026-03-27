@@ -25,6 +25,7 @@
     "noUncheckedSideEffectImports": true,
 
     /* Path aliases */
+    "ignoreDeprecations": "5.0",
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]

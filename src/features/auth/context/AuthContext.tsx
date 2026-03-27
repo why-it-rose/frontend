@@ -30,6 +30,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const me = await getMe();
       setUser(me);
       setIsLoggedIn(true);
+
+      requestFcmToken().then((token) => {
+        if (token) saveFcmToken(token).catch(() => {});
+      });
     } catch {
       setUser(null);
       setIsLoggedIn(false);
@@ -43,24 +47,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoggedIn(false);
   }, []);
 
-  useEffect(() => {
-    void refreshAuth();
-  }, [refreshAuth]);
+    useEffect(() => {
+      void refreshAuth();
+    }, [refreshAuth]);
 
-  return (
-      <AuthContext.Provider
-          value={{
-            isLoggedIn,
-            isAuthLoading,
-            user,
-            nickname: user?.nickname?.trim() ?? '',
-            refreshAuth,
-            clearAuth,
-          }}
-      >
-        {children}
-      </AuthContext.Provider>
-  );
-}
+    return (
+        <AuthContext.Provider
+            value={{
+              isLoggedIn,
+              isAuthLoading,
+              user,
+              nickname: user?.nickname?.trim() ?? '',
+              refreshAuth,
+              clearAuth,
+            }}
+        >
+          {children}
+        </AuthContext.Provider>
+    );
+  }
 
-export const useAuth = () => useContext(AuthContext);
+  export const useAuth = () => useContext(AuthContext);
