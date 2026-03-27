@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { loginWithEmail } from '@/features/auth/api/authApi';
+import loginLogo from '@/assets/logo.svg';
+import googleIcon from '@/assets/google.svg';
+import kakaoIcon from '@/assets/kakao.svg';
 
 type LoginModalProps = {
     onClose: () => void;
@@ -50,7 +53,7 @@ export default function LoginModal({ onClose, onSignup, onLogin }: LoginModalPro
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ width: 430 }}>
+            <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ width: 390, height: 621 }}>
                 <button
                     type="button"
                     onClick={onClose}
@@ -74,37 +77,22 @@ export default function LoginModal({ onClose, onSignup, onLogin }: LoginModalPro
                     ✕
                 </button>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 22 }}>
-                    <div
-                        style={{
-                            width: 28,
-                            height: 28,
-                            borderRadius: 7,
-                            background: '#014d9d',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}
-                    >
-                        <span style={{ fontSize: 14 }}>🐻</span>
-                    </div>
-                    <span style={{ fontFamily: 'Noto Sans KR', fontWeight: 900, fontSize: 14, color: '#014d9d' }}>
-            왜 올랐지?
-          </span>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 0, marginLeft: -2, marginTop: -6 }}>
+                    <img src={loginLogo} alt="왜 올랐지 로고" style={{ height: 54, width: 'auto' }} />
                 </div>
 
-                <div style={{ marginBottom: 6 }}>
-          <span style={{ fontFamily: 'Noto Sans KR', fontWeight: 700, fontSize: 22, color: '#111827' }}>
+                <div style={{ marginBottom: 6, marginLeft: 8 }}>
+          <span style={{ fontFamily: 'Noto Sans KR Black', fontWeight: 900, fontSize: 20, color: '#111827' }}>
             다시 오셨군요 👋
           </span>
                 </div>
-                <div style={{ marginBottom: 24 }}>
+                <div style={{ marginBottom: 24, marginLeft: 8 }}>
           <span style={{ fontFamily: 'Noto Sans KR', fontSize: 14, color: '#6b7280' }}>
             계속하려면 로그인하세요.
           </span>
                 </div>
 
-                <div style={{ marginBottom: 14 }}>
+                <div style={{ marginBottom: 14, marginLeft: 8 }}>
                     <label
                         style={{
                             display: 'block',
@@ -113,12 +101,14 @@ export default function LoginModal({ onClose, onSignup, onLogin }: LoginModalPro
                             fontWeight: 500,
                             color: '#374151',
                             marginBottom: 6,
+                            marginLeft: 3,
                         }}
                     >
                         이메일
                     </label>
                     <input
                         className="input-field"
+                        style={{ width: 'calc(100% - 16px)', marginLeft: 4}}
                         type="email"
                         placeholder="example@email.com"
                         value={email}
@@ -126,7 +116,7 @@ export default function LoginModal({ onClose, onSignup, onLogin }: LoginModalPro
                     />
                 </div>
 
-                <div style={{ marginBottom: 10 }}>
+                <div style={{ marginBottom: 10, marginLeft: 8 }}>
                     <label
                         style={{
                             display: 'block',
@@ -135,12 +125,14 @@ export default function LoginModal({ onClose, onSignup, onLogin }: LoginModalPro
                             fontWeight: 500,
                             color: '#374151',
                             marginBottom: 6,
+                            marginLeft: 4,
                         }}
                     >
                         비밀번호
                     </label>
                     <input
-                        className="input-field active-border"
+                        className="input-field"
+                        style={{ width: 'calc(100% - 16px)', marginLeft: 4 }}
                         type="password"
                         placeholder="••••••••"
                         value={password}
@@ -152,17 +144,41 @@ export default function LoginModal({ onClose, onSignup, onLogin }: LoginModalPro
                     <p style={{ margin: '0 0 12px 0', fontSize: 12, color: '#dc2626' }}>{errorMessage}</p>
                 )}
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', marginBottom: 18 }}>
+                <div
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginTop: 8,
+                        marginBottom: 12,
+                        marginLeft: 8,
+                        width: 'calc(100% - 12px)',
+                    }}
+                >
                     <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
-                        <input type="checkbox" style={{ width: 14, height: 14, accentColor: '#014d9d' }} />
-                        <span style={{ fontFamily: 'Noto Sans KR', fontSize: 12, color: '#6b7280' }}>로그인 상태 유지</span>
+                        <input type="checkbox" style={{ width: 14, height: 14, accentColor: '#014d9d', marginLeft: 4 }} />
+                        <span style={{ fontFamily: 'Noto Sans KR', fontSize: 12, color: '#6b7280', transform: 'translateY(-1px)' }}>로그인 상태 유지</span>
                     </label>
+                    <button
+                        type="button"
+                        style={{
+                            border: 'none',
+                            background: 'none',
+                            padding: 0,
+                            fontFamily: 'Noto Sans KR',
+                            fontSize: 12,
+                            color: '#6b7280',
+                            cursor: 'pointer',
+                        }}
+                    >
+                        비밀번호 찾기
+                    </button>
                 </div>
 
                 <button
                     type="button"
                     className="btn-primary"
-                    style={{ marginBottom: 20 }}
+                    style={{ marginBottom: 20, width: 'calc(100% - 12px)', marginLeft: 8 }}
                     onClick={handleLogin}
                     disabled={isSubmitting}
                 >
@@ -176,14 +192,37 @@ export default function LoginModal({ onClose, onSignup, onLogin }: LoginModalPro
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
-                    <button type="button" className="btn-social" onClick={handleGoogleLogin}>Google로 로그인</button>
-                    <button type="button" className="btn-social" onClick={handleKakaoLogin}>
-                        <span style={{ color: '#3A1D1D' }}>카카오로 로그인</span>
+                    <button
+                        type="button"
+                        className="btn-social"
+                        onClick={handleGoogleLogin}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 8,
+                            width: 'calc(100% - 12px)',
+                            marginLeft: 8,
+                        }}
+                    >
+                        <img src={googleIcon} alt="" aria-hidden style={{ width: 18, height: 18 }} />
+                        <span>Google로 로그인</span>
+                    </button>
+                    <button
+                        type="button"
+                        className="btn-social"
+                        onClick={handleKakaoLogin}
+                        style={{ width: 'calc(100% - 12px)', marginLeft: 8 }}
+                    >
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 12, color: '#3A1D1D' }}>
+                            <img src={kakaoIcon} alt="" aria-hidden style={{ width: 18, height: 18 }} />
+                            <span>카카오로 로그인</span>
+                        </span>
                     </button>
                 </div>
 
                 <div style={{ textAlign: 'center' }}>
-                    <span style={{ fontFamily: 'Noto Sans KR', fontSize: 13, color: '#6b7280' }}>계정이 없으신가요?</span>
+                    <span style={{ fontFamily: 'Noto Sans KR', fontSize: 13, color: '#6b7280', marginRight: 6 }}>계정이 없으신가요?</span>
                     <button
                         type="button"
                         onClick={onSignup}

@@ -4,8 +4,8 @@ import Header from './Header';
 export default function WebSplitLayout({
   left,
   right,
-  leftWidth = '70%',
-  rightWidth = '30%',
+  leftWidth = '75%',
+  rightWidth = '25%',
 }: {
   left: ReactNode;
   right: ReactNode;
