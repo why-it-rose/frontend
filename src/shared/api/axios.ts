@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-    baseURL: '/',
+    baseURL: import.meta.env.VITE_API_BASE_URL,
 });
 
 apiClient.interceptors.request.use((config) => {
@@ -16,6 +16,8 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error: unknown) => {
     if (axios.isAxiosError(error) && error.response?.status === 401) {
+      const url = error.config?.url ?? '';
+      if (url.includes('/api/fcm')) return Promise.reject(error);
       localStorage.removeItem('accessToken');
       window.location.href = '/login';
     }

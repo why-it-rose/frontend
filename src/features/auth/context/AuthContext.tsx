@@ -1,5 +1,7 @@
 import { createContext, useContext, useState } from 'react';
 import type { ReactNode } from 'react';
+import { requestFcmToken } from '@/features/fcm/fcmService';
+import { saveFcmToken } from '@/shared/api/fcm/fcmApi';
 
 interface AuthState {
   isLoggedIn: boolean;
@@ -22,6 +24,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = (nextNickname: string) => {
     setNickname(nextNickname.trim());
     setIsLoggedIn(true);
+    requestFcmToken().then((token) => {
+      if (token) saveFcmToken(token).catch(() => {});
+    });
   };
 
   const logout = () => {
