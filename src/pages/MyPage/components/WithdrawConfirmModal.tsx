@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import logoSad from '@/assets/logo_sad.svg';
 
 export interface WithdrawConfirmModalProps {
   open: boolean;
@@ -28,8 +29,8 @@ export default function WithdrawConfirmModal({ open, onClose, onConfirmWithdraw 
         >
           ✕
         </button>
-        <div className="mb-4 text-center text-4xl" aria-hidden>
-          🐻
+        <div className="mb-2.5 flex justify-center" aria-hidden>
+          <img src={logoSad} alt="" className="h-16 w-auto" />
         </div>
         <h3 id="withdraw-title" className="mb-2.5 text-center text-xl font-bold text-[#111827]">
           정말 탈퇴하시겠어요?
