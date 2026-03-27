@@ -94,7 +94,7 @@ export function StockDetailMain({
       chips.push({
         label: bar.event.label,
         positive: bar.event.positive,
-        date: "최근",
+        date: bar.date || "날짜 미정",
       });
     });
     return chips.slice(-3);
@@ -114,12 +114,12 @@ export function StockDetailMain({
           />
         </div>
 
-        <div className="grid grid-cols-3 border-b border-[#e5e7eb] shrink-0">
+        <div className="grid grid-cols-3 shrink-0 border-b border-[#eff1f8]">
           {(["차트", "이벤트", "메모"] as const).map((tab) => (
             <button
               key={tab}
               type="button"
-              className={`border-b-2 py-3 text-sm font-medium ${
+              className={`border-b-2 py-2.5 text-sm font-medium ${
                 mobileTab === tab
                   ? "border-[#014d9d] text-[#014d9d]"
                   : "border-transparent text-[#9ca3af]"
@@ -133,12 +133,12 @@ export function StockDetailMain({
 
         {mobileTab === "차트" && (
           <>
-            <div className="flex flex-wrap gap-2 border-b border-[#eef2f7] px-4 py-3">
+            <div className="scrollbar-hide flex flex-nowrap gap-2 overflow-x-auto border-b border-[#eef2f7] px-4 py-3">
               {mobileEventChips.length > 0 ? (
                 mobileEventChips.map((chip, idx) => (
                   <div
                     key={`${chip.label}-${idx}`}
-                    className={`shrink-0 rounded-2xl border px-3 py-0.5 text-xs font-medium ${
+                    className={`shrink-0 rounded-2xl border px-3 py-1.5 text-xs font-medium ${
                       chip.positive
                         ? "border-[#fecdd3] bg-[#fff1f2] text-[#e11d48]"
                         : "border-[#bfdbfe] bg-[#eff6ff] text-[#1d4ed8]"

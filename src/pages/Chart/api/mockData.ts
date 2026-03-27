@@ -24,12 +24,7 @@ export const MOCK_TICKERS: TickerItem[] = [
 export function generateMockBars(n = 100): OhlcBar[] {
   const bars: OhlcBar[] = [];
   let base = 52000;
-  const labelEvery = Math.floor(n / 9);
-  const labels = [
-    "2023.1", "2023.4", "2023.7", "2023.10",
-    "2024.1", "2024.4", "2024.7", "2024.10",
-    "2025.1",
-  ];
+  const startDate = new Date(2024, 0, 1);
 
   for (let i = 0; i < n; i++) {
     const open  = base + (Math.random() - 0.5) * 2000;
@@ -39,9 +34,14 @@ export function generateMockBars(n = 100): OhlcBar[] {
     const volume = Math.floor(Math.random() * 8_000_000 + 1_000_000);
     base = close;
 
-    const labelIdx = Math.floor(i / labelEvery);
+    const currentDate = new Date(startDate);
+    currentDate.setDate(startDate.getDate() + i * 3);
+    const yyyy = String(currentDate.getFullYear());
+    const mm = String(currentDate.getMonth() + 1).padStart(2, "0");
+    const dd = String(currentDate.getDate()).padStart(2, "0");
+    const eventDate = `${yyyy}.${mm}.${dd}`;
     bars.push({
-      date:   i % labelEvery === 0 && labelIdx < labels.length ? labels[labelIdx] : "",
+      date: eventDate,
       open, high, low, close, volume,
       ...(i === 20 ? { event: { label: "+17.2%", positive: true  } } : {}),
       ...(i === 45 ? { event: { label: "+12.4%", positive: true  } } : {}),

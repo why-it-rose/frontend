@@ -24,6 +24,7 @@ import lockIco from '@/assets/lock.svg';
 import deleteIco from '@/assets/delete.svg';
 import dragHandleIco from '@/assets/button.svg';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { useNavigate } from 'react-router';
 
 type WatchRow = {
   name: string;
@@ -89,6 +90,31 @@ const INITIAL_WATCHLIST: WatchRow[] = [
   },
 ];
 
+function getWatchLogoText(row: WatchRow) {
+  if (row.name === 'SK하이닉스') return 'SK';
+  if (row.name === 'LG에너지솔루션') return 'LG';
+  return Array.from(row.name.trim())[0] ?? row.initials;
+}
+
+function WatchIdentityBlock({ row, showMarket = true }: { row: WatchRow; showMarket?: boolean }) {
+  return (
+    <div className="flex min-w-0 flex-1 items-center gap-2.5">
+      <div
+        className="flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-[7px] text-[9px] font-black leading-[13.5px] text-white max-md:-translate-y-[0.8px]"
+        style={{ backgroundColor: row.logoBg }}
+      >
+        <span className="max-md:translate-y-[1px]">{getWatchLogoText(row)}</span>
+      </div>
+      <div className="min-w-0 overflow-hidden">
+        <div className="text-[12.5px] font-bold leading-[18.75px] text-[#111827]">{row.name}</div>
+        <div className="font-mono text-[10px] leading-[15px] text-[#9ca3af]">
+          {showMarket ? `${row.code} · ${row.market}` : row.code}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SortableEditRow({
   row,
   onRemove,
@@ -109,27 +135,14 @@ function SortableEditRow({
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex w-full shrink-0 touch-none select-none items-center justify-between border-b border-[#eff1f8] bg-white px-4 py-3 ${
+      className={`box-border grid h-[58px] w-full shrink-0 grid-cols-[minmax(0,1fr)_74px] items-center overflow-hidden border-b border-[#e5e7eb] bg-white px-4 touch-none select-none ${
         isDragging ? 'opacity-30' : ''
       }`}
       {...attributes}
       {...listeners}
     >
-      <div className="flex min-w-0 flex-1 items-center gap-2.5">
-        <div
-          className="flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-[7px] text-[9px] font-black leading-[13.5px] text-white"
-          style={{ backgroundColor: row.logoBg }}
-        >
-          {row.initials}
-        </div>
-        <div className="min-w-0">
-          <div className="text-[12.5px] font-bold leading-[18.75px] text-[#111827]">{row.name}</div>
-          <div className="font-mono text-[10px] leading-[15px] text-[#9ca3af]">
-            {row.code} · {row.market}
-          </div>
-        </div>
-      </div>
-      <div className="flex shrink-0 cursor-grab items-center gap-2.5 pl-2 active:cursor-grabbing">
+      <WatchIdentityBlock row={row} />
+      <div className="ml-auto flex w-[74px] shrink-0 cursor-grab items-center justify-end gap-2.5 active:cursor-grabbing">
         <button
           type="button"
           data-edit-delete
@@ -160,22 +173,9 @@ function SortableEditRow({
 
 function EditRowOverlay({ row }: { row: WatchRow }) {
   return (
-    <div className="box-border flex w-full min-w-[240px] cursor-grabbing items-center justify-between border-b border-[#eff1f8] bg-white px-4 py-3">
-      <div className="flex min-w-0 flex-1 items-center gap-2.5">
-        <div
-          className="flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-[7px] text-[9px] font-black leading-[13.5px] text-white"
-          style={{ backgroundColor: row.logoBg }}
-        >
-          {row.initials}
-        </div>
-        <div className="min-w-0">
-          <div className="text-[12.5px] font-bold leading-[18.75px] text-[#111827]">{row.name}</div>
-          <div className="font-mono text-[10px] leading-[15px] text-[#9ca3af]">
-            {row.code} · {row.market}
-          </div>
-        </div>
-      </div>
-      <div className="flex shrink-0 items-center gap-2.5 pl-2 opacity-60">
+    <div className="box-border grid h-[58px] w-full min-w-[240px] grid-cols-[minmax(0,1fr)_74px] cursor-grabbing items-center overflow-hidden border-b border-[#e5e7eb] bg-white px-4">
+      <WatchIdentityBlock row={row} />
+      <div className="ml-auto flex w-[74px] shrink-0 items-center justify-end gap-2.5 opacity-60">
         <img
           src={deleteIco}
           alt=""
@@ -193,6 +193,7 @@ function EditRowOverlay({ row }: { row: WatchRow }) {
 }
 
 export default function InterestStockAside() {
+  const navigate = useNavigate();
   const { isLoggedIn } = useAuth();
   const [editMode, setEditMode] = useState(false);
   const [items, setItems] = useState<WatchRow[]>(() => [...INITIAL_WATCHLIST]);
@@ -241,7 +242,7 @@ export default function InterestStockAside() {
 
   return (
     <aside className="flex h-full w-full flex-col overflow-hidden bg-white">
-      <div className="flex h-[53px] shrink-0 items-center justify-between border-b border-[#eff1f8] px-4">
+      <div className="flex h-[53px] shrink-0 items-center justify-between border-b border-[#e5e7eb] px-4">
         <div className="flex items-center gap-2">
           <img src={favoriteClickIco} alt="" className="h-[18px] w-[18px] shrink-0" aria-hidden />
           <p className="text-sm font-bold text-[#4e5968]">
@@ -288,28 +289,17 @@ export default function InterestStockAside() {
             items.map((row) => {
               const priceColor = row.up ? 'text-red-600' : 'text-blue-700';
               return (
-                <button
+                <div
                   key={row.code}
-                  type="button"
-                  className="flex h-auto w-full shrink-0 cursor-pointer items-center justify-between border-b border-[#eff1f8] px-4 py-3 text-left transition-colors hover:bg-[#f4f5f7]"
+                  onClick={() => navigate('/chart/stock-detail')}
+                  className="box-border grid h-[58px] w-full shrink-0 grid-cols-[minmax(0,1fr)_74px] items-center overflow-hidden border-0 border-b border-[#e5e7eb] bg-white px-4 text-left transition-colors hover:bg-[#f4f5f7]"
                 >
-                  <div className="flex items-center gap-3 max-md:translate-x-1">
-                    <div
-                      className="flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-[7px] text-[9px] font-black leading-[13.5px] text-white"
-                      style={{ backgroundColor: row.logoBg }}
-                    >
-                      {row.initials}
-                    </div>
-                    <div>
-                      <div className="text-[12.5px] font-bold leading-[18.75px] text-[#111827]">{row.name}</div>
-                      <div className="font-mono text-[10px] leading-[15px] text-[#9ca3af]">{row.code}</div>
-                    </div>
-                  </div>
-                  <div className={`text-right text-[11.5px] font-semibold leading-[17px] ${priceColor}`}>
+                  <WatchIdentityBlock row={row} showMarket={false} />
+                  <div className={`ml-auto w-[74px] text-right text-[11.5px] font-semibold leading-[17px] tabular-nums ${priceColor}`}>
                     <div>{row.price}</div>
                     <div>{row.changeLabel}</div>
                   </div>
-                </button>
+                </div>
               );
             })
           )}

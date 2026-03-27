@@ -20,7 +20,7 @@ export interface AlertCenterProps {
 }
 
 const PANEL_CLASS =
-  'flex h-[581px] max-h-[min(581px,85vh)] w-[380px] max-w-[calc(100vw-24px)] flex-col overflow-hidden rounded-[14px] border border-[#e5e7eb] bg-white shadow-[0_8px_32px_rgba(0,0,0,0.1)]';
+  'flex h-[581px] max-h-[min(581px,85vh)] w-[380px] max-w-[calc(100vw-24px)] flex-col overflow-hidden rounded-[14px] border border-[#e5e7eb] bg-white shadow-[0_8px_32px_rgba(0,0,0,0.1)] max-md:fixed max-md:left-0 max-md:right-0 max-md:top-[55px] max-md:mt-0 max-md:h-[calc(100dvh-55px)] max-md:max-h-none max-md:w-screen max-md:max-w-none max-md:translate-x-0 max-md:rounded-none max-md:border-x-0 max-md:border-b-0 max-md:shadow-none';
 
 export default function AlertCenter({
   onClose,
@@ -59,8 +59,8 @@ export default function AlertCenter({
       aria-modal="true"
       aria-label="알림센터"
     >
-      <div className="flex shrink-0 items-center justify-between border-b border-[#e5e7eb] px-[18px] pb-5 pt-5">
-        <span className="mypage-scrap-kr text-[14px] font-bold leading-tight text-[#111827]">알림센터</span>
+      <div className="flex shrink-0 items-center justify-between border-b border-[#e5e7eb] px-[18px] pb-3 pt-5">
+        <span className="mypage-scrap-kr -translate-y-1 text-[14px] font-bold leading-tight text-[#111827]">알림센터</span>
         {tab === 'all' ? (
           listFullyRead ? (
             <span
@@ -88,7 +88,7 @@ export default function AlertCenter({
         <button
           type="button"
           onClick={() => setTab('all')}
-          className={`mypage-scrap-kr -mb-px cursor-pointer border-0 border-b-[2.5px] bg-transparent py-2.5 text-center text-[13px] transition-colors ${
+          className={`mypage-scrap-kr -mb-px cursor-pointer border-0 border-b-[2.5px] bg-transparent py-3.5 text-center text-[13px] transition-colors ${
             tab === 'all'
               ? 'border-[#014d9d] font-bold text-[#014d9d]'
               : 'border-transparent font-medium text-[#9ca3af]'
@@ -99,7 +99,7 @@ export default function AlertCenter({
         <button
           type="button"
           onClick={() => setTab('detail')}
-          className={`mypage-scrap-kr -mb-px cursor-pointer border-0 border-b-[2.5px] bg-transparent py-2.5 text-center text-[13px] transition-colors ${
+          className={`mypage-scrap-kr -mb-px cursor-pointer border-0 border-b-[2.5px] bg-transparent py-3.5 text-center text-[13px] transition-colors ${
             tab === 'detail'
               ? 'border-[#014d9d] font-bold text-[#014d9d]'
               : 'border-transparent font-medium text-[#9ca3af]'
