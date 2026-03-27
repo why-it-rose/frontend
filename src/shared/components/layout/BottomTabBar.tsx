@@ -40,7 +40,7 @@ export default function BottomTabBar({ onMyPageOpen, myPageActive }: BottomTabBa
               if (isMyPage) onMyPageOpen?.();
               else navigate(path);
             }}
-            className="flex flex-col items-center justify-start pt-2.5"
+            className="flex flex-col items-center justify-start pt-3"
           >
             <img
               src={isActive ? iconActive : icon}

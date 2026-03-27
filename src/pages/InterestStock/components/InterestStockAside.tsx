@@ -117,7 +117,7 @@ function SortableEditRow({
     >
       <div className="flex min-w-0 flex-1 items-center gap-2.5">
         <div
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[7px] text-[9px] font-black leading-[13.5px] text-white"
+          className="flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-[7px] text-[9px] font-black leading-[13.5px] text-white"
           style={{ backgroundColor: row.logoBg }}
         >
           {row.initials}
@@ -163,7 +163,7 @@ function EditRowOverlay({ row }: { row: WatchRow }) {
     <div className="box-border flex w-full min-w-[240px] cursor-grabbing items-center justify-between border-b border-[#eff1f8] bg-white px-4 py-3">
       <div className="flex min-w-0 flex-1 items-center gap-2.5">
         <div
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[7px] text-[9px] font-black leading-[13.5px] text-white"
+          className="flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-[7px] text-[9px] font-black leading-[13.5px] text-white"
           style={{ backgroundColor: row.logoBg }}
         >
           {row.initials}
@@ -243,7 +243,7 @@ export default function InterestStockAside() {
     <aside className="flex h-full w-full flex-col overflow-hidden bg-white">
       <div className="flex h-[53px] shrink-0 items-center justify-between border-b border-[#eff1f8] px-4">
         <div className="flex items-center gap-2">
-          <img src={favoriteClickIco} alt="" className="h-4 w-4 shrink-0" aria-hidden />
+          <img src={favoriteClickIco} alt="" className="h-[18px] w-[18px] shrink-0" aria-hidden />
           <p className="text-sm font-bold text-[#4e5968]">
             {editMode ? '관심 종목 편집' : '관심 종목'}
           </p>
@@ -293,9 +293,9 @@ export default function InterestStockAside() {
                   type="button"
                   className="flex h-auto w-full shrink-0 cursor-pointer items-center justify-between border-b border-[#eff1f8] px-4 py-3 text-left transition-colors hover:bg-[#f4f5f7]"
                 >
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-3 max-md:translate-x-1">
                     <div
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[7px] text-[9px] font-black leading-[13.5px] text-white"
+                      className="flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-[7px] text-[9px] font-black leading-[13.5px] text-white"
                       style={{ backgroundColor: row.logoBg }}
                     >
                       {row.initials}
@@ -305,7 +305,7 @@ export default function InterestStockAside() {
                       <div className="font-mono text-[10px] leading-[15px] text-[#9ca3af]">{row.code}</div>
                     </div>
                   </div>
-                  <div className={`text-right text-[10.5px] font-semibold leading-[15.75px] ${priceColor}`}>
+                  <div className={`text-right text-[11.5px] font-semibold leading-[17px] ${priceColor}`}>
                     <div>{row.price}</div>
                     <div>{row.changeLabel}</div>
                   </div>
