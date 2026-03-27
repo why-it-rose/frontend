@@ -24,6 +24,7 @@ import lockIco from '@/assets/lock.svg';
 import deleteIco from '@/assets/delete.svg';
 import dragHandleIco from '@/assets/button.svg';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { useNavigate } from 'react-router';
 
 type WatchRow = {
   name: string;
@@ -192,6 +193,7 @@ function EditRowOverlay({ row }: { row: WatchRow }) {
 }
 
 export default function InterestStockAside() {
+  const navigate = useNavigate();
   const { isLoggedIn } = useAuth();
   const [editMode, setEditMode] = useState(false);
   const [items, setItems] = useState<WatchRow[]>(() => [...INITIAL_WATCHLIST]);
@@ -289,6 +291,7 @@ export default function InterestStockAside() {
               return (
                 <div
                   key={row.code}
+                  onClick={() => navigate('/chart/stock-detail')}
                   className="box-border grid h-[58px] w-full shrink-0 grid-cols-[minmax(0,1fr)_74px] items-center overflow-hidden border-0 border-b border-[#e5e7eb] bg-white px-4 text-left transition-colors hover:bg-[#f4f5f7]"
                 >
                   <WatchIdentityBlock row={row} showMarket={false} />

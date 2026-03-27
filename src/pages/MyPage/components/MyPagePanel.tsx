@@ -117,8 +117,26 @@ export default function MyPagePanel({ onClose, onLogout }: MyPagePanelProps) {
           )}
         </div>
 
+        {!scrapManageMode && (
+          <div className="hidden shrink-0 flex-col items-center gap-2 border-t border-[#eff1f8] px-[21px] pt-6 pb-4 md:flex">
+            <button
+              type="button"
+              onClick={onLogout}
+              className="w-full cursor-pointer overflow-hidden rounded-lg border-0 bg-transparent p-0 shadow-none"
+            >
+              <img src={logoutButtonImg} alt="로그아웃" className="block h-auto w-full" width={348} height={37} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowWithdrawModal(true)}
+              className="border-0 bg-transparent text-xs text-[#9ca3af] underline"
+            >
+              회원 탈퇴
+            </button>
+          </div>
+        )}
         {activeTab === 'settings' && (
-          <div className="flex shrink-0 flex-col items-center gap-2 border-t border-[#eff1f8] px-[21px] pt-6 pb-4">
+          <div className="flex shrink-0 flex-col items-center gap-2 border-t border-[#eff1f8] px-[21px] pt-6 pb-4 md:hidden">
             <button
               type="button"
               onClick={onLogout}
