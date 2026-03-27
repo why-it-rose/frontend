@@ -52,7 +52,7 @@ export default function StockDetailPage() {
     <div className="flex flex-col flex-1 min-h-0">
       <TabBar tabs={TABS} value={tab} onChange={setTab} />
       {tab === 'event' && <EventTab event={mockEvent} onScrap={(id, s) => console.log(id, s)} />}
-      {tab === 'memo' && <MemoTab memos={memos} onSave={handleSave} onDelete={handleDelete} />}
+      {tab === 'memo' && <MemoTab memos={memos} eventInfo={{ eventType: mockEvent.eventType, stockName: mockEvent.stockName, changeRate: mockEvent.changeRate }} onSave={handleSave} onDelete={handleDelete} />}
     </div>
   );
 }
