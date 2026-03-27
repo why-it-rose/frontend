@@ -31,9 +31,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(me);
       setIsLoggedIn(true);
 
-      requestFcmToken().then((token) => {
-        if (token) saveFcmToken(token).catch(() => {});
-      });
     } catch {
       setUser(null);
       setIsLoggedIn(false);
