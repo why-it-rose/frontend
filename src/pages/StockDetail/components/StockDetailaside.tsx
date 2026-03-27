@@ -120,10 +120,12 @@ function StatCell({
 
 interface StockDetailAsideProps {
   company?: CompanyInfo;
+  hideHeader?: boolean;
 }
 
 export default function StockDetailAside({
   company = MOCK_COMPANY,
+  hideHeader = false,
 }: StockDetailAsideProps) {
   const [expanded, setExpanded] = useState(false);
   const latestPerf = company.performance.at(-1)!;
@@ -136,14 +138,16 @@ export default function StockDetailAside({
 
   return (
     <aside className="flex h-full w-full flex-col overflow-hidden bg-[#f4f6fb]">
-      <div className="shrink-0 bg-white">
-        <div className="flex h-[48px] items-center justify-center">
-          <span className="text-[13px] font-semibold text-[#0158b8]">
-            기업 정보
-          </span>
+      {!hideHeader && (
+        <div className="shrink-0 bg-white">
+          <div className="flex h-[48px] items-center justify-center">
+            <span className="text-[13px] font-semibold text-[#0158b8]">
+              기업 정보
+            </span>
+          </div>
+          <div className="h-[2px] w-full bg-[#0158b8]" />
         </div>
-        <div className="h-[2px] w-full bg-[#0158b8]" />
-      </div>
+      )}
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden">
         <div className="bg-white px-4 pb-3 pt-4">
