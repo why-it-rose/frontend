@@ -12,15 +12,22 @@ export type LoginRequest = {
     password: string;
 };
 
-export type LoginResult = {
+export type AuthUser = {
     userId: number;
     email: string;
     nickname: string;
-    accessToken: string;
-    refreshToken: string;
 };
 
-export async function loginWithEmail(payload: LoginRequest): Promise<LoginResult> {
-    const { data } = await apiClient.post<BaseResponse<LoginResult>>('/auth/login', payload);
+export type LoginResponse = BaseResponse<AuthUser>;
+
+export async function loginWithEmail(payload: LoginRequest): Promise<LoginResponse> {
+    const { data } = await apiClient.post<LoginResponse>('/auth/login', payload);
+    return data;
+}
+
+export async function getMe(): Promise<AuthUser> {
+    const { data } = await apiClient.get<BaseResponse<AuthUser>>('/auth/me', {
+        headers: { 'Cache-Control': 'no-store' },
+    });
     return data.result;
 }

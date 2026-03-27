@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useNavigate } from 'react-router';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import MobileLayout from '@/shared/components/layout/MobileLayout';
@@ -5,28 +6,36 @@ import { ROUTES } from '@/shared/constants/routes';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { isLoggedIn, isAuthLoading } = useAuth();
+
+    useEffect(() => {
+        if (!isAuthLoading && isLoggedIn) {
+            navigate(ROUTES.HOME, { replace: true });
+        }
+    }, [isAuthLoading, isLoggedIn, navigate]);
+
+    if (isAuthLoading) {
+        return (
+            <MobileLayout
+                content={
+                    <div className="flex flex-1 items-center justify-center text-sm text-[#6b7280]">
+                        로그인 상태 확인 중...
+                    </div>
+                }
+            />
+        );
+    }
 
   return (
     <MobileLayout
-      content={
-        <div className="flex flex-1 flex-col items-center justify-center gap-6 px-6">
-          <h1 className="text-xl font-bold text-[#111827]">로그인</h1>
-          <p className="text-center text-sm text-[#6b7280]">
-            로그인 연동 전까지는 아래 버튼으로 세션만 시뮬레이션합니다.
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              login();
-              navigate(ROUTES.HOME, { replace: true });
-            }}
-            className="rounded-lg bg-primary px-8 py-3 text-sm font-semibold text-white"
-          >
-            로그인하기
-          </button>
-        </div>
-      }
+        content={
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
+                <h1 className="text-xl font-bold text-[#111827]">로그인</h1>
+                <p className="text-sm text-[#6b7280]">
+                    상단 로그인 버튼(모달)로 로그인해 주세요.
+                </p>
+            </div>
+        }
     />
   );
 }

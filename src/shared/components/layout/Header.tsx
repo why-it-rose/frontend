@@ -1,42 +1,22 @@
-import { useCallback, useMemo, useRef, useState, useEffect } from "react";
+import { useState } from "react";
+// import { useCallback, useMemo, useRef} from "react";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "@/features/auth/context/AuthContext";
 import { ROUTES } from "@/shared/constants/routes";
-import { AlertCenter } from "@/features/alert/AlertCenter";
-import { alertCenterListHasUnread } from "@/features/alert/AlertCenter/alertCenter.mock";
+// import { AlertCenter } from "@/features/alert/AlertCenter";
+// import { alertCenterListHasUnread } from "@/features/alert/AlertCenter/alertCenter.mock";
 import logoSrc from "@/assets/logo.svg";
 import bellSrc from "@/assets/bell.svg";
-import bellNotSrc from "@/assets/bell_not.svg";
+// import bellNotSrc from "@/assets/bell_not.svg";
 import SearchDropdown from "@/pages/widgets/SearchDropdown/SearchDropdown";
 import LoginModal from "@/features/auth/components/LoginModal";
 import SignupModal from "@/features/auth/components/SignupModal";
 
 export default function Header() {
-  const { isLoggedIn, nickname, login } = useAuth();
+  const { isLoggedIn, nickname, refreshAuth } = useAuth();
   const profileInitial = Array.from(nickname.trim())[0] ?? "유";
   const navigate = useNavigate();
   const [modal, setModal] = useState<"login" | "signup" | null>(null);
-  // useEffect가 URL 해시를 읽음.
-  useEffect(() => {
-    const hash = window.location.hash.startsWith("#")
-      ? window.location.hash.slice(1)
-      : "";
-    if (!hash) return;
-
-    const params = new URLSearchParams(hash);
-    const accessToken = params.get("accessToken");
-    const refreshToken = params.get("refreshToken");
-    const nextNickname = params.get("nickname");
-
-    if (!accessToken || !refreshToken || !nextNickname) return;
-    //토큰을 localStorage에 저장
-    localStorage.setItem("accessToken", accessToken);
-    localStorage.setItem("refreshToken", refreshToken);
-    login(nextNickname); // AuthContext 로그인 상태 갱신
-
-    const cleanUrl = `${window.location.pathname}${window.location.search}`;
-    window.history.replaceState(null, "", cleanUrl); //URL해쉬 지워 깨끗한 주소로 복원
-  }, [login]);
 
   const rightActions = isLoggedIn ? (
     <button
@@ -119,9 +99,9 @@ export default function Header() {
         <LoginModal
           onClose={() => setModal(null)}
           onSignup={() => setModal("signup")}
-          onLogin={(nickname) => {
-            login(nickname);
-            setModal(null);
+          onLoginSuccess={async() => {
+              await refreshAuth();
+              setModal(null);
           }}
         />
       )}

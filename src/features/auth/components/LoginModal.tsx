@@ -7,15 +7,14 @@ import kakaoIcon from '@/assets/kakao.svg';
 type LoginModalProps = {
     onClose: () => void;
     onSignup: () => void;
-    onLogin: (nickname: string) => void;
+    onLoginSuccess: () => Promise<void>;
 };
 
-export default function LoginModal({ onClose, onSignup, onLogin }: LoginModalProps) {
+export default function LoginModal({ onClose, onSignup, onLoginSuccess }: LoginModalProps) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
-    const backendOrigin = import.meta.env.VITE_API_BASE_URL?.trim() || 'http://localhost:8080';
 
     const handleLogin = async () => {
         if (!email.trim() || !password) {
@@ -27,28 +26,17 @@ export default function LoginModal({ onClose, onSignup, onLogin }: LoginModalPro
             setIsSubmitting(true);
             setErrorMessage('');
 
-            const result = await loginWithEmail({
+            await loginWithEmail({
                 email: email.trim(),
                 password,
             });
 
-            localStorage.setItem('accessToken', result.accessToken);
-            localStorage.setItem('refreshToken', result.refreshToken);
-
-            onLogin(result.nickname);
+            await onLoginSuccess();
         } catch {
             setErrorMessage('로그인에 실패했습니다. 이메일/비밀번호를 확인하세요.');
         } finally {
             setIsSubmitting(false);
         }
-    };
-
-    const handleGoogleLogin = () => {
-        window.location.href = `${backendOrigin}/oauth2/authorization/google`;
-    };
-
-    const handleKakaoLogin = () => {
-        window.location.href = `${backendOrigin}/oauth2/authorization/kakao`;
     };
 
     return (
@@ -83,7 +71,7 @@ export default function LoginModal({ onClose, onSignup, onLogin }: LoginModalPro
 
                 <div style={{ marginBottom: 6, marginLeft: 8 }}>
           <span style={{ fontFamily: 'Noto Sans KR Black', fontWeight: 900, fontSize: 20, color: '#111827' }}>
-            다시 오셨군요 👋
+            반갑습니다 👋
           </span>
                 </div>
                 <div style={{ marginBottom: 24, marginLeft: 8 }}>
@@ -108,7 +96,7 @@ export default function LoginModal({ onClose, onSignup, onLogin }: LoginModalPro
                     </label>
                     <input
                         className="input-field"
-                        style={{ width: 'calc(100% - 16px)', marginLeft: 4}}
+                        style={{ width: 'calc(100% - 16px)', marginLeft: 4 }}
                         type="email"
                         placeholder="example@email.com"
                         value={email}
@@ -140,9 +128,7 @@ export default function LoginModal({ onClose, onSignup, onLogin }: LoginModalPro
                     />
                 </div>
 
-                {errorMessage && (
-                    <p style={{ margin: '0 0 12px 0', fontSize: 12, color: '#dc2626' }}>{errorMessage}</p>
-                )}
+                {errorMessage && <p style={{ margin: '0 0 12px 0', fontSize: 12, color: '#dc2626' }}>{errorMessage}</p>}
 
                 <div
                     style={{
@@ -157,7 +143,9 @@ export default function LoginModal({ onClose, onSignup, onLogin }: LoginModalPro
                 >
                     <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
                         <input type="checkbox" style={{ width: 14, height: 14, accentColor: '#014d9d', marginLeft: 4 }} />
-                        <span style={{ fontFamily: 'Noto Sans KR', fontSize: 12, color: '#6b7280', transform: 'translateY(-1px)' }}>로그인 상태 유지</span>
+                        <span style={{ fontFamily: 'Noto Sans KR', fontSize: 12, color: '#6b7280', transform: 'translateY(-1px)' }}>
+              로그인 상태 유지
+            </span>
                     </label>
                     <button
                         type="button"
@@ -195,7 +183,8 @@ export default function LoginModal({ onClose, onSignup, onLogin }: LoginModalPro
                     <button
                         type="button"
                         className="btn-social"
-                        onClick={handleGoogleLogin}
+                        disabled
+                        aria-disabled="true"
                         style={{
                             display: 'flex',
                             alignItems: 'center',
@@ -211,18 +200,21 @@ export default function LoginModal({ onClose, onSignup, onLogin }: LoginModalPro
                     <button
                         type="button"
                         className="btn-social"
-                        onClick={handleKakaoLogin}
+                        disabled
+                        aria-disabled="true"
                         style={{ width: 'calc(100% - 12px)', marginLeft: 8 }}
                     >
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 12, color: '#3A1D1D' }}>
-                            <img src={kakaoIcon} alt="" aria-hidden style={{ width: 18, height: 18 }} />
-                            <span>카카오로 로그인</span>
-                        </span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 12, color: '#3A1D1D' }}>
+              <img src={kakaoIcon} alt="" aria-hidden style={{ width: 18, height: 18 }} />
+              <span>카카오로 로그인</span>
+            </span>
                     </button>
                 </div>
 
                 <div style={{ textAlign: 'center' }}>
-                    <span style={{ fontFamily: 'Noto Sans KR', fontSize: 13, color: '#6b7280', marginRight: 6 }}>계정이 없으신가요?</span>
+          <span style={{ fontFamily: 'Noto Sans KR', fontSize: 13, color: '#6b7280', marginRight: 6 }}>
+            계정이 없으신가요?
+          </span>
                     <button
                         type="button"
                         onClick={onSignup}

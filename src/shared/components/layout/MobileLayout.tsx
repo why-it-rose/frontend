@@ -9,12 +9,12 @@ import BottomTabBar from './BottomTabBar';
 
 /** 홈 등 내부에서 높이·스크롤을 쓰려면 main은 스크롤 금지 + min-h-0 (padding 없음) */
 export default function MobileLayout({
-  content,
-}: {
+                                       content,
+                                     }: {
   content: ReactNode;
 }) {
   const navigate = useNavigate();
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, clearAuth } = useAuth();
   const [myPageOpen, setMyPageOpen] = useState(false);
 
   const openMyPage = () => {
@@ -26,20 +26,20 @@ export default function MobileLayout({
   };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <Header onMyPageOpen={openMyPage} disableMyPagePanel />
-      <main className="flex min-h-0 flex-1 flex-col overflow-hidden">{content}</main>
-      <BottomTabBar onMyPageOpen={openMyPage} myPageActive={myPageOpen} />
-      {isLoggedIn && myPageOpen && (
-        <MyPagePanel
-          onClose={() => setMyPageOpen(false)}
-          onLogout={() => {
-            logout();
-            setMyPageOpen(false);
-            navigate(ROUTES.HOME);
-          }}
-        />
-      )}
-    </div>
+      <div className="flex min-h-0 flex-1 flex-col">
+        <Header />
+        <main className="flex min-h-0 flex-1 flex-col overflow-hidden">{content}</main>
+        <BottomTabBar onMyPageOpen={openMyPage} myPageActive={myPageOpen} />
+        {isLoggedIn && myPageOpen && (
+            <MyPagePanel
+                onClose={() => setMyPageOpen(false)}
+                onLogout={() => {
+                  clearAuth();
+                  setMyPageOpen(false);
+                  navigate(ROUTES.HOME);
+                }}
+            />
+        )}
+      </div>
   );
 }

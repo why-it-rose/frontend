@@ -5,7 +5,9 @@ const BASE_URL = "http://localhost:4000";
 
 // ─── 종목 기본 정보 조회 ────────────────────────────────────────────────────────
 export async function fetchStockInfo(code: string): Promise<StockInfo> {
-  const res = await fetch(`${BASE_URL}/api/stocks/${code}/info`);
+  const res = await fetch(`${BASE_URL}/api/stocks/${code}/info`, {
+    credentials: 'include',
+  });
   if (!res.ok) throw new Error(`fetchStockInfo failed: ${res.status}`);
   return res.json();
 }
@@ -18,7 +20,9 @@ export async function fetchOhlcData(
   period: PeriodParam
 ): Promise<OhlcBar[]> {
   const res = await fetch(
-    `${BASE_URL}/api/stocks/${code}/ohlc?period=${period}`
+    `${BASE_URL}/api/stocks/${code}/ohlc?period=${period}`, {
+        credentials: 'include',
+      }
   );
   if (!res.ok) throw new Error(`fetchOhlcData failed: ${res.status}`);
   return res.json();
@@ -26,7 +30,9 @@ export async function fetchOhlcData(
 
 // ─── 하단 시세 티커 조회 ────────────────────────────────────────────────────────
 export async function fetchTickers(): Promise<TickerItem[]> {
-  const res = await fetch(`${BASE_URL}/api/market/tickers`);
+  const res = await fetch(`${BASE_URL}/api/market/tickers`, {
+    credentials: 'include',
+  });
   if (!res.ok) throw new Error(`fetchTickers failed: ${res.status}`);
   return res.json();
 }
