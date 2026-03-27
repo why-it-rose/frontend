@@ -30,13 +30,13 @@ export default function MyPagePanel({ onClose, onLogout }: MyPagePanelProps) {
     <>
       <button
         type="button"
-        className="fixed inset-0 z-[200] cursor-default bg-black/15"
+        className="fixed inset-0 z-[200] cursor-default bg-black/15 max-md:bottom-[89px]"
         aria-label="닫기"
         onClick={onClose}
       />
 
       <div
-        className="mypage-inter fixed top-0 right-0 z-[201] flex h-[100dvh] w-full max-w-[400px] flex-col bg-white shadow-[-4px_0_24px_rgba(0,0,0,0.1)]"
+        className="mypage-inter fixed top-0 right-0 z-[201] flex h-[100dvh] w-[25vw] min-w-[340px] max-w-[480px] flex-col bg-white shadow-[-4px_0_24px_rgba(0,0,0,0.1)] max-md:bottom-[89px] max-md:h-auto max-md:w-full max-md:min-w-0 max-md:max-w-none"
         role="dialog"
         aria-modal="true"
         aria-labelledby="mypage-panel-title"
@@ -117,7 +117,7 @@ export default function MyPagePanel({ onClose, onLogout }: MyPagePanelProps) {
           )}
         </div>
 
-        {!scrapManageMode && (
+        {activeTab === 'settings' && (
           <div className="flex shrink-0 flex-col items-center gap-2 border-t border-[#eff1f8] px-[21px] pt-6 pb-4">
             <button
               type="button"

@@ -141,7 +141,7 @@ export default function LoginModal({ onClose, onSignup, onLogin }: LoginModalPro
                 </div>
 
                 {errorMessage && (
-                    <p style={{ margin: '0 0 12px 0', fontSize: 12, color: '#dc2626' }}>{errorMessage}</p>
+                    <p style={{ margin: '0 0 12px 12px', fontSize: 12, color: '#dc2626' }}>{errorMessage}</p>
                 )}
 
                 <div
@@ -221,7 +221,7 @@ export default function LoginModal({ onClose, onSignup, onLogin }: LoginModalPro
                     </button>
                 </div>
 
-                <div style={{ textAlign: 'center' }}>
+                <div style={{ textAlign: 'center', marginTop: -10 }}>
                     <span style={{ fontFamily: 'Noto Sans KR', fontSize: 13, color: '#6b7280', marginRight: 6 }}>계정이 없으신가요?</span>
                     <button
                         type="button"

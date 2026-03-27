@@ -53,6 +53,12 @@ export function CandlestickChart({
 
   const yLabels  = Array.from({ length: 5 }, (_, k) => minP + (priceRange / 4) * k);
   const volBaseY = chartH + 20;
+  const maxDateLabels = Math.max(4, Math.floor(innerW / 90));
+  const dateLabelStep = Math.max(1, Math.ceil(bars.length / maxDateLabels));
+  const shouldShowDateLabel = (barIndex: number) => {
+    const isLast = barIndex === bars.length - 1;
+    return barIndex % dateLabelStep === 0 || isLast;
+  };
 
   return (
     <div ref={containerRef} className="w-full h-full">
@@ -198,7 +204,7 @@ export function CandlestickChart({
 
         {/* ── X축 날짜 레이블 ── */}
         {bars.map((bar, i) =>
-          bar.date ? (
+          bar.date && shouldShowDateLabel(i) ? (
             <text key={`d-${i}`} x={bx(i)} y={chartH + 14}
               textAnchor="middle" fontSize="8" fill="#8da0b3">
               {bar.date}

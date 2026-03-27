@@ -236,7 +236,7 @@ export default function HomeLayout({
             ref={listScrollRef}
             className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white"
           >
-            <div className="hidden lg:block" onClick={()=>{navigate('/chart')}}>
+            <div className="hidden lg:block" onClick={()=>{navigate('/chart/stock-detail')}}>
               {displayedStocks.map(stock => (
                 <div
                   key={`${stock.ticker}-${stock.rank}`}
@@ -305,7 +305,7 @@ export default function HomeLayout({
                 <div
                   key={`${stock.ticker}-${stock.rank}`}
                   onClick={() => {
-                    navigate('/chart');
+                    navigate('/chart/stock-detail');
                   }}
                   className="grid min-h-[62px] grid-cols-[minmax(0,1fr)_82px_78px] items-center border-b border-[#eff1f8] px-4 py-2 transition-colors duration-150 hover:bg-[#f4f6fb]"
                 >
