@@ -5,7 +5,7 @@ import {
   HistogramSeries,
   createChart,
 } from "lightweight-charts";
-import type { IChartApi } from "lightweight-charts";
+import type { IChartApi, MouseEventParams, Time } from "lightweight-charts";
 import type { OhlcBar } from "../types";
 
 const MAIN = "#014d9d";
@@ -34,6 +34,33 @@ function dedupeSortedByTime(bars: OhlcBar[]): OhlcBar[] {
 /** 한 화면에 넣을 최대 봉 수 — 값이 클수록 조금 더 축소(넓은 구간) */
 const DEFAULT_VISIBLE_BARS = 120;
 
+function timeToIsoDateKey(t: Time): string | null {
+  if (typeof t === "string") return t.slice(0, 10);
+  if (typeof t === "number") {
+    const d = new Date(t * 1000);
+    const y = d.getUTCFullYear();
+    const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(d.getUTCDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+  if (typeof t === "object" && t !== null && "year" in t) {
+    const b = t as { year: number; month: number; day: number };
+    return `${b.year}-${String(b.month).padStart(2, "0")}-${String(b.day).padStart(2, "0")}`;
+  }
+  return null;
+}
+
+function isCandlePoint(
+  o: unknown
+): o is { open: number; high: number; low: number; close: number } {
+  return (
+    typeof o === "object" &&
+    o !== null &&
+    "open" in o &&
+    typeof (o as { open: unknown }).open === "number"
+  );
+}
+
 function applyZoomedVisibleRange(
   chart: IChartApi,
   barCount: number,
@@ -58,11 +85,16 @@ export function LightweightCandleChart({
   bars,
   /** 기본 72봉. 일봉이 많을 때 최근 구간만 확대 */
   visibleBars = DEFAULT_VISIBLE_BARS,
+  /** 크로스헤어가 올라간 봉 — 마우스가 차트 밖이면 `null` */
+  onHoverBar,
 }: {
   bars: OhlcBar[];
   visibleBars?: number;
+  onHoverBar?: (bar: OhlcBar | null) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const hoverRef = useRef(onHoverBar);
+  hoverRef.current = onHoverBar;
 
   useEffect(() => {
     const el = containerRef.current;
@@ -150,6 +182,51 @@ export function LightweightCandleChart({
     );
 
     applyZoomedVisibleRange(chart, clean.length, visibleBars);
+
+    const crosshairHandler = (param: MouseEventParams) => {
+      const cb = hoverRef.current;
+      if (!cb) return;
+      if (
+        param.time === undefined ||
+        param.point === undefined ||
+        param.point.x < 0 ||
+        param.point.y < 0
+      ) {
+        cb(null);
+        return;
+      }
+      const candle = param.seriesData.get(candleSeries);
+      if (!isCandlePoint(candle)) {
+        cb(null);
+        return;
+      }
+      const key = timeToIsoDateKey(param.time);
+      if (!key) {
+        cb(null);
+        return;
+      }
+      const row = clean.find((b) => barToTimeKey(b) === key);
+      const hist = param.seriesData.get(volSeries);
+      let volume = row?.volume ?? 0;
+      if (
+        hist &&
+        typeof hist === "object" &&
+        "value" in hist &&
+        typeof (hist as { value: unknown }).value === "number"
+      ) {
+        volume = (hist as { value: number }).value;
+      }
+      const displayDate = row?.date ?? key.replace(/-/g, ".");
+      cb({
+        date: displayDate,
+        open: candle.open,
+        high: candle.high,
+        low: candle.low,
+        close: candle.close,
+        volume,
+      });
+    };
+    chart.subscribeCrosshairMove(crosshairHandler);
 
     const ro = new ResizeObserver(() => {
       if (!containerRef.current) return;

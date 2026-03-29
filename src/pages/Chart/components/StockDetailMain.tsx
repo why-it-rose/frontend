@@ -1,13 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { fetchStockSearch } from "@/features/stock/api";
 import { ROUTES } from "@/shared/constants/routes";
-import type { PeriodTab, StockDetailMainProps } from "../types";
+import type { OhlcBar, PeriodTab, StockDetailMainProps } from "../types";
 import {
   useChartPeriod,
   useChartStockHeader,
   useOhlcData,
   useOhlcSummary,
+  ohlcBarToSummary,
 } from "../hook";
 import { LightweightCandleChart } from "./LightweightCandleChart";
 import { StockInfoBar } from "./StockInfoBar";
@@ -180,7 +181,22 @@ export function StockDetailMain({
   const stock = stockProp ?? fetchedHeader;
   const bars = barsProp ?? fetchedBars;
 
-  const summary = useOhlcSummary(bars);
+  const [hoverBar, setHoverBar] = useState<OhlcBar | null>(null);
+  useEffect(() => {
+    setHoverBar(null);
+  }, [bars]);
+
+  const baseSummary = useOhlcSummary(bars);
+  const summary = useMemo(() => {
+    if (!baseSummary) return null;
+    if (hoverBar) return ohlcBarToSummary(hoverBar);
+    return baseSummary;
+  }, [baseSummary, hoverBar]);
+
+  const handleHoverBar = useCallback((bar: OhlcBar | null) => {
+    setHoverBar(bar);
+  }, []);
+
   const chartVisibleBars = visibleBarsForPeriod(activePeriod);
   const mobileEventChips = useMemo(() => {
     const chips: { label: string; positive: boolean; date: string }[] = [];
@@ -257,7 +273,11 @@ export function StockDetailMain({
             </div>
 
             <div className="min-h-0 flex-1 px-1 pb-2 pt-2">
-              <LightweightCandleChart bars={bars} visibleBars={chartVisibleBars} />
+              <LightweightCandleChart
+                bars={bars}
+                visibleBars={chartVisibleBars}
+                onHoverBar={handleHoverBar}
+              />
             </div>
           </>
         )}
@@ -299,7 +319,11 @@ export function StockDetailMain({
         </div>
 
         <main className="min-h-0 flex-1 overflow-hidden border-t border-[#eff1f8] bg-white">
-          <LightweightCandleChart bars={bars} visibleBars={chartVisibleBars} />
+          <LightweightCandleChart
+            bars={bars}
+            visibleBars={chartVisibleBars}
+            onHoverBar={handleHoverBar}
+          />
         </main>
 
         <div className="shrink-0 border-t border-[#eff1f8] bg-[#f9fafc]">

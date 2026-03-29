@@ -25,6 +25,8 @@ export {
 
 // Hooks
 export {
+  formatChartVolume,
+  ohlcBarToSummary,
   useChartPeriod,
   useChartStockHeader,
   useOhlcData,

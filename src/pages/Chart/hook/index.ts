@@ -27,6 +27,26 @@ function candleDtoToBar(c: StockPriceCandleDto): OhlcBar {
   };
 }
 
+/** 단일 봉 거래량 표기 (홈 리스트와 유사) */
+export function formatChartVolume(value: number): string {
+  if (value >= 10_000) {
+    const manJu = value / 10_000;
+    return `${manJu.toLocaleString("ko-KR", { maximumFractionDigits: 1 })}만주`;
+  }
+  return `${value.toLocaleString("ko-KR")}주`;
+}
+
+/** 크로스헤어·요약바용 — 해당 일(봉)의 시고저종·거래량만 반영 */
+export function ohlcBarToSummary(bar: OhlcBar): OhlcSummary {
+  return {
+    open: Math.round(bar.open).toLocaleString("ko-KR"),
+    high: Math.round(bar.high).toLocaleString("ko-KR"),
+    low: Math.round(bar.low).toLocaleString("ko-KR"),
+    close: Math.round(bar.close).toLocaleString("ko-KR"),
+    volume: formatChartVolume(bar.volume),
+  };
+}
+
 // ─── useChartPeriod ─────────────────────────────────────────────────────────────
 /** 활성 기간 탭 상태 관리 */
 export function useChartPeriod(initial: PeriodTab = "일") {
@@ -166,22 +186,11 @@ export function useChartStockHeader(
 }
 
 // ─── useOhlcSummary ─────────────────────────────────────────────────────────────
-/** bars 배열에서 OHLC 요약 계산 (메모이즈) */
+/** 가장 최근 봉(배열 마지막) 기준 요약 — 크로스헤어 없을 때 표시 */
 export function useOhlcSummary(bars: OhlcBar[]): OhlcSummary | null {
   return useMemo(() => {
     if (!bars.length) return null;
-    const last = bars[bars.length - 1];
-    const allHighs = bars.map((b) => b.high);
-    const allLows  = bars.map((b) => b.low);
-    const totalVol = bars.reduce((s, b) => s + b.volume, 0);
-
-    return {
-      open:   Math.round(last.open).toLocaleString(),
-      high:   Math.round(Math.max(...allHighs)).toLocaleString(),
-      low:    Math.round(Math.min(...allLows)).toLocaleString(),
-      close:  Math.round(last.close).toLocaleString(),
-      volume: (totalVol / 1e8).toFixed(1) + "억",
-    };
+    return ohlcBarToSummary(bars[bars.length - 1]);
   }, [bars]);
 }
 
