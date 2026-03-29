@@ -4,7 +4,7 @@ import HomeLayout from './components/HomeLayout';
 
 const DEFAULT_MARKET: StockMarket = 'ALL';
 const DEFAULT_SORT: StockSort = 'TRADING_AMOUNT';
-const DEFAULT_PERIOD: StockPeriod = 'DAILY';
+const DEFAULT_PERIOD: StockPeriod = '1D';
 
 export default function HomePage() {
   const [market, setMarket] = useState<StockMarket>(DEFAULT_MARKET);
