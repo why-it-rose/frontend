@@ -132,41 +132,10 @@ export default function LoginModal({ onClose, onSignup, onLoginSuccess }: LoginM
                     <p style={{ margin: '0 0 12px 12px', fontSize: 12, color: '#dc2626' }}>{errorMessage}</p>
                 )}
 
-                <div
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        marginTop: 8,
-                        marginBottom: 12,
-                        marginLeft: 8,
-                        width: 'calc(100% - 12px)',
-                    }}
-                >
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
-                        <input type="checkbox" style={{ width: 14, height: 14, accentColor: '#014d9d', marginLeft: 4 }} />
-                        <span style={{ fontFamily: 'Noto Sans KR', fontSize: 12, color: '#6b7280', transform: 'translateY(-1px)' }}>로그인 상태 유지</span>
-                    </label>
-                    <button
-                        type="button"
-                        style={{
-                            border: 'none',
-                            background: 'none',
-                            padding: 0,
-                            fontFamily: 'Noto Sans KR',
-                            fontSize: 12,
-                            color: '#6b7280',
-                            cursor: 'pointer',
-                        }}
-                    >
-                        비밀번호 찾기
-                    </button>
-                </div>
-
                 <button
                     type="button"
                     className="btn-primary"
-                    style={{ marginBottom: 20, width: 'calc(100% - 12px)', marginLeft: 8 }}
+                    style={{ marginTop: 12, marginBottom: 20, width: 'calc(100% - 12px)', marginLeft: 8 }}
                     onClick={handleLogin}
                     disabled={isSubmitting}
                 >
