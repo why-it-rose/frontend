@@ -32,6 +32,7 @@ export async function getMe(): Promise<AuthUser> {
     return data.result;
 }
 
-export async function logout(): Promise<void> {
+export async function logoutFromServer(): Promise<void> {
     await apiClient.post('/auth/logout');
 }
+
