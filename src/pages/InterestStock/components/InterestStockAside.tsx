@@ -25,6 +25,7 @@ import deleteIco from '@/assets/delete.svg';
 import dragHandleIco from '@/assets/button.svg';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { useNavigate } from 'react-router';
+import { toChartStockDetail } from '@/shared/constants/routes';
 
 type WatchRow = {
   name: string;
@@ -291,7 +292,7 @@ export default function InterestStockAside() {
               return (
                 <div
                   key={row.code}
-                  onClick={() => navigate('/chart/stock-detail')}
+                  onClick={() => navigate(toChartStockDetail(row.code))}
                   className="box-border grid h-[58px] w-full shrink-0 grid-cols-[minmax(0,1fr)_74px] items-center overflow-hidden border-0 border-b border-[#e5e7eb] bg-white px-4 text-left transition-colors hover:bg-[#f4f5f7]"
                 >
                   <WatchIdentityBlock row={row} showMarket={false} />

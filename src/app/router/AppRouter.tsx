@@ -21,6 +21,10 @@ const router = createBrowserRouter([
   // ── Split (웹) ──────────────────────────────────────────────────────────────
   {
     path: '/chart/stock-detail',
+    element: <Navigate to="/chart/005930/stock-detail" replace />,
+  },
+  {
+    path: '/chart/:stockCode/stock-detail',
     element: (
       <SplitRoute
         left={<StockDetailMain />}

@@ -12,3 +12,11 @@ export const ROUTES = {
 
 /** 종목 상세 경로 생성 헬퍼 */
 export const toStockDetail = (stockCode: string) => `/stocks/${stockCode}`;
+
+/**
+ * 스플릿뷰 차트 종목 상세 — `/chart/{종목코드}/stock-detail`
+ * 예: `/chart/005930/stock-detail`
+ */
+export function toChartStockDetail(stockCode: string) {
+  return `/chart/${encodeURIComponent(stockCode)}/stock-detail`;
+}
