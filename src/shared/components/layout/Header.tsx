@@ -13,7 +13,7 @@ import SignupModal from "@/features/auth/components/SignupModal";
 import MyPagePanel from "@/pages/MyPage/components/MyPagePanel";
 import AlertCenter from "@/features/alert/AlertCenter/AlertCenter";
 import { alertCenterListHasUnread } from "@/features/alert/AlertCenter/alertCenter.mock";
-import { logoutFromServer } from "@/features/auth/api/authApi";
+import { deleteMyAccount, getApiResponseCode, logoutFromServer } from '@/features/auth/api/authApi';
 
 
 type HeaderProps = {
@@ -36,6 +36,8 @@ export default function Header({ onMyPageOpen, disableMyPagePanel = false }: Hea
   const desktopAlertContainerRef = useRef<HTMLDivElement | null>(null);
 
   const hasUnread = alertCenterListHasUnread(allListMarkedRead, detailFullyReadIds);
+  const [withdrawMessage, setWithdrawMessage] = useState('');
+  const [withdrawMessageType, setWithdrawMessageType] = useState<'success' | 'error' | ''>('');
 
   const renderAlertButton = (
     anchor: "mobile" | "desktop",
@@ -137,13 +139,15 @@ export default function Header({ onMyPageOpen, disableMyPagePanel = false }: Hea
               <>
                 {renderAlertButton("desktop", desktopAlertContainerRef, "w-8.5 h-8.5")}
                 <button
-                  onClick={() => {
-                    if (onMyPageOpen) {
-                      onMyPageOpen();
-                      return;
-                    }
-                    setMyPageOpen(true);
-                  }}
+                    onClick={() => {
+                        if (onMyPageOpen) {
+                            onMyPageOpen();
+                            return;
+                        }
+                        setWithdrawMessage('');
+                        setWithdrawMessageType('');
+                        setMyPageOpen(true);
+                    }}
                   className="w-8.5 h-8.5 rounded-full flex items-center justify-center text-white text-xs font-bold bg-primary"
                 >
                   {profileInitial}
@@ -189,18 +193,52 @@ export default function Header({ onMyPageOpen, disableMyPagePanel = false }: Hea
       )}
       <MobileSearchSheet open={mobileSearchOpen} onClose={() => setMobileSearchOpen(false)} />
       {!disableMyPagePanel && isLoggedIn && myPageOpen && (
-        <MyPagePanel
-          onClose={() => setMyPageOpen(false)}
-          onLogout={async () => {
-              try {
-                  await logoutFromServer();
-              } finally {
-                  clearAuth();
+          <MyPagePanel
+              onClose={() => {
                   setMyPageOpen(false);
-                  navigate(ROUTES.HOME);
-              }
-          }}
-        />
+                  setWithdrawMessage('');
+                  setWithdrawMessageType('');
+              }}
+              onLogout={async () => {
+                  try {
+                      await logoutFromServer();
+                  } finally {
+                      clearAuth();
+                      setMyPageOpen(false);
+                      navigate(ROUTES.HOME);
+                  }
+              }}
+              onWithdraw={async () => {
+                  try {
+                      await deleteMyAccount();
+                      clearAuth();
+                      setMyPageOpen(false);
+                      navigate('/login');
+                  } catch (error: unknown) {
+                      const code = getApiResponseCode(error);
+
+                      if (code === 2952) {
+                          setWithdrawMessage('로그인이 필요합니다.');
+                          setWithdrawMessageType('error');
+                          clearAuth();
+                          setMyPageOpen(false);
+                          navigate('/login');
+                          return;
+                      }
+
+                      if (code === 4013) {
+                          setWithdrawMessage('이미 탈퇴한 계정입니다.');
+                          setWithdrawMessageType('error');
+                          return;
+                      }
+
+                      setWithdrawMessage('회원 탈퇴 중 오류가 발생했습니다.');
+                      setWithdrawMessageType('error');
+                  }
+              }}
+              withdrawMessage={withdrawMessage}
+              withdrawMessageType={withdrawMessageType}
+          />
       )}
     </>
   );
