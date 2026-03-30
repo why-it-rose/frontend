@@ -225,7 +225,7 @@ body {
 .market-index-marquee {
   display: inline-flex;
   width: max-content;
-  animation: market-index-marquee 70s linear infinite;
+  animation: market-index-marquee 220s linear infinite;
   will-change: transform;
 }
 
