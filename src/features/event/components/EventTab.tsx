@@ -1,5 +1,7 @@
 import type { StockEvent } from "../types/event.types";
 
+const RELATED_NEWS_LIMIT = 10;
+
 interface EventTabProps {
   event: StockEvent;
   scrapping?: boolean;
@@ -119,7 +121,7 @@ export default function EventTab({
             관련 뉴스
           </p>
           <div className="space-y-2.5">
-            {relatedNews.map((news) => (
+            {relatedNews.slice(0, RELATED_NEWS_LIMIT).map((news) => (
               <div
                 key={news.newsId}
                 onClick={() =>
