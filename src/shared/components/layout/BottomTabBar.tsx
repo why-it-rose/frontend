@@ -31,7 +31,11 @@ export default function BottomTabBar({ onMyPageOpen, myPageActive }: BottomTabBa
     <nav className="bottom-tab-bar grid lg:hidden shrink-0 bg-white border-t border-[#f0f2f8]">
       {TABS.map(({ label, icon, iconActive, path }) => {
         const isMyPage = path === ROUTES.MY;
-        const isActive = isMyPage ? !!myPageActive : activePath === path;
+        const isActive = myPageActive
+          ? isMyPage
+          : isMyPage
+            ? false
+            : activePath === path;
         return (
           <button
             key={path}
