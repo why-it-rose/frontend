@@ -1,5 +1,7 @@
 import type { StockEvent } from "../types/event.types";
 
+const RELATED_NEWS_LIMIT = 10;
+
 interface EventTabProps {
   event: StockEvent;
   scrapping?: boolean;
@@ -119,7 +121,7 @@ export default function EventTab({
             관련 뉴스
           </p>
           <div className="space-y-2.5">
-            {relatedNews.map((news) => (
+            {relatedNews.slice(0, RELATED_NEWS_LIMIT).map((news) => (
               <div
                 key={news.newsId}
                 onClick={() =>
@@ -138,7 +140,7 @@ export default function EventTab({
                 <p className="text-[13px] text-[#6b7280] leading-[1.6] mb-2">
                   {news.body}
                 </p>
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center gap-2">
                   <span className="text-[11px] text-[#9ca3af]">
                     {news.source} ·{" "}
                     {new Date(news.publishedAt)
@@ -150,9 +152,18 @@ export default function EventTab({
                       .replace(/\. /g, ".")
                       .slice(0, -1)}
                   </span>
-                  <span className="text-[11px] text-[#4b5563] bg-[#f3f4f6] px-2 py-0.5 rounded-full">
-                    {news.tag}
-                  </span>
+                  {news.tags.length > 0 && (
+                    <div className="flex items-center justify-end gap-1 flex-wrap">
+                      {news.tags.map((tag) => (
+                        <span
+                          key={`${news.newsId}-${tag}`}
+                          className="text-[11px] text-[#4b5563] bg-[#f3f4f6] px-2 py-0.5 rounded-full"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

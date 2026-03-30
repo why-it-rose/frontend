@@ -12,6 +12,7 @@ interface ApiNewsItem {
   thumbnailUrl: string;
   publishedAt: string;
   relevanceScore: number;
+  tags?: string[];
 }
 
 export interface ApiEventItem {
@@ -61,7 +62,7 @@ function toStockEvent(d: ApiEventDetail): StockEvent {
       source: n.source,
       publishedAt: n.publishedAt,
       url: n.url,
-      tag: "",
+      tags: n.tags ?? [],
     })),
     isScrapped: d.isScrapped ?? d.scrapped ?? false,
   };
