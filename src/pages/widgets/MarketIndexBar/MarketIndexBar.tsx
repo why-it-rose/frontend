@@ -1,40 +1,73 @@
-/** 한 줄에 반복할 코스피·코스닥 쌍 개수 (넓은 화면에서도 칸이 차도록) */
-const PAIR_REPEAT = 12;
+import {
+  formatChange,
+  formatPct,
+  formatPrice,
+  isUpQuote,
+  useMarketTickerQuotes,
+  type TickerRow,
+} from './useMarketTickerQuotes';
 
-function IndexPair() {
-  return (
-    <div className="flex shrink-0 items-center gap-8 text-xs text-[#4b5563]">
-      <span className="whitespace-nowrap">
-        코스피 <strong className="text-[#111827]">2,690.12</strong>{' '}
-        <span className="text-red-500">+1.24%</span>
-      </span>
-      <span className="whitespace-nowrap">
-        코스닥 <strong className="text-[#111827]">842.31</strong>{' '}
-        <span className="text-blue-500">-0.48%</span>
-      </span>
-    </div>
-  );
-}
+/** 한 줄에 반복할 스트립 개수 (마퀴 루프용) */
+const STRIP_REPEAT = 8;
 
-function TickerSegment({ segmentKey }: { segmentKey: 'a' | 'b' }) {
+function TickerStrip({ stripKey, rows }: { stripKey: string; rows: TickerRow[] }) {
   return (
-    <div className="flex shrink-0 items-center gap-8 px-6 py-2">
-      {Array.from({ length: PAIR_REPEAT }, (_, i) => (
-        <IndexPair key={`${segmentKey}-${i}`} />
-      ))}
+    <div className="flex shrink-0 items-center gap-6 px-5 py-2 text-[11px] text-[#4b5563] md:gap-8 md:text-xs">
+      {rows.map((item) => {
+        const q = item.quote;
+        const titleName = (q?.hname && q.hname.trim()) || item.label;
+        const pending = !item.loaded && !item.error;
+        const priceStr = pending ? '…' : q != null ? formatPrice(q.price) : '—';
+        const changeStr = pending ? '…' : q != null ? formatChange(q.change) : '—';
+        const pctStr = pending ? '…' : q != null ? `(${formatPct(q.diffPct)})` : '(—)';
+        const up = q != null ? isUpQuote(q.sign, q.change) : true;
+
+        return (
+          <a
+            key={`${stripKey}-${item.id}`}
+            href={item.infoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group relative z-0 inline-flex items-center whitespace-nowrap px-2 py-0 text-[#4b5563] no-underline transition-colors before:pointer-events-none before:absolute before:inset-x-[-6px] before:inset-y-[-5px] before:-z-10 before:rounded-md before:bg-slate-200/85 before:opacity-0 before:transition-opacity before:content-[''] hover:before:opacity-100"
+            title={`${titleName} · ${item.shcode}`}
+          >
+            <span className="relative z-10">
+              <span className="transition-colors group-hover:text-[#111827]">{item.label}</span>{' '}
+              <strong className="font-semibold text-[#111827] transition-colors group-hover:text-[#0f172a]">
+                {priceStr}
+              </strong>{' '}
+              <span
+                className={
+                  up
+                    ? 'text-red-500 transition-colors group-hover:text-red-600'
+                    : 'text-blue-500 transition-colors group-hover:text-blue-600'
+                }
+              >
+                {changeStr} {pctStr}
+              </span>
+            </span>
+          </a>
+        );
+      })}
     </div>
   );
 }
 
 export default function MarketIndexBar() {
+  const { rows } = useMarketTickerQuotes();
+
   return (
     <section
-      className="hidden min-w-0 w-full shrink-0 overflow-hidden border-t border-[#d8e2f8] bg-white lg:block"
-      aria-label="시장 지수"
+      className="hidden min-w-0 w-full shrink-0 overflow-hidden border-t border-[#d8e2f8] bg-white md:block"
+      aria-label="시장 지수 및 시세"
     >
       <div className="market-index-marquee">
-        <TickerSegment segmentKey="a" />
-        <TickerSegment segmentKey="b" />
+        {Array.from({ length: STRIP_REPEAT }, (_, i) => (
+          <TickerStrip key={`a-${i}`} stripKey={`a-${i}`} rows={rows} />
+        ))}
+        {Array.from({ length: STRIP_REPEAT }, (_, i) => (
+          <TickerStrip key={`b-${i}`} stripKey={`b-${i}`} rows={rows} />
+        ))}
       </div>
     </section>
   );
