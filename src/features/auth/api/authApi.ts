@@ -18,7 +18,21 @@ export type AuthUser = {
     nickname: string;
 };
 
+export type SignupRequest = {
+    name: string;
+    nickname: string;
+    email: string;
+    password: string;
+};
+
+export type SignupResult = {
+    userId: number;
+    email: string;
+    nickname: string;
+};
+
 export type LoginResponse = BaseResponse<AuthUser>;
+export type SignupResponse = BaseResponse<SignupResult>;
 
 export async function loginWithEmail(payload: LoginRequest): Promise<LoginResponse> {
     const { data } = await apiClient.post<LoginResponse>('/auth/login', payload);
@@ -36,3 +50,7 @@ export async function logoutFromServer(): Promise<void> {
     await apiClient.post('/auth/logout');
 }
 
+export async function signupWithEmail(payload: SignupRequest): Promise<SignupResponse> {
+    const { data } = await apiClient.post<SignupResponse>('/auth/signup', payload);
+    return data;
+}
