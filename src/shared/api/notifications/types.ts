@@ -1,139 +1,55 @@
 /**
- * Notification API — `08_notification.md` 명세와 동기화
- * Base: `/api/notifications`
+ * Notification API 타입 정의
+ * Base: /api/notifications
  */
 
-/** 공통 래핑 응답 (성공 시) */
-export interface ApiSuccessEnvelope<T> {
-  code: string;
-  message: string;
-  data: T;
+// 공통 응답 래퍼
+export interface ApiResponse<T> {
+  isSuccess: boolean;
+  responseCode: number;
+  responseMessage: string;
+  result: T;
 }
 
-// --- 1. unread-count ---
-
-export interface UnreadCountData {
-  unreadCount: number;
-}
-
-// --- 2. GET /notifications (전체 탭 목록) ---
-
-export type NotificationReadStatusFilter = 'READ' | 'UNREAD';
-
-export interface NotificationListParams {
-  stockId?: number;
-  tagName?: string;
-  startDate?: string;
-  endDate?: string;
-  readStatus?: NotificationReadStatusFilter;
-  page?: number;
-  size?: number;
-}
-
-export interface NotificationListStock {
-  stockId: number;
-  ticker: string;
-  name: string;
-  logoUrl: string;
-  newsCount: number;
-}
-
-export interface NotificationListItem {
-  notifiedDate: string;
-  daysAgo: number;
-  isRead: boolean;
+// 알림 요약 아이템 (GET /api/notifications/summary)
+export interface NotificationSummaryItem {
   notificationId: number;
-  stocks: NotificationListStock[];
+  date: string;         // "yyyy.MM.dd"
+  stockNames: string;   // "삼성전자, SK하이닉스" 또는 "삼성전자 외 N개"
+  relativeTime: string; // "오늘", "1일 전", "N일 전"
+  message: string;      // **bold** 마크다운 포함
+  isRead: boolean;
 }
 
-export interface NotificationListData {
-  page: number;
-  size: number;
-  totalCount: number;
-  items: NotificationListItem[];
-}
-
-// --- 3. GET /notifications/{id} (세부) ---
-
-export interface NotificationNewsItem {
+// 뉴스 아이템
+export interface NewsItem {
   newsId: number;
   title: string;
+  summary: string;
+  publishedAt: string; // "yyyy.MM.dd HH:mm"
   source: string;
   url: string;
-  publishedAt: string;
   tags: string[];
 }
 
-export type EventAlertType = 'SURGE' | 'DROP' | string;
-
-export interface NotificationEventAlert {
-  eventId: number;
-  eventType: EventAlertType;
-  changeRate: number;
-  summary: string;
-}
-
-export interface NotificationReviewAlert {
-  eventId: number;
-  changeRate: number;
-  message: string;
-}
-
-export interface NotificationStockGroup {
+// 종목별 뉴스 그룹
+export interface StockNewsGroup {
   stockId: number;
+  stockName: string;
   ticker: string;
-  name: string;
-  logoUrl: string;
-  eventSummary: string;
-  newsItems: NotificationNewsItem[];
-  eventAlerts: NotificationEventAlert[];
-  reviewAlert: NotificationReviewAlert | null;
+  newsCount: number;
+  newsList: NewsItem[];
 }
 
-export interface NotificationDetailData {
-  notificationId: number;
-  notifiedDate: string;
-  stockGroups: NotificationStockGroup[];
-}
-
-// --- 4. PATCH /notifications/read ---
-
-export interface NotificationReadRequest {
-  notificationIds: number[];
-}
-
-export interface NotificationReadResult {
-  updatedCount: number;
-}
-
-// --- 5. GET /notifications/history ---
-
-export interface NotificationHistoryParams {
-  stockId?: number;
-  page?: number;
-  size?: number;
-}
-
-export type NotificationHistoryType = 'NEWS' | 'EVENT' | 'REVIEW' | 'SYSTEM';
-
-export interface NotificationHistoryItem {
-  notificationId: number;
-  type: NotificationHistoryType;
-  title: string;
-  description: string;
-  isRead: boolean;
-  createdAt: string;
-}
-
-export interface NotificationHistoryGroup {
+// 알림 세부 아이템 (GET /api/notifications)
+export interface NotificationDetailItem {
   date: string;
-  label: string;
-  items: NotificationHistoryItem[];
+  notificationId: number;
+  isRead: boolean;
+  stocks: StockNewsGroup[];
 }
 
-export interface NotificationHistoryData {
-  page: number;
-  size: number;
-  totalCount: number;
-  groups: NotificationHistoryGroup[];
+// 미읽음 수 (GET /api/notifications/unread-count)
+export interface UnreadCountResult {
+  count: number;
 }
