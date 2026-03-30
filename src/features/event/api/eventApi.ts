@@ -30,6 +30,8 @@ export interface ApiEventItem {
 interface ApiEventDetail extends ApiEventItem {
   summary: string | null;
   newsList: ApiNewsItem[];
+  isScrapped?: boolean;
+  scrapped?: boolean;
 }
 
 interface ApiResponse<T> {
@@ -61,8 +63,37 @@ function toStockEvent(d: ApiEventDetail): StockEvent {
       url: n.url,
       tag: "",
     })),
-    isScrapped: false,
+    isScrapped: d.isScrapped ?? d.scrapped ?? false,
   };
+}
+
+async function ensureApiSuccess(
+  res: Response,
+  ignoreResponseCodes: number[] = [],
+  ignoreHttpStatuses: number[] = [],
+): Promise<void> {
+  const text = await res.text();
+  let json: ApiResponse<unknown> | null = null;
+  if (text) {
+    try {
+      json = JSON.parse(text) as ApiResponse<unknown>;
+    } catch {
+      json = null;
+    }
+  }
+
+  if (!res.ok) {
+    if (ignoreHttpStatuses.includes(res.status)) return;
+    if (json && ignoreResponseCodes.includes(json.responseCode)) return;
+    throw new Error(json?.responseMessage || `event scrap request failed: ${res.status}`);
+  }
+
+  if (res.status === 204 || !json) return;
+
+  if (ignoreResponseCodes.includes(json.responseCode)) return;
+  if (typeof json?.isSuccess === "boolean" && !json.isSuccess) {
+    throw new Error(json.responseMessage || "event scrap request failed");
+  }
 }
 
 // ─── API 함수 ─────────────────────────────────────────────────────────────────
@@ -97,4 +128,20 @@ export async function fetchEventDetail(eventId: number): Promise<StockEvent> {
   const json: ApiResponse<ApiEventDetail> = await res.json();
   if (!json.isSuccess) throw new Error(json.responseMessage);
   return toStockEvent(json.result);
+}
+
+export async function addEventScrap(eventId: number): Promise<void> {
+  const res = await fetch(`${BASE_URL}/events/${eventId}/scraps`, {
+    method: "POST",
+    credentials: "include",
+  });
+  await ensureApiSuccess(res, [4022], [409]);
+}
+
+export async function removeEventScrap(eventId: number): Promise<void> {
+  const res = await fetch(`${BASE_URL}/events/${eventId}/scraps`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  await ensureApiSuccess(res, [4020], [404]);
 }

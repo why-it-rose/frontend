@@ -140,7 +140,7 @@ export function StockDetailMain({
         : "차트"
   );
 
-  const { event: mobileEvent } = useEventDetail(
+  const { event: mobileEvent, scrapping: mobileEventScrapping, toggleScrap } = useEventDetail(
     mobileMode === "event" ? mobileEventId : null
   );
   const { memos, save: saveMemo, update: updateMemo, remove: removeMemo } = useMemos(
@@ -285,7 +285,8 @@ export function StockDetailMain({
         {mobileTab === "이벤트" && mobileEvent && (
           <EventTab
             event={mobileEvent}
-            onScrap={(id, s) => console.log(id, s)}
+            scrapping={mobileEventScrapping}
+            onScrap={toggleScrap}
           />
         )}
 
