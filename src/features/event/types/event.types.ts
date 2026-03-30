@@ -2,11 +2,8 @@ export type EventType = 'SURGE' | 'PLUNGE';
 
 export interface StockMemo {
   memoId: number;
-  eventType: EventType;
-  stockName: string;
-  changeRate: number; // e.g. +19.47 or -8.23
-  date: string; // e.g. "03.16"
-  text: string;
+  content: string;
+  createdAt: string; // ISO: "2026-03-16T10:30:00"
 }
 
 export type VoteType = '상승' | '횡보' | '하락' | null;
