@@ -254,6 +254,12 @@ body {
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.13);
 }
 
+/* 데스크톱: 헤더 딤 위에만 표시(포털) — 위치는 인라인 */
+.search-dropdown--portal {
+  position: fixed;
+  z-index: 201;
+}
+
 /* 인기 검색 순위: 홈 종목 리스트와 동일하게 body(Pretendard) 상속 + 굵기 유지 */
 .search-popular-rank {
   flex-shrink: 0;

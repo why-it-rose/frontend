@@ -81,8 +81,14 @@ export interface OhlcSummaryBarProps {
 
 export interface StockInfoBarProps {
   stock: StockInfo;
+  /** 차트 종목 ID — 관심 추가/해제 API에 사용 */
+  stockId?: number | null;
+  /** 로그인 + 관심 목록 기준 표시 */
+  isInterested?: boolean;
   onBack?: () => void;
   onAddWatchlist?: () => void;
+  /** 비로그인 시 관심 버튼 클릭 */
+  onRequireLogin?: () => void;
 }
 
 export interface TickerBarProps {
