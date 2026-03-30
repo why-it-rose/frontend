@@ -2,7 +2,7 @@ export type StockMarket = 'ALL' | 'KOSPI' | 'KOSDAQ';
 
 export type StockSort = 'TRADING_AMOUNT' | 'TRADING_VOLUME' | 'SURGE' | 'DROP';
 
-export type StockPeriod = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'THREE_MONTHS' | 'SIX_MONTHS';
+export type StockPeriod = '1D' | '1W' | '1M' | '3M' | '6M';
 
 export type StockChangeDirection = 'UP' | 'DOWN' | 'FLAT';
 
