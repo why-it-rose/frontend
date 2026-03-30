@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams, useSearchParams } from "react-router";
 import LoginModal from "@/features/auth/components/LoginModal";
 import { useAuth } from "@/features/auth/context/AuthContext";
 import { fetchStockSearch } from "@/features/stock/api";
@@ -24,7 +24,7 @@ import NewsTab from "@/features/news/components/NewsTab";
 import StockDetailAside from "@/pages/StockDetail/components/StockDetailaside";
 import type { StockEvent, StockMemo } from "@/features/event/types/event.types";
 import type { TodayNews } from "@/features/news/types/news.types";
-
+import { useEventDetail } from "@/features/event/hooks/useEventDetail";
 const MOCK_EVENT: StockEvent = {
   eventId: 1,
   stockCode: "005930",
@@ -124,11 +124,13 @@ export function StockDetailMain({
   const { refreshAuth } = useAuth();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const { stockCode: stockCodeParam } = useParams<{ stockCode?: string }>();
+  const [searchParams] = useSearchParams();
   const { data: interestItems = [] } = useInterestStocksQuery();
 
   const [resolvedTickerStockId, setResolvedTickerStockId] = useState<number | undefined>(undefined);
   // 검색이 완료된 코드 — stockCodeParam과 다르면 아직 검색 중
   const [searchedCode, setSearchedCode] = useState<string | undefined>(undefined);
+
 
   useEffect(() => {
     if (stockId != null || !stockCodeParam) return;
@@ -251,6 +253,24 @@ export function StockDetailMain({
     return chips.slice(-3);
   }, [bars]);
 
+  const queryEventId = useMemo(() => {
+    const rawEventId = searchParams.get("eventId");
+    if (!rawEventId) return null;
+    const parsed = Number(rawEventId);
+    return Number.isFinite(parsed) ? parsed : null;
+  }, [searchParams]);
+
+  const { event: eventDetailData, error: eventDetailError } = useEventDetail(queryEventId);
+
+  useEffect(() => {
+    if (eventDetailData) {
+      console.log("eventDetail:", eventDetailData);
+    }
+    if (eventDetailError) {
+      console.error("eventDetail(1) error:", eventDetailError);
+    }
+  }, [eventDetailData, eventDetailError]);
+  
   return (
     <>
     <div
@@ -337,7 +357,7 @@ export function StockDetailMain({
 
         {mobileTab === "이벤트" && (
           <EventTab
-            event={MOCK_EVENT}
+            event={eventDetailData ?? MOCK_EVENT}
             onScrap={(id, s) => console.log(id, s)}
           />
         )}
