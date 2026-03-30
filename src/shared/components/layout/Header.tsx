@@ -12,59 +12,71 @@ import LoginModal from "@/features/auth/components/LoginModal";
 import SignupModal from "@/features/auth/components/SignupModal";
 import MyPagePanel from "@/pages/MyPage/components/MyPagePanel";
 import AlertCenter from "@/features/alert/AlertCenter/AlertCenter";
-import { alertCenterListHasUnread } from "@/features/alert/AlertCenter/alertCenter.mock";
-import { deleteMyAccount, getApiResponseCode, logoutFromServer } from '@/features/auth/api/authApi';
-
+import { NotificationBadge } from "@/features/alert/components/NotificationBadge";
+import { useNotificationBadge } from "@/features/alert/hooks/useNotificationBadge";
+import {
+  deleteMyAccount,
+  getApiResponseCode,
+  logoutFromServer,
+} from "@/features/auth/api/authApi";
 
 type HeaderProps = {
   onMyPageOpen?: () => void;
   disableMyPagePanel?: boolean;
 };
 
-export default function Header({ onMyPageOpen, disableMyPagePanel = false }: HeaderProps) {
-  const { isLoggedIn, nickname, refreshAuth, clearAuth} = useAuth();
+export default function Header({
+  onMyPageOpen,
+  disableMyPagePanel = false,
+}: HeaderProps) {
+  const { isLoggedIn, nickname, refreshAuth, clearAuth } = useAuth();
   const profileInitial = Array.from(nickname.trim())[0] ?? "유";
   const navigate = useNavigate();
   const [modal, setModal] = useState<"login" | "signup" | null>(null);
   const [myPageOpen, setMyPageOpen] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const [alertAnchor, setAlertAnchor] = useState<"mobile" | "desktop" | null>(null);
-  const [allListMarkedRead, setAllListMarkedRead] = useState(false);
-  const [detailFullyReadIds, setDetailFullyReadIds] = useState<Set<number>>(() => new Set());
+  const [alertAnchor, setAlertAnchor] = useState<"mobile" | "desktop" | null>(
+    null,
+  );
   const mobileAlertContainerRef = useRef<HTMLDivElement | null>(null);
   const desktopAlertContainerRef = useRef<HTMLDivElement | null>(null);
 
-  const hasUnread = alertCenterListHasUnread(allListMarkedRead, detailFullyReadIds);
-  const [withdrawMessage, setWithdrawMessage] = useState('');
-  const [withdrawMessageType, setWithdrawMessageType] = useState<'success' | 'error' | ''>('');
+  const { count: unreadCount } = useNotificationBadge();
+  const hasUnread = unreadCount > 0;
+  const [withdrawMessage, setWithdrawMessage] = useState("");
+  const [withdrawMessageType, setWithdrawMessageType] = useState<
+    "success" | "error" | ""
+  >("");
 
   const renderAlertButton = (
     anchor: "mobile" | "desktop",
     containerRef: RefObject<HTMLDivElement | null>,
     className: string,
   ) => (
-    <div ref={containerRef} className={`relative flex items-center justify-center ${className}`}>
+    <div
+      ref={containerRef}
+      className={`relative flex items-center justify-center ${className}`}
+    >
       <button
         type="button"
         onClick={() => {
           setAlertAnchor(anchor);
           setAlertOpen((prev) => (alertAnchor === anchor ? !prev : true));
         }}
-        className="flex items-center justify-center"
+        className="relative flex items-center justify-center"
       >
-        <img src={hasUnread ? bellSrc : bellNotSrc} alt="알림" className="w-8.5 h-8.5" />
+        <img
+          src={hasUnread ? bellSrc : bellNotSrc}
+          alt="알림"
+          className="w-8.5 h-8.5"
+        />
+        <NotificationBadge />
       </button>
       {alertOpen && alertAnchor === anchor && (
         <AlertCenter
           onClose={() => setAlertOpen(false)}
           containerRef={containerRef}
-          allListMarkedRead={allListMarkedRead}
-          onAllListMarkedRead={() => setAllListMarkedRead(true)}
-          detailFullyReadIds={detailFullyReadIds}
-          onNotificationDetailFullyRead={(notificationId) => {
-            setDetailFullyReadIds((prev) => new Set(prev).add(notificationId));
-          }}
         />
       )}
     </div>
@@ -79,7 +91,12 @@ export default function Header({ onMyPageOpen, disableMyPagePanel = false }: Hea
             <img
               src={logoSrc}
               alt="왜 올랐지?"
-              style={{ height: "58px", width: "auto", objectFit: "contain", marginTop: 6 }}
+              style={{
+                height: "58px",
+                width: "auto",
+                objectFit: "contain",
+                marginTop: 6,
+              }}
             />
           </Link>
           {isLoggedIn ? (
@@ -105,14 +122,22 @@ export default function Header({ onMyPageOpen, disableMyPagePanel = false }: Hea
               <button
                 onClick={() => setModal("login")}
                 className="flex items-center justify-center text-sm font-medium text-[#4b5368] bg-white border border-[#d1d5db] rounded-[7px]"
-                style={{ padding: "8px 16px", height: "30px", minWidth: "52px" }}
+                style={{
+                  padding: "8px 16px",
+                  height: "30px",
+                  minWidth: "52px",
+                }}
               >
                 로그인
               </button>
               <button
                 onClick={() => setModal("signup")}
                 className="flex items-center justify-center text-sm font-semibold text-white rounded-[7px] bg-primary"
-                style={{ padding: "8px 16px", height: "30px", minWidth: "60px" }}
+                style={{
+                  padding: "8px 16px",
+                  height: "30px",
+                  minWidth: "60px",
+                }}
               >
                 회원가입
               </button>
@@ -137,17 +162,21 @@ export default function Header({ onMyPageOpen, disableMyPagePanel = false }: Hea
           <div className="flex items-center justify-end gap-2.5">
             {isLoggedIn ? (
               <>
-                {renderAlertButton("desktop", desktopAlertContainerRef, "w-8.5 h-8.5")}
+                {renderAlertButton(
+                  "desktop",
+                  desktopAlertContainerRef,
+                  "w-8.5 h-8.5",
+                )}
                 <button
-                    onClick={() => {
-                        if (onMyPageOpen) {
-                            onMyPageOpen();
-                            return;
-                        }
-                        setWithdrawMessage('');
-                        setWithdrawMessageType('');
-                        setMyPageOpen(true);
-                    }}
+                  onClick={() => {
+                    if (onMyPageOpen) {
+                      onMyPageOpen();
+                      return;
+                    }
+                    setWithdrawMessage("");
+                    setWithdrawMessageType("");
+                    setMyPageOpen(true);
+                  }}
                   className="w-8.5 h-8.5 rounded-full flex items-center justify-center text-white text-xs font-bold bg-primary"
                 >
                   {profileInitial}
@@ -158,14 +187,22 @@ export default function Header({ onMyPageOpen, disableMyPagePanel = false }: Hea
                 <button
                   onClick={() => setModal("login")}
                   className="flex items-center justify-center text-sm font-medium text-[#4b5368] bg-white border border-[#d1d5db] rounded-[7px]"
-                  style={{ padding: "8px 16px", height: "30px", minWidth: "52px" }}
+                  style={{
+                    padding: "8px 16px",
+                    height: "30px",
+                    minWidth: "52px",
+                  }}
                 >
                   로그인
                 </button>
                 <button
                   onClick={() => setModal("signup")}
                   className="flex items-center justify-center text-sm font-semibold text-white rounded-[7px] bg-primary"
-                  style={{ padding: "8px 16px", height: "30px", minWidth: "60px" }}
+                  style={{
+                    padding: "8px 16px",
+                    height: "30px",
+                    minWidth: "60px",
+                  }}
                 >
                   회원가입
                 </button>
@@ -178,8 +215,8 @@ export default function Header({ onMyPageOpen, disableMyPagePanel = false }: Hea
         <LoginModal
           onClose={() => setModal(null)}
           onSignup={() => setModal("signup")}
-          onLoginSuccess={async() => {
-            await  refreshAuth();
+          onLoginSuccess={async () => {
+            await refreshAuth();
             setModal(null);
           }}
         />
@@ -191,54 +228,57 @@ export default function Header({ onMyPageOpen, disableMyPagePanel = false }: Hea
           onLogin={() => setModal("login")}
         />
       )}
-      <MobileSearchSheet open={mobileSearchOpen} onClose={() => setMobileSearchOpen(false)} />
+      <MobileSearchSheet
+        open={mobileSearchOpen}
+        onClose={() => setMobileSearchOpen(false)}
+      />
       {!disableMyPagePanel && isLoggedIn && myPageOpen && (
-          <MyPagePanel
-              onClose={() => {
-                  setMyPageOpen(false);
-                  setWithdrawMessage('');
-                  setWithdrawMessageType('');
-              }}
-              onLogout={async () => {
-                  try {
-                      await logoutFromServer();
-                  } finally {
-                      clearAuth();
-                      setMyPageOpen(false);
-                      navigate(ROUTES.HOME);
-                  }
-              }}
-              onWithdraw={async () => {
-                  try {
-                      await deleteMyAccount();
-                      clearAuth();
-                      setMyPageOpen(false);
-                      navigate('/login');
-                  } catch (error: unknown) {
-                      const code = getApiResponseCode(error);
+        <MyPagePanel
+          onClose={() => {
+            setMyPageOpen(false);
+            setWithdrawMessage("");
+            setWithdrawMessageType("");
+          }}
+          onLogout={async () => {
+            try {
+              await logoutFromServer();
+            } finally {
+              clearAuth();
+              setMyPageOpen(false);
+              navigate(ROUTES.HOME);
+            }
+          }}
+          onWithdraw={async () => {
+            try {
+              await deleteMyAccount();
+              clearAuth();
+              setMyPageOpen(false);
+              navigate("/login");
+            } catch (error: unknown) {
+              const code = getApiResponseCode(error);
 
-                      if (code === 2952) {
-                          setWithdrawMessage('로그인이 필요합니다.');
-                          setWithdrawMessageType('error');
-                          clearAuth();
-                          setMyPageOpen(false);
-                          navigate('/login');
-                          return;
-                      }
+              if (code === 2952) {
+                setWithdrawMessage("로그인이 필요합니다.");
+                setWithdrawMessageType("error");
+                clearAuth();
+                setMyPageOpen(false);
+                navigate("/login");
+                return;
+              }
 
-                      if (code === 4013) {
-                          setWithdrawMessage('이미 탈퇴한 계정입니다.');
-                          setWithdrawMessageType('error');
-                          return;
-                      }
+              if (code === 4013) {
+                setWithdrawMessage("이미 탈퇴한 계정입니다.");
+                setWithdrawMessageType("error");
+                return;
+              }
 
-                      setWithdrawMessage('회원 탈퇴 중 오류가 발생했습니다.');
-                      setWithdrawMessageType('error');
-                  }
-              }}
-              withdrawMessage={withdrawMessage}
-              withdrawMessageType={withdrawMessageType}
-          />
+              setWithdrawMessage("회원 탈퇴 중 오류가 발생했습니다.");
+              setWithdrawMessageType("error");
+            }
+          }}
+          withdrawMessage={withdrawMessage}
+          withdrawMessageType={withdrawMessageType}
+        />
       )}
     </>
   );
