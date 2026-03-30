@@ -100,7 +100,7 @@ export function StockSearchPanelBody({
             ref={inputRef}
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
-            placeholder="종목명 또는 티커 검색"
+            placeholder="종목명 또는 종목코드"
             className="w-full bg-transparent text-sm outline-none"
             autoComplete="off"
           />
