@@ -84,11 +84,12 @@ export async function fetchStockPrices(
  */
 export async function fetchStockSearch(
   q: string,
-  limit = 10
+  limit = 10,
+  signal?: AbortSignal
 ): Promise<StockSearchItemDto[]> {
   const qs = new URLSearchParams({ q, limit: String(limit) });
   const url = `${BASE_URL}/api/stocks/search?${qs.toString()}`;
-  const res = await fetch(url);
+  const res = await fetch(url, signal ? { signal } : undefined);
   if (!res.ok) {
     throw new Error(`fetchStockSearch failed: ${res.status}`);
   }

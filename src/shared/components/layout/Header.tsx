@@ -5,7 +5,9 @@ import { ROUTES } from "@/shared/constants/routes";
 import logoSrc from "@/assets/logo.svg";
 import bellSrc from "@/assets/bell.svg";
 import bellNotSrc from "@/assets/bell_not.svg";
+import searchMobileSrc from "@/assets/search_mobile.svg";
 import SearchDropdown from "@/pages/widgets/SearchDropdown/SearchDropdown";
+import { MobileSearchSheet } from "@/pages/widgets/SearchDropdown/MobileSearchSheet";
 import LoginModal from "@/features/auth/components/LoginModal";
 import SignupModal from "@/features/auth/components/SignupModal";
 import MyPagePanel from "@/pages/MyPage/components/MyPagePanel";
@@ -24,6 +26,7 @@ export default function Header({ onMyPageOpen, disableMyPagePanel = false }: Hea
   const [modal, setModal] = useState<"login" | "signup" | null>(null);
   const [myPageOpen, setMyPageOpen] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [alertAnchor, setAlertAnchor] = useState<"mobile" | "desktop" | null>(null);
   const [allListMarkedRead, setAllListMarkedRead] = useState(false);
   const [detailFullyReadIds, setDetailFullyReadIds] = useState<Set<number>>(() => new Set());
@@ -97,7 +100,23 @@ export default function Header({ onMyPageOpen, disableMyPagePanel = false }: Hea
             />
           </Link>
           {isLoggedIn ? (
-            renderAlertButton("mobile", mobileAlertContainerRef, "")
+            <div className="flex items-center gap-2">
+              {renderAlertButton("mobile", mobileAlertContainerRef, "")}
+              <button
+                type="button"
+                onClick={() => setMobileSearchOpen(true)}
+                className="flex h-[34px] w-[34px] shrink-0 items-center justify-center border-0 bg-transparent p-0"
+                aria-label="종목 검색"
+              >
+                <img
+                  src={searchMobileSrc}
+                  alt=""
+                  width={34}
+                  height={34}
+                  className="h-[34px] w-[34px] shrink-0"
+                />
+              </button>
+            </div>
           ) : (
             <div className="flex items-center gap-1.5">
               <button
@@ -187,6 +206,7 @@ export default function Header({ onMyPageOpen, disableMyPagePanel = false }: Hea
           onLogin={() => setModal("login")}
         />
       )}
+      <MobileSearchSheet open={mobileSearchOpen} onClose={() => setMobileSearchOpen(false)} />
       {!disableMyPagePanel && isLoggedIn && myPageOpen && (
         <MyPagePanel
           onClose={() => setMyPageOpen(false)}
