@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
+import LoginModal from "@/features/auth/components/LoginModal";
+import { useAuth } from "@/features/auth/context/AuthContext";
 import { fetchStockSearch } from "@/features/stock/api";
+import { useInterestStocksQuery } from "@/features/stock/hooks/useInterestStocks";
 import { ROUTES } from "@/shared/constants/routes";
 import type { OhlcBar, PeriodTab, StockDetailMainProps } from "../types";
 import {
@@ -118,7 +121,10 @@ export function StockDetailMain({
   mobileMode = "stock-detail",
 }: StockDetailMainAllProps) {
   const navigate = useNavigate();
+  const { refreshAuth } = useAuth();
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
   const { stockCode: stockCodeParam } = useParams<{ stockCode?: string }>();
+  const { data: interestItems = [] } = useInterestStocksQuery();
 
   const [resolvedTickerStockId, setResolvedTickerStockId] = useState<number | undefined>(
     undefined
@@ -163,6 +169,14 @@ export function StockDetailMain({
   const routeHasTicker = Boolean(stockCodeParam);
   const holdEmptyChart = Boolean(
     stockCodeParam && !stockId && !searchSettled
+  );
+
+  const isInterested = useMemo(
+    () =>
+      chartStockId != null &&
+      chartStockId > 0 &&
+      interestItems.some((i) => i.stockId === chartStockId),
+    [chartStockId, interestItems]
   );
 
   const { activePeriod, setActivePeriod } = useChartPeriod("일");
@@ -250,6 +264,7 @@ export function StockDetailMain({
   }, [bars]);
 
   return (
+    <>
     <div
       className={`flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f4f6fb] ${className}`}
     >
@@ -258,8 +273,11 @@ export function StockDetailMain({
         <div className="shrink-0 bg-white px-4 py-2.5">
           <StockInfoBar
             stock={stock}
+            stockId={chartStockId}
+            isInterested={isInterested}
             onBack={() => navigate(ROUTES.HOME)}
             onAddWatchlist={() => {}}
+            onRequireLogin={() => setLoginModalOpen(true)}
           />
         </div>
 
@@ -354,8 +372,11 @@ export function StockDetailMain({
         <div className="shrink-0 bg-white px-5 py-2.5">
           <StockInfoBar
             stock={stock}
+            stockId={chartStockId}
+            isInterested={isInterested}
             onBack={() => navigate(ROUTES.HOME)}
             onAddWatchlist={() => {}}
+            onRequireLogin={() => setLoginModalOpen(true)}
           />
 
           <div className="mt-2.5 flex flex-wrap items-center justify-between gap-3 border-t border-[#eff1f8] pt-2.5">
@@ -377,5 +398,19 @@ export function StockDetailMain({
         </div>
       </div>
     </div>
+    {loginModalOpen && (
+      <LoginModal
+        onClose={() => setLoginModalOpen(false)}
+        onSignup={() => {
+          setLoginModalOpen(false);
+          navigate("/signup");
+        }}
+        onLoginSuccess={async () => {
+          await refreshAuth();
+          setLoginModalOpen(false);
+        }}
+      />
+    )}
+    </>
   );
 }

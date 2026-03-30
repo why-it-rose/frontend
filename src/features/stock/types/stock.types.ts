@@ -8,6 +8,18 @@ export type StockChangeDirection = 'UP' | 'DOWN' | 'FLAT';
 
 export type StockEventType = 'SURGE' | 'DROP';
 
+/** GET /api/me/interest-stocks — result.items[] */
+export interface InterestStockItemDto {
+  stockId: number;
+  ticker: string;
+  name: string;
+  market: string;
+  logoUrl?: string | null;
+  currentPrice: number;
+  changeRate: number;
+  changeDirection: StockChangeDirection;
+}
+
 export interface StockListParams {
   market?: StockMarket;
   sort?: StockSort;

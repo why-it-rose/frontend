@@ -1,5 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useAuth } from '@/features/auth/context/AuthContext';
 import { fetchStockList } from '@/features/stock/api';
+import {
+  useAddInterestStockMutation,
+  useInterestStocksQuery,
+  useRemoveInterestStockMutation,
+} from '@/features/stock/hooks/useInterestStocks';
 import type { HomeStockItemDto, StockMarket, StockPeriod, StockSort } from '@/features/stock/types';
 import favoriteIco from '@/assets/favorite.svg';
 import favoriteClickIco from '@/assets/favorite_click.svg';
@@ -14,6 +20,8 @@ interface HomeLayoutProps {
   onChangeMarket: (market: StockMarket) => void;
   onChangeSort: (sort: StockSort) => void;
   onChangePeriod: (period: StockPeriod) => void;
+  /** 비로그인 시 홈에서 관심(별) 클릭 */
+  onRequireLoginForFavorite?: () => void;
 }
 
 interface HomeStockRow {
@@ -111,8 +119,17 @@ export default function HomeLayout({
   onChangeMarket,
   onChangeSort,
   onChangePeriod,
+  onRequireLoginForFavorite,
 }: HomeLayoutProps) {
   const navigate = useNavigate();
+  const { isLoggedIn } = useAuth();
+  const { data: interestItems = [] } = useInterestStocksQuery();
+  const interestIdSet = useMemo(
+    () => new Set(interestItems.map((i) => i.stockId)),
+    [interestItems]
+  );
+  const addInterestMut = useAddInterestStockMutation();
+  const removeInterestMut = useRemoveInterestStockMutation();
   const marketOptions: StockMarket[] = ['ALL', 'KOSPI', 'KOSDAQ'];
   const sortOptions: StockSort[] = ['TRADING_AMOUNT', 'TRADING_VOLUME', 'SURGE', 'DROP'];
   /** 리스트 등락률 기준 기간(스톡 프라이스 차트 기간과 다름) */
@@ -201,16 +218,27 @@ export default function HomeLayout({
     return () => observer.disconnect();
   }, [loadNextPage]);
 
-  const [favorites, setFavorites] = useState<Set<string>>(() => new Set());
-
-  const toggleFavorite = useCallback((ticker: string) => {
-    setFavorites(prev => {
-      const next = new Set(prev);
-      if (next.has(ticker)) next.delete(ticker);
-      else next.add(ticker);
-      return next;
-    });
-  }, []);
+  const toggleFavorite = useCallback(
+    (stockId: number, e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!isLoggedIn) {
+        onRequireLoginForFavorite?.();
+        return;
+      }
+      if (interestIdSet.has(stockId)) {
+        removeInterestMut.mutate(stockId);
+      } else {
+        addInterestMut.mutate(stockId);
+      }
+    },
+    [
+      isLoggedIn,
+      interestIdSet,
+      addInterestMut,
+      removeInterestMut,
+      onRequireLoginForFavorite,
+    ]
+  );
 
   return (
     <main className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f4f6fb]">
@@ -309,15 +337,13 @@ export default function HomeLayout({
                 >
                   <button
                     type="button"
-                    onClick={e => {
-                      e.stopPropagation();
-                      toggleFavorite(stock.ticker);
-                    }}
+                    onClick={e => toggleFavorite(stock.stockId, e)}
                     className="pl-1 translate-x-1 text-gray-300"
-                    aria-pressed={favorites.has(stock.ticker)}
+                    aria-pressed={interestIdSet.has(stock.stockId)}
+                    disabled={addInterestMut.isPending || removeInterestMut.isPending}
                   >
                     <img
-                      src={favorites.has(stock.ticker) ? favoriteClickIco : favoriteIco}
+                      src={interestIdSet.has(stock.stockId) ? favoriteClickIco : favoriteIco}
                       alt="관심 종목"
                       className="h-[18px] w-[18px]"
                     />
@@ -399,15 +425,13 @@ export default function HomeLayout({
                   <div className="flex min-w-0 items-center gap-2">
                     <button
                       type="button"
-                      onClick={e => {
-                        e.stopPropagation();
-                        toggleFavorite(stock.ticker);
-                      }}
+                      onClick={e => toggleFavorite(stock.stockId, e)}
                       className="shrink-0 -translate-x-0.8 text-gray-300"
-                      aria-pressed={favorites.has(stock.ticker)}
+                      aria-pressed={interestIdSet.has(stock.stockId)}
+                      disabled={addInterestMut.isPending || removeInterestMut.isPending}
                     >
                       <img
-                        src={favorites.has(stock.ticker) ? favoriteClickIco : favoriteIco}
+                        src={interestIdSet.has(stock.stockId) ? favoriteClickIco : favoriteIco}
                         alt="관심 종목"
                         className="h-[18px] w-[18px]"
                       />

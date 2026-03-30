@@ -2,6 +2,7 @@ export type {
   ApiEnvelope,
   CursorPageDto,
   HomeStockItemDto,
+  InterestStockItemDto,
   StockChangeDirection,
   StockChartPeriod,
   StockEventType,
