@@ -5,6 +5,7 @@ import favoriteIco from '@/assets/favorite.svg';
 import favoriteClickIco from '@/assets/favorite_click.svg';
 import MarketIndexBar from '@/pages/widgets/MarketIndexBar/MarketIndexBar';
 import { useNavigate } from 'react-router';
+import { toChartStockDetail } from '@/shared/constants/routes';
 
 interface HomeLayoutProps {
   market: StockMarket;
@@ -16,6 +17,7 @@ interface HomeLayoutProps {
 }
 
 interface HomeStockRow {
+  stockId: number;
   rank: number;
   ticker: string;
   name: string;
@@ -88,6 +90,7 @@ function formatTradingVolumeKR(value: number) {
 
 function toHomeStockRow(item: HomeStockItemDto): HomeStockRow {
   return {
+    stockId: item.stockId,
     rank: item.rank,
     ticker: item.ticker,
     name: item.name,
@@ -281,7 +284,7 @@ export default function HomeLayout({
             ref={listScrollRef}
             className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white"
           >
-            <div className="hidden lg:block" onClick={()=>{navigate('/chart/stock-detail')}}>
+            <div className="hidden lg:block">
               {isLoading && (
                 <div className="px-4 py-6 text-center text-sm text-[#9ca3af]">종목 리스트를 불러오는 중...</div>
               )}
@@ -291,7 +294,18 @@ export default function HomeLayout({
               {stocks.map(stock => (
                 <div
                   key={`${stock.ticker}-${stock.rank}`}
-                  className="grid grid-cols-[28px_44px_1fr_110px_88px_100px_100px_92px] items-center border-b border-[#eff1f8] px-4 py-2.5 transition-colors duration-150 hover:bg-[#f4f6fb]"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() =>
+                    navigate(toChartStockDetail(stock.ticker))
+                  }
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      navigate(toChartStockDetail(stock.ticker));
+                    }
+                  }}
+                  className="grid cursor-pointer grid-cols-[28px_44px_1fr_110px_88px_100px_100px_92px] items-center border-b border-[#eff1f8] px-4 py-2.5 transition-colors duration-150 hover:bg-[#f4f6fb]"
                 >
                   <button
                     type="button"
@@ -369,10 +383,18 @@ export default function HomeLayout({
               {stocks.map(stock => (
                 <div
                   key={`${stock.ticker}-${stock.rank}`}
-                  onClick={() => {
-                    navigate('/chart/stock-detail');
+                  role="button"
+                  tabIndex={0}
+                  onClick={() =>
+                    navigate(toChartStockDetail(stock.ticker))
+                  }
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      navigate(toChartStockDetail(stock.ticker));
+                    }
                   }}
-                  className="grid min-h-[62px] grid-cols-[minmax(0,1fr)_82px_78px] items-center border-b border-[#eff1f8] px-4 py-2 transition-colors duration-150 hover:bg-[#f4f6fb]"
+                  className="grid min-h-[62px] cursor-pointer grid-cols-[minmax(0,1fr)_82px_78px] items-center border-b border-[#eff1f8] px-4 py-2 transition-colors duration-150 hover:bg-[#f4f6fb]"
                 >
                   <div className="flex min-w-0 items-center gap-2">
                     <button

@@ -1,20 +1,20 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router";
+import { fetchStockSearch } from "@/features/stock/api";
 import { ROUTES } from "@/shared/constants/routes";
-import type { ChartPin, StockDetailMainProps } from "../types";
+import type { OhlcBar, PeriodTab, StockDetailMainProps } from "../types";
 import {
   useChartPeriod,
+  useChartStockHeader,
   useOhlcData,
   useOhlcSummary,
-  useStockInfo,
+  ohlcBarToSummary,
 } from "../hook";
-import { CandlestickChart } from "./CandlestickChart";
+import { LightweightCandleChart } from "./LightweightCandleChart";
 import { StockInfoBar } from "./StockInfoBar";
 import { PeriodTabs } from "./PeriodTabs";
 import { OhlcSummaryBar } from "./OhlcSummaryBar";
-import { MOCK_STOCK_INFO } from "../api";
 import MarketIndexBar from "@/pages/widgets/MarketIndexBar/MarketIndexBar";
-import { MOCK_PINS } from "../api/mockData";
 import EventTab from "@/features/event/components/EventTab";
 import MemoTab from "@/features/event/components/MemoTab";
 import NewsTab from "@/features/news/components/NewsTab";
@@ -56,6 +56,21 @@ const MOCK_EVENT: StockEvent = {
   isScrapped: false,
 };
 
+/** 기간별로 한 화면에 보일 최대 봉 수(많을수록 조금 더 축소된 느낌) — 봉이 적으면 전체 표시 */
+function visibleBarsForPeriod(tab: PeriodTab): number {
+  switch (tab) {
+    case "일":
+      return 120;
+    case "주":
+      return 102;
+    case "월":
+      return 72;
+    case "년":
+      return 32;
+    default:
+      return 120;
+  }
+}
 const MOCK_NEWS: TodayNews = {
   newsId: 1,
   stockCode: "005930",
@@ -85,16 +100,11 @@ const INITIAL_MEMOS: StockMemo[] = [
   },
 ];
 
-/** 목업 `MOCK_PINS` 등 — 초록 이벤트 핀 (`#059669`) */
-const GREEN_EVENT_PIN_HEX = "059669";
-
-function isGreenEventPin(pin: ChartPin): boolean {
-  const hex = (pin.color ?? "").replace(/^#/, "").trim().toLowerCase();
-  return hex === GREEN_EVENT_PIN_HEX;
-}
-
 export interface StockDetailMainAllProps extends StockDetailMainProps {
+  /** 티커 폴백 (라우트에 없을 때만) */
   code?: string;
+  /** 직접 전달 시 검색 생략 — `GET /api/stocks/{stockId}/prices` */
+  stockId?: number;
   useMock?: boolean;
   mobileMode?: "stock-detail" | "event" | "news";
 }
@@ -102,17 +112,68 @@ export interface StockDetailMainAllProps extends StockDetailMainProps {
 export function StockDetailMain({
   stock: stockProp,
   bars: barsProp,
-  pins: pinsProp,
-  onPinClick,
-  code = "005930",
-  useMock = true,
+  code,
+  stockId,
   className = "",
   mobileMode = "stock-detail",
 }: StockDetailMainAllProps) {
   const navigate = useNavigate();
-  const { activePeriod, setActivePeriod } = useChartPeriod("월");
-  const [mobileTab, setMobileTab] = useState<"차트" | "기업 정보" | "이벤트" | "메모" | "오늘의 뉴스">(
-    mobileMode === "event" ? "이벤트" : "차트",
+  const { stockCode: stockCodeParam } = useParams<{ stockCode?: string }>();
+
+  const [resolvedTickerStockId, setResolvedTickerStockId] = useState<number | undefined>(
+    undefined
+  );
+  const [searchSettled, setSearchSettled] = useState(true);
+
+  useEffect(() => {
+    const direct = stockId;
+    if (direct != null) {
+      setResolvedTickerStockId(undefined);
+      setSearchSettled(true);
+      return;
+    }
+    if (!stockCodeParam) {
+      setResolvedTickerStockId(undefined);
+      setSearchSettled(true);
+      return;
+    }
+    let cancelled = false;
+    setSearchSettled(false);
+    setResolvedTickerStockId(undefined);
+    fetchStockSearch(stockCodeParam, 20)
+      .then((items) => {
+        if (cancelled) return;
+        const exact =
+          items.find((i) => i.ticker === stockCodeParam) ?? items[0];
+        setResolvedTickerStockId(exact?.stockId);
+      })
+      .catch(() => {
+        if (!cancelled) setResolvedTickerStockId(undefined);
+      })
+      .finally(() => {
+        if (!cancelled) setSearchSettled(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [stockId, stockCodeParam]);
+
+  const chartStockId = stockId ?? resolvedTickerStockId;
+  const displayCode = stockCodeParam ?? code ?? "";
+  const routeHasTicker = Boolean(stockCodeParam);
+  const holdEmptyChart = Boolean(
+    stockCodeParam && !stockId && !searchSettled
+  );
+
+  const { activePeriod, setActivePeriod } = useChartPeriod("일");
+  const [mobileTab, setMobileTab] = useState<
+    "차트" | "기업 정보" | "이벤트" | "메모" | "오늘의 뉴스"
+  >(
+    mobileMode === "event"
+      ? "이벤트"
+      : mobileMode === "news"
+        ? "오늘의 뉴스"
+        : "차트"
   );
 
   const [memos, setMemos] = useState<StockMemo[]>(INITIAL_MEMOS);
@@ -137,20 +198,37 @@ export function StockDetailMain({
   const handleMemoDelete = (memoId: number) => {
     setMemos((prev) => prev.filter((m) => m.memoId !== memoId));
   };
-  const { stock: fetchedStock } = useStockInfo(code, useMock);
-  const { bars: fetchedBars } = useOhlcData(code, activePeriod, useMock);
-  const stock = stockProp ?? fetchedStock ?? MOCK_STOCK_INFO;
+  const { stock: fetchedHeader } = useChartStockHeader(
+    chartStockId,
+    displayCode,
+    routeHasTicker
+  );
+  const { bars: fetchedBars } = useOhlcData(
+    chartStockId,
+    activePeriod,
+    holdEmptyChart
+  );
+  const stock = stockProp ?? fetchedHeader;
   const bars = barsProp ?? fetchedBars;
-  const pins = pinsProp ?? (useMock ? MOCK_PINS : []);
 
-  const summary = useOhlcSummary(bars);
-  const handlePinClick = (pin: ChartPin) => {
-    if (isGreenEventPin(pin)) {
-      navigate("/chart/event");
-      return;
-    }
-    onPinClick?.(pin);
-  };
+  const [hoverBar, setHoverBar] = useState<OhlcBar | null>(null);
+  useEffect(() => {
+    setHoverBar(null);
+  }, [bars]);
+
+  const baseSummary = useOhlcSummary(bars);
+  const summary = useMemo(() => {
+    if (!baseSummary) return null;
+    if (hoverBar) return ohlcBarToSummary(hoverBar);
+    return baseSummary;
+  }, [baseSummary, hoverBar]);
+
+  const handleHoverBar = useCallback((bar: OhlcBar | null) => {
+    setHoverBar(bar);
+  }, []);
+
+  const chartVisibleBars = visibleBarsForPeriod(activePeriod);
+
   const mobileTabs =
     mobileMode === "event"
       ? (["차트", "이벤트", "메모"] as const)
@@ -233,10 +311,10 @@ export function StockDetailMain({
             </div>
 
             <div className="min-h-0 flex-1 px-1 pb-2 pt-2">
-              <CandlestickChart
+              <LightweightCandleChart
                 bars={bars}
-                pins={pins}
-                onPinClick={handlePinClick}
+                visibleBars={chartVisibleBars}
+                onHoverBar={handleHoverBar}
               />
             </div>
           </>
@@ -287,10 +365,10 @@ export function StockDetailMain({
         </div>
 
         <main className="min-h-0 flex-1 overflow-hidden border-t border-[#eff1f8] bg-white">
-          <CandlestickChart
+          <LightweightCandleChart
             bars={bars}
-            pins={pins}
-            onPinClick={handlePinClick}
+            visibleBars={chartVisibleBars}
+            onHoverBar={handleHoverBar}
           />
         </main>
 

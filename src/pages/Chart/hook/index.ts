@@ -1,36 +1,68 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import type { OhlcBar, OhlcSummary, PeriodTab, TickerItem, StockInfo } from "../types";
-import {
-  fetchOhlcData,
-  fetchTickers,
-  fetchStockInfo,
-  generateMockBars,
-  MOCK_TICKERS,
-  MOCK_STOCK_INFO,
-  type PeriodParam,
-} from "../api";
+import { fetchTickers, fetchStockInfo, MOCK_TICKERS, MOCK_STOCK_INFO } from "../api";
+import { fetchStockDetail, fetchStockPrices } from "@/features/stock/api";
+import { mapStockDetailToStockInfo } from "../lib/mapStockDetail";
+import type { StockChartPeriod, StockPriceCandleDto } from "@/features/stock/types";
 
-// ─── 기간 탭 → API 파라미터 매핑 ───────────────────────────────────────────────
-const PERIOD_MAP: Record<PeriodTab, PeriodParam> = {
-  "일": "DAILY",
-  "주": "WEEKLY",
-  "월": "MONTHLY",
-  "년": "YEARLY",
+// ─── 기간 탭 → Swagger period ──────────────────────────────────────────────────
+const PERIOD_MAP: Record<PeriodTab, StockChartPeriod> = {
+  일: "1D",
+  주: "1W",
+  월: "1M",
+  년: "1Y",
 };
+
+function candleDtoToBar(c: StockPriceCandleDto): OhlcBar {
+  const raw = c.date.trim();
+  const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const display = iso ? `${iso[1]}.${iso[2]}.${iso[3]}` : raw;
+  return {
+    date: display,
+    open: c.open,
+    high: c.high,
+    low: c.low,
+    close: c.close,
+    volume: c.volume,
+  };
+}
+
+/** 단일 봉 거래량 표기 (홈 리스트와 유사) */
+export function formatChartVolume(value: number): string {
+  if (value >= 10_000) {
+    const manJu = value / 10_000;
+    return `${manJu.toLocaleString("ko-KR", { maximumFractionDigits: 1 })}만주`;
+  }
+  return `${value.toLocaleString("ko-KR")}주`;
+}
+
+/** 크로스헤어·요약바용 — 해당 일(봉)의 시고저종·거래량만 반영 */
+export function ohlcBarToSummary(bar: OhlcBar): OhlcSummary {
+  return {
+    open: Math.round(bar.open).toLocaleString("ko-KR"),
+    high: Math.round(bar.high).toLocaleString("ko-KR"),
+    low: Math.round(bar.low).toLocaleString("ko-KR"),
+    close: Math.round(bar.close).toLocaleString("ko-KR"),
+    volume: formatChartVolume(bar.volume),
+  };
+}
 
 // ─── useChartPeriod ─────────────────────────────────────────────────────────────
 /** 활성 기간 탭 상태 관리 */
-export function useChartPeriod(initial: PeriodTab = "월") {
+export function useChartPeriod(initial: PeriodTab = "일") {
   const [activePeriod, setActivePeriod] = useState<PeriodTab>(initial);
   return { activePeriod, setActivePeriod };
 }
 
 // ─── useOhlcData ────────────────────────────────────────────────────────────────
-/** OHLCV 데이터 fetch + 목업 폴백 */
+/**
+ * OHLCV — API `GET /api/stocks/{stockId}/prices`만 사용 (목업 없음).
+ * `holdEmpty`: 티커→stockId 해석 전에는 캔들 요청 안 함.
+ */
 export function useOhlcData(
-  code: string,
+  stockId: number | undefined,
   period: PeriodTab,
-  useMock = true
+  holdEmpty = false
 ) {
   const [bars, setBars] = useState<OhlcBar[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,40 +72,125 @@ export function useOhlcData(
     setLoading(true);
     setError(null);
     try {
-      const data = useMock
-        ? generateMockBars(100)
-        : await fetchOhlcData(code, PERIOD_MAP[period]);
-      setBars(data);
+      if (holdEmpty) {
+        setBars([]);
+        return;
+      }
+      const hasStock =
+        stockId != null && !Number.isNaN(Number(stockId)) && Number(stockId) > 0;
+      if (!hasStock) {
+        setBars([]);
+        return;
+      }
+      const { candles } = await fetchStockPrices(stockId!, PERIOD_MAP[period]);
+      setBars(candles.map(candleDtoToBar));
     } catch (e) {
       setError((e as Error).message);
-      setBars(generateMockBars(100)); // 오류 시 목업으로 폴백
+      setBars([]);
     } finally {
       setLoading(false);
     }
-  }, [code, period, useMock]);
+  }, [stockId, period, holdEmpty]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   return { bars, loading, error, refetch: load };
 }
 
+// ─── useChartStockHeader ───────────────────────────────────────────────────────
+const EMPTY_STOCK_INFO: StockInfo = {
+  name: "—",
+  code: "—",
+  market: "—",
+  price: "—",
+  change: "",
+  changePercent: "—",
+  positive: true,
+};
+
+/** `/chart/:ticker/stock-detail`에서만 API; 그 외 라우트(예: 이벤트 옆 패널)는 빈 칸 */
+export function useChartStockHeader(
+  stockId: number | undefined,
+  tickerLabel: string,
+  routeHasTicker: boolean
+): { stock: StockInfo } {
+  const [info, setInfo] = useState<StockInfo | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!routeHasTicker) {
+      setInfo(null);
+      return;
+    }
+    if (!stockId || stockId <= 0) {
+      setInfo(null);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    fetchStockDetail(stockId)
+      .then((d) => {
+        if (!cancelled) setInfo(mapStockDetailToStockInfo(d));
+      })
+      .catch(() => {
+        if (!cancelled) setInfo(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [stockId, routeHasTicker]);
+
+  const stock = useMemo((): StockInfo => {
+    if (!routeHasTicker) return EMPTY_STOCK_INFO;
+    if (info) return info;
+    const label = tickerLabel || "—";
+    if (!stockId || stockId <= 0) {
+      return {
+        name: label,
+        code: label,
+        market: "—",
+        price: "—",
+        change: "",
+        changePercent: "—",
+        positive: true,
+      };
+    }
+    if (loading) {
+      return {
+        name: label,
+        code: label,
+        market: "—",
+        price: "—",
+        change: "",
+        changePercent: "—",
+        positive: true,
+      };
+    }
+    return {
+      name: label,
+      code: label,
+      market: "—",
+      price: "—",
+      change: "",
+      changePercent: "—",
+      positive: true,
+    };
+  }, [routeHasTicker, info, tickerLabel, stockId, loading]);
+
+  return { stock };
+}
+
 // ─── useOhlcSummary ─────────────────────────────────────────────────────────────
-/** bars 배열에서 OHLC 요약 계산 (메모이즈) */
+/** 가장 최근 봉(배열 마지막) 기준 요약 — 크로스헤어 없을 때 표시 */
 export function useOhlcSummary(bars: OhlcBar[]): OhlcSummary | null {
   return useMemo(() => {
     if (!bars.length) return null;
-    const last = bars[bars.length - 1];
-    const allHighs = bars.map((b) => b.high);
-    const allLows  = bars.map((b) => b.low);
-    const totalVol = bars.reduce((s, b) => s + b.volume, 0);
-
-    return {
-      open:   Math.round(last.open).toLocaleString(),
-      high:   Math.round(Math.max(...allHighs)).toLocaleString(),
-      low:    Math.round(Math.min(...allLows)).toLocaleString(),
-      close:  Math.round(last.close).toLocaleString(),
-      volume: (totalVol / 1e8).toFixed(1) + "억",
-    };
+    return ohlcBarToSummary(bars[bars.length - 1]);
   }, [bars]);
 }
 
