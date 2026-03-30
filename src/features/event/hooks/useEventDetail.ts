@@ -4,6 +4,9 @@ import { addEventScrap, fetchEventDetail, removeEventScrap } from '../api/eventA
 
 const DEFAULT_ERROR_MESSAGE = 'Something went wrong.';
 
+// 페이지 내 탐색 시 서버가 isScrapped를 못 돌려줘도 상태 유지
+const scrapCache = new Map<number, boolean>();
+
 export function useEventDetail(eventId: number | null) {
   const [event, setEvent] = useState<StockEvent | null>(null);
   const [loading, setLoading] = useState(false);
@@ -19,6 +22,12 @@ export function useEventDetail(eventId: number | null) {
     setLoading(true);
     setError(null);
     fetchEventDetail(eventId)
+      .then((ev) => {
+        if (scrapCache.has(ev.eventId)) {
+          return { ...ev, isScrapped: scrapCache.get(ev.eventId)! };
+        }
+        return ev;
+      })
       .then(setEvent)
       .catch((e: unknown) => {
         setError(e instanceof Error ? e.message : DEFAULT_ERROR_MESSAGE);
@@ -42,6 +51,7 @@ export function useEventDetail(eventId: number | null) {
       } else {
         await removeEventScrap(targetEventId);
       }
+      scrapCache.set(targetEventId, nextScrapped);
     } catch (e: unknown) {
       setEvent((prev) => {
         if (!prev || prev.eventId !== targetEventId) return prev;
