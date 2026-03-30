@@ -1,41 +1,30 @@
 import { useEffect, useState, type RefObject } from 'react';
-import { ALERT_CENTER_NOTIFICATION_LIST, alertCenterListFullyRead } from './alertCenter.mock';
 import AlertCenterDetailFeed from './AlertCenterDetailFeed';
-import {
-  formatDaysAgoLabel,
-  formatNotifiedDateTitle,
-  stockNamesSubtitle,
-} from './alertCenterFormatters';
 import bellAlarmSrc from '@/assets/Bell_alarm.svg';
+import { useNotificationSummary } from '../hooks/useNotificationSummary';
+import { useMarkNotificationRead, useMarkAllNotificationsRead } from '../hooks/useNotificationMutations';
 
 export type AlertCenterTab = 'all' | 'detail';
 
 export interface AlertCenterProps {
   onClose: () => void;
   containerRef: RefObject<HTMLElement | null>;
-  allListMarkedRead: boolean;
-  onAllListMarkedRead: () => void;
-  detailFullyReadIds: ReadonlySet<number>;
-  onNotificationDetailFullyRead: (notificationId: number) => void;
 }
 
 const PANEL_CLASS =
   'flex h-[581px] max-h-[min(581px,85vh)] w-[380px] max-w-[calc(100vw-24px)] flex-col overflow-hidden rounded-[14px] border border-[#e5e7eb] bg-white shadow-[0_8px_32px_rgba(0,0,0,0.1)] max-md:fixed max-md:left-0 max-md:right-0 max-md:top-[55px] max-md:mt-0 max-md:h-[calc(100dvh-55px)] max-md:max-h-none max-md:w-screen max-md:max-w-none max-md:translate-x-0 max-md:rounded-none max-md:border-x-0 max-md:border-b-0 max-md:shadow-none';
 
-export default function AlertCenter({
-  onClose,
-  containerRef,
-  allListMarkedRead,
-  onAllListMarkedRead,
-  detailFullyReadIds,
-  onNotificationDetailFullyRead,
-}: AlertCenterProps) {
+export default function AlertCenter({ onClose, containerRef }: AlertCenterProps) {
   const [tab, setTab] = useState<AlertCenterTab>('all');
   const [selectedNotificationId, setSelectedNotificationId] = useState<number | null>(null);
 
-  const firstListId = ALERT_CENTER_NOTIFICATION_LIST[0]?.notificationId ?? null;
+  const { data: summaryList, isLoading } = useNotificationSummary(7);
+  const { mutate: markRead } = useMarkNotificationRead();
+  const { mutate: markAllRead } = useMarkAllNotificationsRead();
+
+  const firstListId = summaryList[0]?.notificationId ?? null;
   const effectiveDetailId = selectedNotificationId ?? firstListId;
-  const listFullyRead = alertCenterListFullyRead(allListMarkedRead, detailFullyReadIds);
+  const listFullyRead = summaryList.length > 0 && summaryList.every((item) => item.isRead);
 
   useEffect(() => {
     function handleMouseDown(e: MouseEvent) {
@@ -73,10 +62,7 @@ export default function AlertCenter({
             <button
               type="button"
               className="mypage-scrap-kr shrink-0 border-0 bg-transparent p-0 text-[11.5px] font-bold leading-tight text-[#014d9d]"
-              onClick={() => {
-                onAllListMarkedRead();
-                // TODO: PATCH /api/notifications/read — body { notificationIds: [] }
-              }}
+              onClick={() => markAllRead()}
             >
               전체 읽음 처리
             </button>
@@ -112,34 +98,40 @@ export default function AlertCenter({
       <div className="min-h-0 flex-1 overflow-hidden">
         {tab === 'all' ? (
           <div className="scrollbar-hide h-full overflow-y-auto">
-            {ALERT_CENTER_NOTIFICATION_LIST.map((item) => (
+            {isLoading && (
+              <div className="mypage-scrap-kr flex min-h-[120px] items-center justify-center text-[13px] text-[#9ca3af]">
+                불러오는 중...
+              </div>
+            )}
+            {!isLoading && summaryList.length === 0 && (
+              <div className="mypage-scrap-kr flex min-h-[120px] items-center justify-center text-[13px] text-[#9ca3af]">
+                최근 알림이 없습니다.
+              </div>
+            )}
+            {summaryList.map((item) => (
               <button
                 key={item.notificationId}
                 type="button"
                 onClick={() => {
+                  markRead(item.notificationId);
                   setSelectedNotificationId(item.notificationId);
                   setTab('detail');
                 }}
                 className={`mypage-scrap-kr flex h-[81px] min-h-[81px] w-full shrink-0 cursor-pointer items-center gap-3 border-b border-[#f3f4f6] px-[18px] text-left transition-colors hover:bg-[#F0F2F8] ${
-                  allListMarkedRead || detailFullyReadIds.has(item.notificationId) ? 'bg-[#F0F2F8]' : ''
-                } ${
-                  !allListMarkedRead &&
-                  !detailFullyReadIds.has(item.notificationId) &&
-                  item.isRead
-                    ? 'opacity-90'
-                    : ''
+                  item.isRead ? 'bg-[#F0F2F8]' : ''
                 }`}
               >
                 <div className="flex h-9 w-9 shrink-0 -translate-y-1 items-center justify-center rounded-lg bg-[#f3f4f6]">
                   <img src={bellAlarmSrc} alt="" aria-hidden className="h-6 w-6" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-[13px] font-bold leading-snug text-[#111827]">
-                    {formatNotifiedDateTitle(item.notifiedDate)}
+                  <div className="text-[12px] leading-snug text-[#111827]">
+                    {item.message.split(/\*\*(.*?)\*\*/g).map((part, i) =>
+                      i % 2 === 1 ? <strong key={i}>{part}</strong> : part
+                    )}
                   </div>
-                  <div className="mt-0.5 text-[12px] leading-snug text-[#6b7280]">{stockNamesSubtitle(item.stocks)}</div>
                   <div className="mt-1 text-[11px] leading-snug text-[#9ca3af]">
-                    {formatDaysAgoLabel(item.daysAgo)}
+                    {item.relativeTime}
                   </div>
                 </div>
               </button>
@@ -147,10 +139,7 @@ export default function AlertCenter({
           </div>
         ) : (
           <div className="scrollbar-faint h-full overflow-y-auto overflow-x-hidden">
-            <AlertCenterDetailFeed
-              notificationId={effectiveDetailId}
-              onNotificationDetailFullyRead={onNotificationDetailFullyRead}
-            />
+            <AlertCenterDetailFeed notificationId={effectiveDetailId} />
           </div>
         )}
       </div>

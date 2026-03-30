@@ -1,20 +1,20 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import type { AlertItemRow, AlertTag } from './alertCenter.types';
-import { getNotificationDetailMock } from './alertCenter.mock';
 import { isTodayNotifiedDate, notificationDetailToAlertGroups } from './alertCenterDetailAdapter';
 import AlertStockAvatar from './AlertStockAvatar';
+import { useNotificationDetail } from '../hooks/useNotificationDetail';
 
 function TagChip({ tag }: { tag: AlertTag }) {
   if (tag.variant === 'outline') {
     return (
       <span className="rounded-md border border-[#C7DBFF] bg-[#F4F6FB] px-2 py-0.5 text-[10px] text-[#014D9D]">
-        {tag.label}
+        #{tag.label}
       </span>
     );
   }
   return (
     <span className="rounded-md border border-[#C7DBFF] bg-[#F4F6FB] px-2 py-0.5 text-[10px] font-medium text-[#014D9D]">
-      {tag.label}
+      #{tag.label}
     </span>
   );
 }
@@ -29,7 +29,7 @@ function EventContent({ item }: { item: AlertItemRow }) {
       {item.tags && item.tags.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {item.tags.map((tag) => (
-            <TagChip key={`${item.headline}-${tag.label}`} tag={tag} />
+            <TagChip key={`${item.headline}-$#{tag.label}`} tag={tag} />
           ))}
         </div>
       )}
@@ -40,9 +40,7 @@ function EventContent({ item }: { item: AlertItemRow }) {
 const PX = 18;
 
 export interface AlertCenterDetailFeedProps {
-  /** GET /api/notifications/{notificationId} 조회 키 (목업은 `getNotificationDetailMock`) */
   notificationId: number | null;
-  /** 세부 탭에서 해당 알림의 모든 그룹을 읽음 처리했을 때 (전체 탭 행 강조 등) */
   onNotificationDetailFullyRead?: (notificationId: number) => void;
 }
 
@@ -51,20 +49,18 @@ export default function AlertCenterDetailFeed({
   onNotificationDetailFullyRead,
 }: AlertCenterDetailFeedProps) {
   const [readStateByGroup, setReadStateByGroup] = useState<Record<string, boolean>>({});
+  const [collapsedByGroup, setCollapsedByGroup] = useState<Record<string, boolean>>({});
+  const { data: allDetails } = useNotificationDetail({ days: 7 });
+
+  const detail = notificationId != null
+    ? allDetails.find((n) => n.notificationId === notificationId) ?? null
+    : null;
 
   const sections = useMemo(() => {
-    if (notificationId == null) return [];
-    const detail = getNotificationDetailMock(notificationId);
     if (!detail) return [];
     const groups = notificationDetailToAlertGroups(detail);
-    return [
-      {
-        date: detail.notifiedDate,
-        isToday: isTodayNotifiedDate(detail.notifiedDate),
-        groups,
-      },
-    ];
-  }, [notificationId]);
+    return [{ date: detail.date, isToday: isTodayNotifiedDate(detail.date), groups }];
+  }, [detail]);
 
   const allGroupKeys = useMemo(() => {
     const keys: string[] = [];
@@ -141,10 +137,19 @@ export default function AlertCenterDetailFeed({
                   {(() => {
                     const groupKey = getGroupKey(date, group.code);
                     const isRead = !!readStateByGroup[groupKey];
+                    const isCollapsed = collapsedByGroup[groupKey] !== false; // 기본 접힘
                     return (
                       <>
                         <div className="relative z-10 border-b border-[#f3f4f6] last:border-b-0">
-                          <div className="-mx-[18px] flex w-[calc(100%+36px)] items-center gap-3 px-[18px] py-3 transition-colors hover:bg-[#F0F2F8]">
+                          <div
+                            className="-mx-[18px] flex w-[calc(100%+36px)] cursor-pointer items-center gap-3 px-[18px] py-3 transition-colors hover:bg-[#F0F2F8]"
+                            onClick={() =>
+                              setCollapsedByGroup((prev) => ({
+                                ...prev,
+                                [groupKey]: !isCollapsed,
+                              }))
+                            }
+                          >
                             <div className="relative shrink-0">
                               <AlertStockAvatar color={group.color} ini={group.ini} />
                               {!isRead && (
@@ -166,6 +171,14 @@ export default function AlertCenterDetailFeed({
                                 <div className="mt-0 text-[11px] leading-4 text-[#6b7280]">{group.summaryLine}</div>
                               )}
                             </div>
+
+                            <span
+                              className={`shrink-0 text-[10px] text-[#9ca3af] transition-transform duration-200 ${
+                                isCollapsed ? '' : 'rotate-180'
+                              }`}
+                            >
+                              ▼
+                            </span>
                           </div>
 
                           <div
@@ -175,53 +188,55 @@ export default function AlertCenterDetailFeed({
                           />
                         </div>
 
-                        <div
-                          className={`relative z-10 border-b border-[#f3f4f6] last:border-b-0 ${
-                            isRead ? 'bg-[#F0F2F8]' : 'bg-white'
-                          }`}
-                          style={{ marginLeft: -PX, marginRight: -PX, paddingLeft: PX, paddingRight: PX }}
-                        >
-                          <div className="relative flex flex-col">
-                            <div className="absolute top-0 bottom-0 left-[-2px] z-30 w-[2px] bg-[#D8E2F8]" aria-hidden />
-                            {group.items.map((item, itemIdx) => (
-                              <div
-                                key={`${group.code}-${itemIdx}`}
-                                className="relative -mx-[18px] flex w-[calc(100%+36px)] items-stretch gap-2.5 px-[18px] py-2 transition-colors hover:bg-[#F0F2F8]"
-                              >
-                                <div className="flex w-4 shrink-0 flex-col items-center">
-                                  <span
-                                    className="relative z-30 -ml-[17px] mt-1 h-1.5 w-1.5 shrink-0 rounded-full ring-3 ring-white"
-                                    style={{ backgroundColor: item.dotColor }}
-                                    aria-hidden
-                                  />
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <EventContent item={item} />
-                                </div>
+                        {!isCollapsed && (
+                          <>
+                            <div
+                              className={`relative z-10 border-b border-[#f3f4f6] last:border-b-0 ${
+                                isRead ? 'bg-[#F0F2F8]' : 'bg-white'
+                              }`}
+                              style={{ marginLeft: -PX, marginRight: -PX, paddingLeft: PX, paddingRight: PX }}
+                            >
+                              <div className="relative flex flex-col">
+                                <div className="absolute top-0 bottom-0 left-[-2px] z-30 w-[2px] bg-[#D8E2F8]" aria-hidden />
+                                {group.items.map((item, itemIdx) => (
+                                  <div
+                                    key={`${group.code}-${itemIdx}`}
+                                    className="relative -mx-[18px] flex w-[calc(100%+36px)] items-stretch gap-2.5 px-[18px] py-2 transition-colors hover:bg-[#F0F2F8]"
+                                  >
+                                    <div className="flex w-4 shrink-0 flex-col items-center">
+                                      <span
+                                        className="relative z-30 -ml-[17px] mt-1 h-1.5 w-1.5 shrink-0 rounded-full ring-3 ring-white"
+                                        style={{ backgroundColor: item.dotColor }}
+                                        aria-hidden
+                                      />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <EventContent item={item} />
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
-                            ))}
-                          </div>
-                        </div>
-                        <div
-                          className="relative z-10 flex items-center justify-between gap-3 border-y border-[#f3f4f6] bg-[#F0F2F8] py-2.5"
-                          style={{ marginLeft: -PX, marginRight: -PX, paddingLeft: PX, paddingRight: PX }}
-                        >
-                          <span className="text-[12px] font-medium text-[#6b7280]">총 {group.items.length}건</span>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setReadStateByGroup((prev) => ({
-                                ...prev,
-                                [groupKey]: true,
-                              }))
-                            }
-                            className={`shrink-0 border-0 bg-transparent p-0 text-[11.5px] font-bold ${
-                              isRead ? 'text-[#9ca3af]' : 'text-[#014d9d]'
-                            }`}
-                          >
-                            {isRead ? '읽음' : '읽음 처리'}
-                          </button>
-                        </div>
+                            </div>
+                            <div
+                              className="relative z-10 flex items-center justify-between gap-3 border-y border-[#f3f4f6] bg-[#F0F2F8] py-2.5"
+                              style={{ marginLeft: -PX, marginRight: -PX, paddingLeft: PX, paddingRight: PX }}
+                            >
+                              <span className="text-[12px] font-medium text-[#6b7280]">총 {group.items.length}건</span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setReadStateByGroup((prev) => ({ ...prev, [groupKey]: true }));
+                                }}
+                                className={`shrink-0 border-0 bg-transparent p-0 text-[11.5px] font-bold ${
+                                  isRead ? 'text-[#9ca3af]' : 'text-[#014d9d]'
+                                }`}
+                              >
+                                {isRead ? '읽음' : '읽음 처리'}
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </>
                     );
                   })()}
