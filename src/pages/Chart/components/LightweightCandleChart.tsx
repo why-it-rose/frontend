@@ -89,17 +89,25 @@ export function LightweightCandleChart({
   onHoverBar,
   /** 이벤트 핀 클릭 시 호출 — eventId 전달 */
   onEventClick,
+  /** 오늘의 학습 핀 데이터 — null이면 미표시 */
+  learningPin,
+  /** 오늘의 학습 핀 클릭 콜백 */
+  onLearningPinClick,
 }: {
   bars: OhlcBar[];
   visibleBars?: number;
   onHoverBar?: (bar: OhlcBar | null) => void;
   onEventClick?: (eventId: number) => void;
+  learningPin?: { digestDate: string; newsCount: number } | null;
+  onLearningPinClick?: () => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const hoverRef = useRef(onHoverBar);
   hoverRef.current = onHoverBar;
   const eventClickRef = useRef(onEventClick);
   eventClickRef.current = onEventClick;
+  const learningPinClickRef = useRef(onLearningPinClick);
+  learningPinClickRef.current = onLearningPinClick;
 
   useEffect(() => {
     const el = containerRef.current;
@@ -354,7 +362,90 @@ export function LightweightCandleChart({
     }
 
     renderHtmlPins();
-    chart.timeScale().subscribeVisibleLogicalRangeChange(renderHtmlPins);
+
+    // ─── 오늘의 학습 핀 (마름모) ────────────────────────────────────────────
+    const learningPinEl = document.createElement("div");
+    learningPinEl.style.cssText = [
+      "position:absolute",
+      "inset:0",
+      "pointer-events:none",
+      "overflow:visible",
+      "z-index:11",
+    ].join(";");
+    el.appendChild(learningPinEl);
+
+    function renderLearningPin() {
+      learningPinEl.innerHTML = "";
+      if (!el || !learningPin) return;
+
+      // digestDate("yyyy-MM-dd")를 bars에서 찾고, 없으면 마지막 봉 사용
+      const targetKey = learningPin.digestDate.slice(0, 10); // "yyyy-MM-dd"
+      const targetBar = clean.find((b) => barToTimeKey(b) === targetKey) ?? clean[clean.length - 1];
+      if (!targetBar) return;
+
+      const x = chart.timeScale().timeToCoordinate(barToTimeKey(targetBar) as Time);
+      if (x === null) return;
+
+      // 이벤트 핀과 동일하게 거래량 바 상단 좌표 기준
+      const y = volSeries.priceToCoordinate(targetBar.volume);
+      if (y === null) return;
+
+      const wrapper = document.createElement("div");
+      wrapper.style.cssText = [
+        "position:absolute",
+        `left:${x}px`,
+        `top:${y}px`,
+        "transform:translate(-50%, -100%)",
+        "display:flex",
+        "flex-direction:column",
+        "align-items:center",
+        "gap:3px",
+        "pointer-events:none",
+      ].join(";");
+
+      // 줄기
+      const stem = makeStem(false);
+      stem.style.background = "#EAB308";
+
+      // 핀 헤드 — 노란색
+      const head = ((): HTMLDivElement => {
+        const outer = document.createElement("div");
+        outer.style.cssText = [
+          "width:32px", "height:32px", "border-radius:50%",
+          "background:rgba(234,179,8,0.15)",
+          "display:flex", "align-items:center", "justify-content:center",
+          "cursor:pointer", "pointer-events:auto",
+        ].join(";");
+        const inner = document.createElement("div");
+        inner.style.cssText = [
+          "width:22px", "height:22px", "border-radius:50%",
+          "background:#EAB308",
+          "display:flex", "align-items:center", "justify-content:center",
+        ].join(";");
+        const icon = document.createElement("div");
+        icon.style.cssText = [
+          "width:8px", "height:8px",
+          "background:white",
+          "transform:rotate(45deg)",
+          "border-radius:1px",
+        ].join(";");
+        inner.appendChild(icon);
+        outer.appendChild(inner);
+        outer.addEventListener("click", (e) => { e.stopPropagation(); learningPinClickRef.current?.(); });
+        return outer;
+      })();
+      wrapper.appendChild(stem);
+      wrapper.appendChild(head);
+      learningPinEl.appendChild(wrapper);
+    }
+
+    renderLearningPin();
+
+    function renderAll() {
+      renderHtmlPins();
+      renderLearningPin();
+    }
+    chart.timeScale().subscribeVisibleLogicalRangeChange(renderAll);
 
     // ─── 크로스헤어 ──────────────────────────────────────────────────────────
     const crosshairHandler = (param: MouseEventParams) => {
@@ -408,16 +499,18 @@ export function LightweightCandleChart({
       const h = containerRef.current.clientHeight;
       chart.applyOptions({ width: w, height: h });
       renderHtmlPins();
+      renderLearningPin();
     });
     ro.observe(el);
 
     return () => {
-      chart.timeScale().unsubscribeVisibleLogicalRangeChange(renderHtmlPins);
+      chart.timeScale().unsubscribeVisibleLogicalRangeChange(renderAll);
       ro.disconnect();
       chart.remove();
       if (pinsEl.parentNode === el) el.removeChild(pinsEl);
+      if (learningPinEl.parentNode === el) el.removeChild(learningPinEl);
     };
-  }, [bars, visibleBars]);
+  }, [bars, visibleBars, learningPin]);
 
   if (!bars.length) {
     return (
