@@ -1,6 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router';
 import logoutButtonImg from '@/assets/logoutButton.svg';
+import { getApiResponseCode, updateMyNickname } from '@/features/auth/api/authApi';
+import { useAuth } from '@/features/auth/context/AuthContext';
 import type { MyPageTabKey } from './myPage.types';
 import MyPageAlarmTab from './MyPageAlarmTab';
 import MyPageReviewTab from './MyPageReviewTab';
@@ -21,40 +24,91 @@ const TABS: { key: MyPageTabKey; label: string }[] = [
 ];
 
 export default function MyPagePanel({ onClose, onLogout }: MyPagePanelProps) {
+  const navigate = useNavigate();
+  const { user, nickname, refreshAuth, clearAuth } = useAuth();
+
   const [activeTab, setActiveTab] = useState<MyPageTabKey>('scrap');
   const [scrapManageMode, setScrapManageMode] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   const [isEditingNickname, setIsEditingNickname] = useState(false);
-  const [currentNickname, setCurrentNickname] = useState('신범창');
-  const [nicknameDraft, setNicknameDraft] = useState('신범창');
+  const [nicknameDraft, setNicknameDraft] = useState('');
   const [isSavingNickname, setIsSavingNickname] = useState(false);
+  const [nicknameMessage, setNicknameMessage] = useState('');
+  const [nicknameMessageType, setNicknameMessageType] = useState<'success' | 'error' | ''>('');
 
-  const profileInitial = currentNickname.trim().charAt(0) || '유';
+  const displayNickname = nickname || user?.nickname || '사용자';
+  const displayEmail = user?.email || '';
+  const profileInitial = Array.from(displayNickname.trim())[0] ?? '유';
+
+  useEffect(() => {
+    setNicknameDraft(displayNickname);
+  }, [displayNickname]);
 
   const handleNicknameSave = async () => {
     const trimmedNickname = nicknameDraft.trim();
 
     if (!trimmedNickname) {
-      window.alert('닉네임을 입력해 주세요.');
+      setNicknameMessage('닉네임을 입력해 주세요.');
+      setNicknameMessageType('error');
+      return;
+    }
+
+    if (trimmedNickname === displayNickname) {
+      setIsEditingNickname(false);
+      setNicknameMessage('');
+      setNicknameMessageType('');
       return;
     }
 
     try {
       setIsSavingNickname(true);
+      setNicknameMessage('');
+      setNicknameMessageType('');
 
-      // 이슈 3에서 실제 API(updateMyNickname + refreshAuth) 연결 예정
-      setCurrentNickname(trimmedNickname);
+      await updateMyNickname(trimmedNickname);
+      await refreshAuth();
+
       setIsEditingNickname(false);
+      setNicknameMessage('닉네임이 변경되었습니다.');
+      setNicknameMessageType('success');
+    } catch (error: unknown) {
+      const responseCode = getApiResponseCode(error);
+
+      if (responseCode === 4010) {
+        setNicknameMessage('이미 사용 중인 닉네임입니다.');
+        setNicknameMessageType('error');
+        return;
+      }
+
+      if (responseCode === 4009) {
+        setNicknameMessage('닉네임을 올바르게 입력해 주세요.');
+        setNicknameMessageType('error');
+        return;
+      }
+
+      if (responseCode === 2952) {
+        setNicknameMessage('로그인이 필요합니다.');
+        setNicknameMessageType('error');
+        clearAuth();
+        onClose();
+        navigate('/login');
+        return;
+      }
+
+      setNicknameMessage('닉네임 변경 중 오류가 발생했습니다.');
+      setNicknameMessageType('error');
     } finally {
       setIsSavingNickname(false);
     }
   };
 
   const handleNicknameCancel = () => {
-    setNicknameDraft(currentNickname);
+    setNicknameDraft(displayNickname);
     setIsEditingNickname(false);
+    setNicknameMessage('');
+    setNicknameMessageType('');
   };
 
   const panel = (
@@ -82,11 +136,15 @@ export default function MyPagePanel({ onClose, onLogout }: MyPagePanelProps) {
                   {!isEditingNickname ? (
                       <div className="flex items-center gap-1.5">
                         <h2 id="mypage-panel-title" className="text-[15px] font-bold text-[#111827]">
-                          {currentNickname}
+                          {displayNickname}
                         </h2>
                         <button
                             type="button"
-                            onClick={() => setIsEditingNickname(true)}
+                            onClick={() => {
+                              setIsEditingNickname(true);
+                              setNicknameMessage('');
+                              setNicknameMessageType('');
+                            }}
                             aria-label="닉네임 수정"
                             className="inline-flex h-5 w-5 items-center justify-center rounded text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-[#374151]"
                         >
@@ -120,7 +178,18 @@ export default function MyPagePanel({ onClose, onLogout }: MyPagePanelProps) {
                         </button>
                       </div>
                   )}
-                  <p className="text-xs text-[#9ca3af]">example@gmail.com</p>
+
+                  {nicknameMessage && (
+                      <p
+                          className={`mt-1 text-[11px] ${
+                              nicknameMessageType === 'error' ? 'text-[#dc2626]' : 'text-[#059669]'
+                          }`}
+                      >
+                        {nicknameMessage}
+                      </p>
+                  )}
+
+                  <p className="mt-1 text-xs text-[#9ca3af]">{displayEmail}</p>
                 </div>
               </div>
             </div>
