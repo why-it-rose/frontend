@@ -29,17 +29,21 @@ const router = createBrowserRouter([
       <SplitRoute
         left={<StockDetailMain />}
         right={<StockDetailAside />}
-        mobile={<StockDetailMain />}
+        mobile={<StockDetailMain key="stock-detail" mobileMode="stock-detail" />}
       />
     ),
   },
   {
     path: '/chart/event',
+    element: <Navigate to="/chart/005930/event" replace />,
+  },
+  {
+    path: '/chart/:stockCode/event',
     element: (
       <SplitRoute
         left={<StockDetailMain />}
         right={<StockDetailPage />}
-        mobile={<StockDetailMain />}
+        mobile={<StockDetailMain key="event" mobileMode="event" />}
       />
     ),
   },
@@ -49,7 +53,7 @@ const router = createBrowserRouter([
       <SplitRoute
         left={<StockDetailMain />}
         right={<NewsPage />}
-        mobile={<NewsPage />}
+        mobile={<StockDetailMain mobileMode="news" />}
       />
     ),
   },

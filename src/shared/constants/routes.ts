@@ -20,3 +20,11 @@ export const toStockDetail = (stockCode: string) => `/stocks/${stockCode}`;
 export function toChartStockDetail(stockCode: string) {
   return `/chart/${encodeURIComponent(stockCode)}/stock-detail`;
 }
+
+/**
+ * 스플릿뷰 이벤트 패널 — `/chart/{종목코드}/event`
+ * 예: `/chart/005930/event`
+ */
+export function toChartStockEvent(stockCode: string) {
+  return `/chart/${encodeURIComponent(stockCode)}/event`;
+}

@@ -17,7 +17,10 @@ import { OhlcSummaryBar } from "./OhlcSummaryBar";
 import MarketIndexBar from "@/pages/widgets/MarketIndexBar/MarketIndexBar";
 import EventTab from "@/features/event/components/EventTab";
 import MemoTab from "@/features/event/components/MemoTab";
+import NewsTab from "@/features/news/components/NewsTab";
+import StockDetailAside from "@/pages/StockDetail/components/StockDetailaside";
 import type { StockEvent, StockMemo } from "@/features/event/types/event.types";
+import type { TodayNews } from "@/features/news/types/news.types";
 
 const MOCK_EVENT: StockEvent = {
   eventId: 1,
@@ -68,6 +71,23 @@ function visibleBarsForPeriod(tab: PeriodTab): number {
       return 120;
   }
 }
+const MOCK_NEWS: TodayNews = {
+  newsId: 1,
+  stockCode: "005930",
+  stockName: "삼성전자",
+  eventType: "PLUNGE",
+  occurredAt: "2026-03-17T09:00:00",
+  changeRate: 2.08,
+  priceBefore: 188000,
+  priceAfter: 184000,
+  aiSummary:
+    "이 구간에서는 엔비디아 GTC 컨퍼런스 이후 HBM3E 공급 기대감이 급격히 확대되었습니다. 삼성전자의 AI 칩 납품 재개 가능성이 보도되며 외국인 매수세가 집중된 것으로 확인됩니다.",
+  relatedNews: [
+    { newsId: 1, title: "외국인, 삼성전자 3일 연속 순매수 2조원 돌파", body: "외국인 투자자들이 삼성전자를 3거래일 연속 순매수하며 코스피 상승을 이끌었다.", source: "연합인포맥스", publishedAt: "2026-03-16T10:00:00", url: "#", tag: "외국인" },
+    { newsId: 2, title: "외국인, 삼성전자 3일 연속 순매수 2조원 돌파", body: "외국인 투자자들이 삼성전자를 3거래일 연속 순매수하며 코스피 상승을 이끌었다.", source: "연합인포맥스", publishedAt: "2026-03-16T11:00:00", url: "#", tag: "외국인" },
+    { newsId: 3, title: "외국인, 삼성전자 3일 연속 순매수 2조원 돌파", body: "외국인 투자자들이 삼성전자를 3거래일 연속 순매수하며 코스피 상승을 이끌었다.", source: "연합인포맥스", publishedAt: "2026-03-16T12:00:00", url: "#", tag: "외국인" },
+  ],
+};
 
 const INITIAL_MEMOS: StockMemo[] = [
   {
@@ -85,6 +105,8 @@ export interface StockDetailMainAllProps extends StockDetailMainProps {
   code?: string;
   /** 직접 전달 시 검색 생략 — `GET /api/stocks/{stockId}/prices` */
   stockId?: number;
+  useMock?: boolean;
+  mobileMode?: "stock-detail" | "event" | "news";
 }
 
 export function StockDetailMain({
@@ -93,6 +115,7 @@ export function StockDetailMain({
   code,
   stockId,
   className = "",
+  mobileMode = "stock-detail",
 }: StockDetailMainAllProps) {
   const navigate = useNavigate();
   const { stockCode: stockCodeParam } = useParams<{ stockCode?: string }>();
@@ -143,9 +166,16 @@ export function StockDetailMain({
   );
 
   const { activePeriod, setActivePeriod } = useChartPeriod("일");
-  const [mobileTab, setMobileTab] = useState<"차트" | "이벤트" | "메모">(
-    "차트",
+  const [mobileTab, setMobileTab] = useState<
+    "차트" | "기업 정보" | "이벤트" | "메모" | "오늘의 뉴스"
+  >(
+    mobileMode === "event"
+      ? "이벤트"
+      : mobileMode === "news"
+        ? "오늘의 뉴스"
+        : "차트"
   );
+
   const [memos, setMemos] = useState<StockMemo[]>(INITIAL_MEMOS);
 
   const handleMemoSave = (text: string) => {
@@ -198,6 +228,14 @@ export function StockDetailMain({
   }, []);
 
   const chartVisibleBars = visibleBarsForPeriod(activePeriod);
+
+  const mobileTabs =
+    mobileMode === "event"
+      ? (["차트", "이벤트", "메모"] as const)
+      : mobileMode === "news"
+        ? (["차트", "오늘의 뉴스"] as const)
+        : (["차트", "기업 정보"] as const);
+
   const mobileEventChips = useMemo(() => {
     const chips: { label: string; positive: boolean; date: string }[] = [];
     bars.forEach((bar) => {
@@ -225,8 +263,8 @@ export function StockDetailMain({
           />
         </div>
 
-        <div className="grid grid-cols-3 shrink-0 border-b border-[#eff1f8]">
-          {(["차트", "이벤트", "메모"] as const).map((tab) => (
+        <div className={`grid shrink-0 border-b border-[#eff1f8] ${mobileMode === "event" ? "grid-cols-3" : "grid-cols-2"}`}>
+          {mobileTabs.map((tab) => (
             <button
               key={tab}
               type="button"
@@ -280,6 +318,14 @@ export function StockDetailMain({
               />
             </div>
           </>
+        )}
+
+        {mobileTab === "오늘의 뉴스" && <NewsTab news={MOCK_NEWS} />}
+
+        {mobileTab === "기업 정보" && (
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <StockDetailAside hideHeader />
+          </div>
         )}
 
         {mobileTab === "이벤트" && (
