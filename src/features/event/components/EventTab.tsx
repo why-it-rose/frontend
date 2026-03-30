@@ -2,10 +2,15 @@ import type { StockEvent } from "../types/event.types";
 
 interface EventTabProps {
   event: StockEvent;
-  onScrap?: (eventId: number, isScrapped: boolean) => void;
+  scrapping?: boolean;
+  onScrap?: (eventId: number, isScrapped: boolean) => Promise<void> | void;
 }
 
-export default function EventTab({ event, onScrap }: EventTabProps) {
+export default function EventTab({
+  event,
+  scrapping = false,
+  onScrap,
+}: EventTabProps) {
   const {
     eventId,
     stockName,
@@ -22,6 +27,11 @@ export default function EventTab({ event, onScrap }: EventTabProps) {
   const isSurge = eventType === "SURGE";
   const sign = isSurge ? "+" : "-";
   const rateColor = isSurge ? "#e03131" : "#1971c2";
+  const scrapButtonLabel = scrapping
+    ? "처리 중..."
+    : isScrapped
+      ? "스크랩 취소"
+      : "스크랩";
 
   const date = new Date(occurredAt);
   const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
@@ -29,7 +39,10 @@ export default function EventTab({ event, onScrap }: EventTabProps) {
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <div className="flex-1 min-h-0 overflow-y-auto scrollbar-subtle px-4" style={{ scrollbarGutter: 'stable' }}>
+      <div
+        className="flex-1 min-h-0 overflow-y-auto scrollbar-subtle px-4"
+        style={{ scrollbarGutter: "stable" }}
+      >
         {/* 이벤트 헤더 카드 */}
         <div
           className="mt-3 mb-2.5 rounded-[14px] p-4"
@@ -39,9 +52,10 @@ export default function EventTab({ event, onScrap }: EventTabProps) {
             <span className="text-xs text-[#9ca3af]">{dateLabel}</span>
             <span
               className="text-[11px] font-bold px-2 py-0.5 rounded-[4px]"
-              style={isSurge
-                ? { color: "#e03131", background: "#FFF0F0" }
-                : { color: "#1971c2", background: "#EFF6FF" }
+              style={
+                isSurge
+                  ? { color: "#e03131", background: "#FFF0F0" }
+                  : { color: "#1971c2", background: "#EFF6FF" }
               }
             >
               {isSurge ? "급등" : "급락"}
@@ -151,10 +165,15 @@ export default function EventTab({ event, onScrap }: EventTabProps) {
       <div className="shrink-0 px-4 pt-3 pb-5 md:pb-6 border-t border-border bg-white">
         <button
           onClick={() => onScrap?.(eventId, isScrapped)}
-          className="w-full py-3 md:py-3.25 rounded-[10px] text-[15px] font-bold text-white transition-colors active:opacity-80"
-          style={{ background: isScrapped ? "#013d7d" : "#014d9d" }}
+          disabled={scrapping}
+          className="w-full py-3 md:py-3.25 rounded-[10px] text-[15px] font-bold transition-colors active:opacity-80 disabled:opacity-70"
+          style={{
+            background: isScrapped ? "#e7f0ff" : "#014d9d",
+            color: isScrapped ? "#013d7d" : "#ffffff",
+            border: isScrapped ? "1px solid #bfd6ff" : "1px solid #014d9d",
+          }}
         >
-          스크랩
+          {scrapButtonLabel}
         </button>
       </div>
     </div>

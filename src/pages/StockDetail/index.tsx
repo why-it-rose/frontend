@@ -15,7 +15,7 @@ export default function StockDetailPage() {
   const [searchParams] = useSearchParams();
   const eventId = searchParams.get('eventId') ? Number(searchParams.get('eventId')) : null;
 
-  const { event, loading, error } = useEventDetail(eventId);
+  const { event, loading, scrapping, error, toggleScrap } = useEventDetail(eventId);
   const { memos, save, update, remove } = useMemos(eventId);
 
   const [tab, setTab] = useState('event');
@@ -35,7 +35,7 @@ export default function StockDetailPage() {
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <TabBar tabs={TABS} value={tab} onChange={setTab} />
-      {tab === 'event' && <EventTab event={event} onScrap={(id, s) => console.log(id, s)} />}
+      {tab === 'event' && <EventTab event={event} scrapping={scrapping} onScrap={toggleScrap} />}
       {tab === 'memo' && (
         <MemoTab
           memos={memos}
