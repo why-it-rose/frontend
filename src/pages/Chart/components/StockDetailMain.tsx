@@ -9,7 +9,7 @@ import type { OhlcBar, PeriodTab, StockDetailMainProps } from "../types";
 import {
   useChartPeriod,
   useChartStockHeader,
-  useOhlcData,
+  useOhlcDataWithEvents,
   useOhlcSummary,
   ohlcBarToSummary,
 } from "../hook";
@@ -126,50 +126,37 @@ export function StockDetailMain({
   const { stockCode: stockCodeParam } = useParams<{ stockCode?: string }>();
   const { data: interestItems = [] } = useInterestStocksQuery();
 
-  const [resolvedTickerStockId, setResolvedTickerStockId] = useState<number | undefined>(
-    undefined
-  );
-  const [searchSettled, setSearchSettled] = useState(true);
+  const [resolvedTickerStockId, setResolvedTickerStockId] = useState<number | undefined>(undefined);
+  // 검색이 완료된 코드 — stockCodeParam과 다르면 아직 검색 중
+  const [searchedCode, setSearchedCode] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    const direct = stockId;
-    if (direct != null) {
-      setResolvedTickerStockId(undefined);
-      setSearchSettled(true);
-      return;
-    }
-    if (!stockCodeParam) {
-      setResolvedTickerStockId(undefined);
-      setSearchSettled(true);
-      return;
-    }
+    if (stockId != null || !stockCodeParam) return;
+
     let cancelled = false;
-    setSearchSettled(false);
-    setResolvedTickerStockId(undefined);
     fetchStockSearch(stockCodeParam, 20)
       .then((items) => {
         if (cancelled) return;
-        const exact =
-          items.find((i) => i.ticker === stockCodeParam) ?? items[0];
+        const exact = items.find((i) => i.ticker === stockCodeParam) ?? items[0];
         setResolvedTickerStockId(exact?.stockId);
+        setSearchedCode(stockCodeParam);
       })
       .catch(() => {
-        if (!cancelled) setResolvedTickerStockId(undefined);
-      })
-      .finally(() => {
-        if (!cancelled) setSearchSettled(true);
+        if (!cancelled) {
+          setResolvedTickerStockId(undefined);
+          setSearchedCode(stockCodeParam);
+        }
       });
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [stockId, stockCodeParam]);
 
-  const chartStockId = stockId ?? resolvedTickerStockId;
+  // 검색 완료 여부: stockId 직접 제공 / stockCodeParam 없음 / 현재 코드 검색 완료
+  const searchSettled = stockId != null || !stockCodeParam || searchedCode === stockCodeParam;
+  // stockCodeParam 없으면 stale resolvedTickerStockId 무시
+  const chartStockId = stockId ?? (stockCodeParam ? resolvedTickerStockId : undefined);
   const displayCode = stockCodeParam ?? code ?? "";
   const routeHasTicker = Boolean(stockCodeParam);
-  const holdEmptyChart = Boolean(
-    stockCodeParam && !stockId && !searchSettled
-  );
+  const holdEmptyChart = Boolean(stockCodeParam && !stockId && !searchSettled);
 
   const isInterested = useMemo(
     () =>
@@ -212,12 +199,17 @@ export function StockDetailMain({
   const handleMemoDelete = (memoId: number) => {
     setMemos((prev) => prev.filter((m) => m.memoId !== memoId));
   };
+
+  const handleEventClick = useCallback((eventId: number) => {
+    const code = stockCodeParam ?? "";
+    navigate(`/chart/${code}/event?eventId=${eventId}`);
+  }, [navigate, stockCodeParam]);
   const { stock: fetchedHeader } = useChartStockHeader(
     chartStockId,
     displayCode,
     routeHasTicker
   );
-  const { bars: fetchedBars } = useOhlcData(
+  const { bars: fetchedBars } = useOhlcDataWithEvents(
     chartStockId,
     activePeriod,
     holdEmptyChart
@@ -226,23 +218,21 @@ export function StockDetailMain({
   const bars = barsProp ?? fetchedBars;
 
   const [hoverBar, setHoverBar] = useState<OhlcBar | null>(null);
-  useEffect(() => {
-    setHoverBar(null);
-  }, [bars]);
 
   const baseSummary = useOhlcSummary(bars);
   const summary = useMemo(() => {
     if (!baseSummary) return null;
-    if (hoverBar) return ohlcBarToSummary(hoverBar);
+    if (hoverBar && bars.some((b) => b.date === hoverBar.date)) {
+      return ohlcBarToSummary(hoverBar);
+    }
     return baseSummary;
-  }, [baseSummary, hoverBar]);
+  }, [baseSummary, hoverBar, bars]);
 
   const handleHoverBar = useCallback((bar: OhlcBar | null) => {
     setHoverBar(bar);
   }, []);
 
   const chartVisibleBars = visibleBarsForPeriod(activePeriod);
-
   const mobileTabs =
     mobileMode === "event"
       ? (["차트", "이벤트", "메모"] as const)
@@ -253,12 +243,10 @@ export function StockDetailMain({
   const mobileEventChips = useMemo(() => {
     const chips: { label: string; positive: boolean; date: string }[] = [];
     bars.forEach((bar) => {
-      if (!bar.event) return;
-      chips.push({
-        label: bar.event.label,
-        positive: bar.event.positive,
-        date: bar.date || "날짜 미정",
-      });
+      if (!bar.events?.length) return;
+      // 대표 이벤트(첫 번째 = changePct 최대)만 표시
+      const ev = bar.events[0];
+      chips.push({ label: ev.label, positive: ev.positive, date: bar.date || "날짜 미정" });
     });
     return chips.slice(-3);
   }, [bars]);
@@ -333,6 +321,7 @@ export function StockDetailMain({
                 bars={bars}
                 visibleBars={chartVisibleBars}
                 onHoverBar={handleHoverBar}
+                onEventClick={handleEventClick}
               />
             </div>
           </>
@@ -390,6 +379,7 @@ export function StockDetailMain({
             bars={bars}
             visibleBars={chartVisibleBars}
             onHoverBar={handleHoverBar}
+            onEventClick={handleEventClick}
           />
         </main>
 
