@@ -10,25 +10,16 @@ import {
 /** 한 줄에 반복할 스트립 개수 (마퀴 루프용) */
 const STRIP_REPEAT = 8;
 
-function TickerStrip({
-  stripKey,
-  rows,
-  loading,
-}: {
-  stripKey: string;
-  rows: TickerRow[];
-  loading: boolean;
-}) {
+function TickerStrip({ stripKey, rows }: { stripKey: string; rows: TickerRow[] }) {
   return (
     <div className="flex shrink-0 items-center gap-6 px-5 py-2 text-[11px] text-[#4b5563] md:gap-8 md:text-xs">
       {rows.map((item) => {
         const q = item.quote;
         const titleName = (q?.hname && q.hname.trim()) || item.label;
-        const priceStr =
-          loading && !q ? '…' : q != null ? formatPrice(q.price) : '—';
-        const changeStr =
-          loading && !q ? '…' : q != null ? formatChange(q.change) : '—';
-        const pctStr = loading && !q ? '…' : q != null ? `(${formatPct(q.diffPct)})` : '(—)';
+        const pending = !item.loaded && !item.error;
+        const priceStr = pending ? '…' : q != null ? formatPrice(q.price) : '—';
+        const changeStr = pending ? '…' : q != null ? formatChange(q.change) : '—';
+        const pctStr = pending ? '…' : q != null ? `(${formatPct(q.diffPct)})` : '(—)';
         const up = q != null ? isUpQuote(q.sign, q.change) : true;
 
         return (
@@ -63,7 +54,7 @@ function TickerStrip({
 }
 
 export default function MarketIndexBar() {
-  const { rows, loading } = useMarketTickerQuotes();
+  const { rows } = useMarketTickerQuotes();
 
   return (
     <section
@@ -72,10 +63,10 @@ export default function MarketIndexBar() {
     >
       <div className="market-index-marquee">
         {Array.from({ length: STRIP_REPEAT }, (_, i) => (
-          <TickerStrip key={`a-${i}`} stripKey={`a-${i}`} rows={rows} loading={loading} />
+          <TickerStrip key={`a-${i}`} stripKey={`a-${i}`} rows={rows} />
         ))}
         {Array.from({ length: STRIP_REPEAT }, (_, i) => (
-          <TickerStrip key={`b-${i}`} stripKey={`b-${i}`} rows={rows} loading={loading} />
+          <TickerStrip key={`b-${i}`} stripKey={`b-${i}`} rows={rows} />
         ))}
       </div>
     </section>

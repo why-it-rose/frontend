@@ -8,6 +8,8 @@ const POLL_MS = 10 * 60 * 1000;
 export type TickerRow = MarketTickerDef & {
   quote: T1101Quote | null;
   error?: boolean;
+  /** 해당 종목 첫 조회 완료 여부 — 완료 전에는 … 표시 */
+  loaded: boolean;
 };
 
 /** 한국 시세 UI: 상승 빨강 — change·sign 기준 */
@@ -33,42 +35,49 @@ export function formatPct(p: number): string {
 
 export function useMarketTickerQuotes() {
   const [rows, setRows] = useState<TickerRow[]>(() =>
-    MARKET_TICKER_DEFS.map((d) => ({ ...d, quote: null }))
+    MARKET_TICKER_DEFS.map((d) => ({ ...d, quote: null, loaded: false }))
   );
-  const [loading, setLoading] = useState(true);
 
-  const loadAll = useCallback(async () => {
+  const loadAll = useCallback(async (silent: boolean) => {
     const hasKey = Boolean(
       import.meta.env.VITE_LS_APP_KEY?.trim() && import.meta.env.VITE_LS_APP_SECRET?.trim()
     );
     if (!hasKey) {
-      setRows(MARKET_TICKER_DEFS.map((d) => ({ ...d, quote: null, error: true })));
-      setLoading(false);
+      setRows(MARKET_TICKER_DEFS.map((d) => ({ ...d, quote: null, error: true, loaded: true })));
       return;
     }
 
-    setLoading(true);
     await fetchLsAccessToken();
 
-    const results = await Promise.all(
-      MARKET_TICKER_DEFS.map(async (def) => {
+    if (!silent) {
+      setRows(MARKET_TICKER_DEFS.map((d) => ({ ...d, quote: null, error: false, loaded: false })));
+    }
+
+    MARKET_TICKER_DEFS.forEach((def) => {
+      void (async () => {
         try {
           const quote = await fetchT1101Quote(def.shcode);
-          return { ...def, quote, error: !quote } as TickerRow;
+          setRows((prev) =>
+            prev.map((r) =>
+              r.id === def.id ? { ...r, quote, error: !quote, loaded: true } : r
+            )
+          );
         } catch {
-          return { ...def, quote: null, error: true } as TickerRow;
+          setRows((prev) =>
+            prev.map((r) =>
+              r.id === def.id ? { ...r, quote: null, error: true, loaded: true } : r
+            )
+          );
         }
-      })
-    );
-    setRows(results);
-    setLoading(false);
+      })();
+    });
   }, []);
 
   useEffect(() => {
-    void loadAll();
-    const id = window.setInterval(() => void loadAll(), POLL_MS);
+    void loadAll(false);
+    const id = window.setInterval(() => void loadAll(true), POLL_MS);
     return () => window.clearInterval(id);
   }, [loadAll]);
 
-  return { rows, loading, reload: loadAll };
+  return { rows, reload: () => void loadAll(false) };
 }
