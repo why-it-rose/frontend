@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams, useSearchParams } from "react-router";
 import LoginModal from "@/features/auth/components/LoginModal";
 import { useAuth } from "@/features/auth/context/AuthContext";
 import { fetchStockSearch } from "@/features/stock/api";
@@ -9,7 +9,7 @@ import type { OhlcBar, PeriodTab, StockDetailMainProps } from "../types";
 import {
   useChartPeriod,
   useChartStockHeader,
-  useOhlcData,
+  useOhlcDataWithEvents,
   useOhlcSummary,
   ohlcBarToSummary,
 } from "../hook";
@@ -22,42 +22,10 @@ import EventTab from "@/features/event/components/EventTab";
 import MemoTab from "@/features/event/components/MemoTab";
 import NewsTab from "@/features/news/components/NewsTab";
 import StockDetailAside from "@/pages/StockDetail/components/StockDetailaside";
-import type { StockEvent, StockMemo } from "@/features/event/types/event.types";
+import { useEventDetail } from "@/features/event/hooks/useEventDetail";
+import { useMemos } from "@/features/event/hooks/useMemos";
 import type { TodayNews } from "@/features/news/types/news.types";
 
-const MOCK_EVENT: StockEvent = {
-  eventId: 1,
-  stockCode: "005930",
-  stockName: "삼성전자",
-  eventType: "SURGE",
-  occurredAt: "2025-11-26T09:00:00",
-  changeRate: 17.2,
-  priceBefore: 125000,
-  priceAfter: 146500,
-  aiSummary:
-    "이 구간에서는 엔비디아 GTC 컨퍼런스 이후 HBM3E 공급 기대감이 급격히 확대되었습니다. 삼성전자의 AI 칩 납품 재개 가능성이 보도되며 외국인 매수세가 집중된 것으로 확인됩니다.",
-  relatedNews: [
-    {
-      newsId: 1,
-      title: "외국인, 삼성전자 3일 연속 순매수 2조원 돌파",
-      body: "외국인 투자자들이 삼성전자를 3거래일 연속 순매수하며 코스피 상승을 이끌었다.",
-      source: "연합인포맥스",
-      publishedAt: "2025-11-26T10:00:00",
-      url: "#",
-      tag: "외국인",
-    },
-    {
-      newsId: 2,
-      title: "삼성전자 HBM3E 납품 재개 기대감 확산",
-      body: "엔비디아향 HBM3E 공급 재개 가능성이 제기되며 반도체 섹터 전반에 매수세가 유입됐다.",
-      source: "한국경제",
-      publishedAt: "2025-11-26T11:00:00",
-      url: "#",
-      tag: "반도체",
-    },
-  ],
-  isScrapped: false,
-};
 
 /** 기간별로 한 화면에 보일 최대 봉 수(많을수록 조금 더 축소된 느낌) — 봉이 적으면 전체 표시 */
 function visibleBarsForPeriod(tab: PeriodTab): number {
@@ -92,16 +60,6 @@ const MOCK_NEWS: TodayNews = {
   ],
 };
 
-const INITIAL_MEMOS: StockMemo[] = [
-  {
-    memoId: 1,
-    eventType: "SURGE",
-    stockName: "삼성전자",
-    changeRate: 19.47,
-    date: "03.16",
-    text: "HBM 납품 기대감으로 외국인 매수세가 강하게 붙은 구간.",
-  },
-];
 
 export interface StockDetailMainAllProps extends StockDetailMainProps {
   /** 티커 폴백 (라우트에 없을 때만) */
@@ -124,52 +82,44 @@ export function StockDetailMain({
   const { refreshAuth } = useAuth();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const { stockCode: stockCodeParam } = useParams<{ stockCode?: string }>();
+  const [searchParams] = useSearchParams();
+  const mobileEventId = useMemo(() => {
+    const p = searchParams.get("eventId");
+    return p ? Number(p) : null;
+  }, [searchParams]);
   const { data: interestItems = [] } = useInterestStocksQuery();
 
-  const [resolvedTickerStockId, setResolvedTickerStockId] = useState<number | undefined>(
-    undefined
-  );
-  const [searchSettled, setSearchSettled] = useState(true);
+  const [resolvedTickerStockId, setResolvedTickerStockId] = useState<number | undefined>(undefined);
+  // 검색이 완료된 코드 — stockCodeParam과 다르면 아직 검색 중
+  const [searchedCode, setSearchedCode] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    const direct = stockId;
-    if (direct != null) {
-      setResolvedTickerStockId(undefined);
-      setSearchSettled(true);
-      return;
-    }
-    if (!stockCodeParam) {
-      setResolvedTickerStockId(undefined);
-      setSearchSettled(true);
-      return;
-    }
+    if (stockId != null || !stockCodeParam) return;
+
     let cancelled = false;
-    setSearchSettled(false);
-    setResolvedTickerStockId(undefined);
     fetchStockSearch(stockCodeParam, 20)
       .then((items) => {
         if (cancelled) return;
-        const exact =
-          items.find((i) => i.ticker === stockCodeParam) ?? items[0];
+        const exact = items.find((i) => i.ticker === stockCodeParam) ?? items[0];
         setResolvedTickerStockId(exact?.stockId);
+        setSearchedCode(stockCodeParam);
       })
       .catch(() => {
-        if (!cancelled) setResolvedTickerStockId(undefined);
-      })
-      .finally(() => {
-        if (!cancelled) setSearchSettled(true);
+        if (!cancelled) {
+          setResolvedTickerStockId(undefined);
+          setSearchedCode(stockCodeParam);
+        }
       });
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [stockId, stockCodeParam]);
 
-  const chartStockId = stockId ?? resolvedTickerStockId;
+  // 검색 완료 여부: stockId 직접 제공 / stockCodeParam 없음 / 현재 코드 검색 완료
+  const searchSettled = stockId != null || !stockCodeParam || searchedCode === stockCodeParam;
+  // stockCodeParam 없으면 stale resolvedTickerStockId 무시
+  const chartStockId = stockId ?? (stockCodeParam ? resolvedTickerStockId : undefined);
   const displayCode = stockCodeParam ?? code ?? "";
   const routeHasTicker = Boolean(stockCodeParam);
-  const holdEmptyChart = Boolean(
-    stockCodeParam && !stockId && !searchSettled
-  );
+  const holdEmptyChart = Boolean(stockCodeParam && !stockId && !searchSettled);
 
   const isInterested = useMemo(
     () =>
@@ -190,34 +140,23 @@ export function StockDetailMain({
         : "차트"
   );
 
-  const [memos, setMemos] = useState<StockMemo[]>(INITIAL_MEMOS);
+  const { event: mobileEvent } = useEventDetail(
+    mobileMode === "event" ? mobileEventId : null
+  );
+  const { memos, save: saveMemo, update: updateMemo, remove: removeMemo } = useMemos(
+    mobileMode === "event" ? mobileEventId : null
+  );
 
-  const handleMemoSave = (text: string) => {
-    setMemos((prev) => [
-      {
-        memoId: Date.now(),
-        eventType: "SURGE",
-        stockName: "삼성전자",
-        changeRate: 17.2,
-        date: new Date()
-          .toLocaleDateString("ko-KR", { month: "2-digit", day: "2-digit" })
-          .replace(/\. /g, ".")
-          .slice(0, -1),
-        text,
-      },
-      ...prev,
-    ]);
-  };
-
-  const handleMemoDelete = (memoId: number) => {
-    setMemos((prev) => prev.filter((m) => m.memoId !== memoId));
-  };
+  const handleEventClick = useCallback((eventId: number) => {
+    const code = stockCodeParam ?? "";
+    navigate(`/chart/${code}/event?eventId=${eventId}`);
+  }, [navigate, stockCodeParam]);
   const { stock: fetchedHeader } = useChartStockHeader(
     chartStockId,
     displayCode,
     routeHasTicker
   );
-  const { bars: fetchedBars } = useOhlcData(
+  const { bars: fetchedBars } = useOhlcDataWithEvents(
     chartStockId,
     activePeriod,
     holdEmptyChart
@@ -226,23 +165,21 @@ export function StockDetailMain({
   const bars = barsProp ?? fetchedBars;
 
   const [hoverBar, setHoverBar] = useState<OhlcBar | null>(null);
-  useEffect(() => {
-    setHoverBar(null);
-  }, [bars]);
 
   const baseSummary = useOhlcSummary(bars);
   const summary = useMemo(() => {
     if (!baseSummary) return null;
-    if (hoverBar) return ohlcBarToSummary(hoverBar);
+    if (hoverBar && bars.some((b) => b.date === hoverBar.date)) {
+      return ohlcBarToSummary(hoverBar);
+    }
     return baseSummary;
-  }, [baseSummary, hoverBar]);
+  }, [baseSummary, hoverBar, bars]);
 
   const handleHoverBar = useCallback((bar: OhlcBar | null) => {
     setHoverBar(bar);
   }, []);
 
   const chartVisibleBars = visibleBarsForPeriod(activePeriod);
-
   const mobileTabs =
     mobileMode === "event"
       ? (["차트", "이벤트", "메모"] as const)
@@ -253,12 +190,10 @@ export function StockDetailMain({
   const mobileEventChips = useMemo(() => {
     const chips: { label: string; positive: boolean; date: string }[] = [];
     bars.forEach((bar) => {
-      if (!bar.event) return;
-      chips.push({
-        label: bar.event.label,
-        positive: bar.event.positive,
-        date: bar.date || "날짜 미정",
-      });
+      if (!bar.events?.length) return;
+      // 대표 이벤트(첫 번째 = changePct 최대)만 표시
+      const ev = bar.events[0];
+      chips.push({ label: ev.label, positive: ev.positive, date: bar.date || "날짜 미정" });
     });
     return chips.slice(-3);
   }, [bars]);
@@ -333,6 +268,7 @@ export function StockDetailMain({
                 bars={bars}
                 visibleBars={chartVisibleBars}
                 onHoverBar={handleHoverBar}
+                onEventClick={handleEventClick}
               />
             </div>
           </>
@@ -346,9 +282,9 @@ export function StockDetailMain({
           </div>
         )}
 
-        {mobileTab === "이벤트" && (
+        {mobileTab === "이벤트" && mobileEvent && (
           <EventTab
-            event={MOCK_EVENT}
+            event={mobileEvent}
             onScrap={(id, s) => console.log(id, s)}
           />
         )}
@@ -356,13 +292,14 @@ export function StockDetailMain({
         {mobileTab === "메모" && (
           <MemoTab
             memos={memos}
-            eventInfo={{
-              eventType: MOCK_EVENT.eventType,
-              stockName: MOCK_EVENT.stockName,
-              changeRate: MOCK_EVENT.changeRate,
-            }}
-            onSave={handleMemoSave}
-            onDelete={handleMemoDelete}
+            eventInfo={mobileEvent ? {
+              eventType: mobileEvent.eventType,
+              stockName: mobileEvent.stockName,
+              changeRate: mobileEvent.changeRate,
+            } : undefined}
+            onSave={saveMemo}
+            onUpdate={updateMemo}
+            onDelete={removeMemo}
           />
         )}
       </div>
@@ -390,6 +327,7 @@ export function StockDetailMain({
             bars={bars}
             visibleBars={chartVisibleBars}
             onHoverBar={handleHoverBar}
+            onEventClick={handleEventClick}
           />
         </main>
 

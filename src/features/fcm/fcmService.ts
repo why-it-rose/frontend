@@ -6,7 +6,7 @@ export function initForegroundMessage() {
     console.log('[FCM] 포그라운드 메시지 수신:', payload);
     const title = payload.notification?.title ?? '알림';
     const body = payload.notification?.body ?? '';
-    new Notification(title, { body, icon: '/favicon.svg' });
+    new Notification(title, { body, icon: '/logo.svg' });
   });
 }
 
