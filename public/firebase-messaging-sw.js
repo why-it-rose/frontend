@@ -12,10 +12,13 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-messaging.onBackgroundMessage((payload) => {
+messaging.onBackgroundMessage(async (payload) => {
+  const clients = await self.clients.matchAll({ type: 'window' });
+  if (clients.length > 0) return;
+
   const { title = '알림', body = '' } = payload.notification ?? {};
   self.registration.showNotification(title, {
     body,
-    icon: '/favicon.svg',
+    icon: '/logo.svg',
   });
 });
