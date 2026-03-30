@@ -33,6 +33,7 @@ function stockGroupToAlertGroup(sg: StockNewsGroup, index: number, date: string,
     items,
     date,
     isToday,
+    logoUrl: sg.logoUrl ?? null,
   };
 }
 

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import type { AlertItemRow, AlertTag } from './alertCenter.types';
 import { isTodayNotifiedDate, notificationDetailToAlertGroups } from './alertCenterDetailAdapter';
 import AlertStockAvatar from './AlertStockAvatar';
@@ -29,7 +29,7 @@ function EventContent({ item }: { item: AlertItemRow }) {
       {item.tags && item.tags.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {item.tags.map((tag) => (
-            <TagChip key={`${item.headline}-$#{tag.label}`} tag={tag} />
+            <TagChip key={`${item.headline}-${tag.label}`} tag={tag} />
           ))}
         </div>
       )}
@@ -41,14 +41,9 @@ const PX = 18;
 
 export interface AlertCenterDetailFeedProps {
   notificationId: number | null;
-  onNotificationDetailFullyRead?: (notificationId: number) => void;
 }
 
-export default function AlertCenterDetailFeed({
-  notificationId,
-  onNotificationDetailFullyRead,
-}: AlertCenterDetailFeedProps) {
-  const [readStateByGroup, setReadStateByGroup] = useState<Record<string, boolean>>({});
+export default function AlertCenterDetailFeed({ notificationId }: AlertCenterDetailFeedProps) {
   const [collapsedByGroup, setCollapsedByGroup] = useState<Record<string, boolean>>({});
   const { data: allDetails } = useNotificationDetail({ days: 7 });
 
@@ -62,28 +57,7 @@ export default function AlertCenterDetailFeed({
     return [{ date: detail.date, isToday: isTodayNotifiedDate(detail.date), groups }];
   }, [detail]);
 
-  const allGroupKeys = useMemo(() => {
-    const keys: string[] = [];
-    for (const s of sections) {
-      s.groups.forEach((g) => keys.push(`${s.date}-${g.code}`));
-    }
-    return keys;
-  }, [sections]);
-
-  const isAllRead = allGroupKeys.length > 0 && allGroupKeys.every((k) => readStateByGroup[k]);
   const getGroupKey = (date: string, code: string) => `${date}-${code}`;
-
-  const detailNotifyRef = useRef<number | null>(null);
-  useEffect(() => {
-    detailNotifyRef.current = null;
-  }, [notificationId]);
-
-  useEffect(() => {
-    if (notificationId == null || allGroupKeys.length === 0 || !isAllRead) return;
-    if (detailNotifyRef.current === notificationId) return;
-    detailNotifyRef.current = notificationId;
-    onNotificationDetailFullyRead?.(notificationId);
-  }, [notificationId, isAllRead, allGroupKeys.length, onNotificationDetailFullyRead]);
 
   if (sections.length === 0) {
     return (
@@ -96,7 +70,7 @@ export default function AlertCenterDetailFeed({
   return (
     <div className="mypage-scrap-kr w-full overflow-x-hidden pt-4 pb-4" style={{ paddingLeft: PX, paddingRight: PX }}>
       <div className="flex flex-col gap-4">
-        {sections.map(({ date, isToday, groups }, dateIdx) => (
+        {sections.map(({ date, isToday, groups }) => (
           <section key={date} className="flex flex-col gap-0">
             <div
               className="flex items-center justify-between gap-3 border-b border-[#e5e7eb] pb-2.5"
@@ -110,25 +84,6 @@ export default function AlertCenterDetailFeed({
                   </span>
                 )}
               </div>
-              {dateIdx === 0 && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setReadStateByGroup(() => {
-                      const next: Record<string, boolean> = {};
-                      allGroupKeys.forEach((k) => {
-                        next[k] = true;
-                      });
-                      return next;
-                    })
-                  }
-                  className={`shrink-0 translate-x-2 border-0 bg-transparent p-0 text-[11.5px] font-bold ${
-                    isAllRead ? 'text-[#9ca3af]' : 'text-[#014d9d]'
-                  }`}
-                >
-                  {isAllRead ? '전체 읽음' : '전체 읽음 처리'}
-                </button>
-              )}
             </div>
 
             <div className="relative flex flex-col">
@@ -136,8 +91,7 @@ export default function AlertCenterDetailFeed({
                 <Fragment key={`${group.code}-${date}-${idx}`}>
                   {(() => {
                     const groupKey = getGroupKey(date, group.code);
-                    const isRead = !!readStateByGroup[groupKey];
-                    const isCollapsed = collapsedByGroup[groupKey] !== false; // 기본 접힘
+                    const isCollapsed = collapsedByGroup[groupKey] !== false;
                     return (
                       <>
                         <div className="relative z-10 border-b border-[#f3f4f6] last:border-b-0">
@@ -151,15 +105,7 @@ export default function AlertCenterDetailFeed({
                             }
                           >
                             <div className="relative shrink-0">
-                              <AlertStockAvatar color={group.color} ini={group.ini} />
-                              {!isRead && (
-                                <span
-                                  className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold text-white shadow-sm"
-                                  style={{ backgroundColor: group.badgeColor }}
-                                >
-                                  {group.items.length}
-                                </span>
-                              )}
+                              <AlertStockAvatar color={group.color} ini={group.ini} logoUrl={group.logoUrl} />
                             </div>
 
                             <div className="min-w-0 flex-1">
@@ -189,53 +135,31 @@ export default function AlertCenterDetailFeed({
                         </div>
 
                         {!isCollapsed && (
-                          <>
-                            <div
-                              className={`relative z-10 border-b border-[#f3f4f6] last:border-b-0 ${
-                                isRead ? 'bg-[#F0F2F8]' : 'bg-white'
-                              }`}
-                              style={{ marginLeft: -PX, marginRight: -PX, paddingLeft: PX, paddingRight: PX }}
-                            >
-                              <div className="relative flex flex-col">
-                                <div className="absolute top-0 bottom-0 left-[-2px] z-30 w-[2px] bg-[#D8E2F8]" aria-hidden />
-                                {group.items.map((item, itemIdx) => (
-                                  <div
-                                    key={`${group.code}-${itemIdx}`}
-                                    className="relative -mx-[18px] flex w-[calc(100%+36px)] items-stretch gap-2.5 px-[18px] py-2 transition-colors hover:bg-[#F0F2F8]"
-                                  >
-                                    <div className="flex w-4 shrink-0 flex-col items-center">
-                                      <span
-                                        className="relative z-30 -ml-[17px] mt-1 h-1.5 w-1.5 shrink-0 rounded-full ring-3 ring-white"
-                                        style={{ backgroundColor: item.dotColor }}
-                                        aria-hidden
-                                      />
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                      <EventContent item={item} />
-                                    </div>
+                          <div
+                            className="relative z-10 border-b border-[#f3f4f6] last:border-b-0 bg-white"
+                            style={{ marginLeft: -PX, marginRight: -PX, paddingLeft: PX, paddingRight: PX }}
+                          >
+                            <div className="relative flex flex-col">
+                              <div className="absolute top-0 bottom-0 left-[-2px] z-30 w-[2px] bg-[#D8E2F8]" aria-hidden />
+                              {group.items.map((item, itemIdx) => (
+                                <div
+                                  key={`${group.code}-${itemIdx}`}
+                                  className="relative -mx-[18px] flex w-[calc(100%+36px)] items-stretch gap-2.5 px-[18px] py-2 transition-colors hover:bg-[#F0F2F8]"
+                                >
+                                  <div className="flex w-4 shrink-0 flex-col items-center">
+                                    <span
+                                      className="relative z-30 -ml-[17px] mt-1 h-1.5 w-1.5 shrink-0 rounded-full ring-3 ring-white"
+                                      style={{ backgroundColor: item.dotColor }}
+                                      aria-hidden
+                                    />
                                   </div>
-                                ))}
-                              </div>
+                                  <div className="min-w-0 flex-1">
+                                    <EventContent item={item} />
+                                  </div>
+                                </div>
+                              ))}
                             </div>
-                            <div
-                              className="relative z-10 flex items-center justify-between gap-3 border-y border-[#f3f4f6] bg-[#F0F2F8] py-2.5"
-                              style={{ marginLeft: -PX, marginRight: -PX, paddingLeft: PX, paddingRight: PX }}
-                            >
-                              <span className="text-[12px] font-medium text-[#6b7280]">총 {group.items.length}건</span>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setReadStateByGroup((prev) => ({ ...prev, [groupKey]: true }));
-                                }}
-                                className={`shrink-0 border-0 bg-transparent p-0 text-[11.5px] font-bold ${
-                                  isRead ? 'text-[#9ca3af]' : 'text-[#014d9d]'
-                                }`}
-                              >
-                                {isRead ? '읽음' : '읽음 처리'}
-                              </button>
-                            </div>
-                          </>
+                          </div>
                         )}
                       </>
                     );

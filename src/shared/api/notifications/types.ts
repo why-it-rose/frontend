@@ -38,6 +38,7 @@ export interface StockNewsGroup {
   stockName: string;
   ticker: string;
   newsCount: number;
+  logoUrl?: string | null;
   newsList: NewsItem[];
 }
 

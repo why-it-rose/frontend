@@ -25,5 +25,6 @@ export type AlertGroup = {
   summaryLine?: string;
   date: string;
   isToday: boolean;
+  logoUrl?: string | null;
 };
 
