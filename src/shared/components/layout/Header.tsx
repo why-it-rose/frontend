@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type RefObject } from "react";
+import { useState, useRef, type RefObject } from "react";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "@/features/auth/context/AuthContext";
 import { ROUTES } from "@/shared/constants/routes";
@@ -18,7 +18,7 @@ type HeaderProps = {
 };
 
 export default function Header({ onMyPageOpen, disableMyPagePanel = false }: HeaderProps) {
-  const { isLoggedIn, nickname, login, logout } = useAuth();
+  const { isLoggedIn, nickname, refreshAuth, clearAuth} = useAuth();
   const profileInitial = Array.from(nickname.trim())[0] ?? "유";
   const navigate = useNavigate();
   const [modal, setModal] = useState<"login" | "signup" | null>(null);
@@ -29,27 +29,6 @@ export default function Header({ onMyPageOpen, disableMyPagePanel = false }: Hea
   const [detailFullyReadIds, setDetailFullyReadIds] = useState<Set<number>>(() => new Set());
   const mobileAlertContainerRef = useRef<HTMLDivElement | null>(null);
   const desktopAlertContainerRef = useRef<HTMLDivElement | null>(null);
-  // useEffect가 URL 해시를 읽음.
-  useEffect(() => {
-    const hash = window.location.hash.startsWith("#")
-      ? window.location.hash.slice(1)
-      : "";
-    if (!hash) return;
-
-    const params = new URLSearchParams(hash);
-    const accessToken = params.get("accessToken");
-    const refreshToken = params.get("refreshToken");
-    const nextNickname = params.get("nickname");
-
-    if (!accessToken || !refreshToken || !nextNickname) return;
-    //토큰을 localStorage에 저장
-    localStorage.setItem("accessToken", accessToken);
-    localStorage.setItem("refreshToken", refreshToken);
-    login(nextNickname); // AuthContext 로그인 상태 갱신
-
-    const cleanUrl = `${window.location.pathname}${window.location.search}`;
-    window.history.replaceState(null, "", cleanUrl); //URL해쉬 지워 깨끗한 주소로 복원
-  }, [login]);
 
   const hasUnread = alertCenterListHasUnread(allListMarkedRead, detailFullyReadIds);
 
@@ -174,8 +153,8 @@ export default function Header({ onMyPageOpen, disableMyPagePanel = false }: Hea
         <LoginModal
           onClose={() => setModal(null)}
           onSignup={() => setModal("signup")}
-          onLogin={(nickname) => {
-            login(nickname);
+          onLoginSuccess={async() => {
+            await  refreshAuth();
             setModal(null);
           }}
         />
@@ -191,7 +170,7 @@ export default function Header({ onMyPageOpen, disableMyPagePanel = false }: Hea
         <MyPagePanel
           onClose={() => setMyPageOpen(false)}
           onLogout={() => {
-            logout();
+            clearAuth();
             setMyPageOpen(false);
             navigate(ROUTES.HOME);
           }}

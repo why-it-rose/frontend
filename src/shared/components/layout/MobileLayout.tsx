@@ -14,7 +14,7 @@ export default function MobileLayout({
   content: ReactNode;
 }) {
   const navigate = useNavigate();
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, clearAuth } = useAuth();
   const [myPageOpen, setMyPageOpen] = useState(false);
 
   const openMyPage = () => {
@@ -34,7 +34,7 @@ export default function MobileLayout({
         <MyPagePanel
           onClose={() => setMyPageOpen(false)}
           onLogout={() => {
-            logout();
+            clearAuth();
             setMyPageOpen(false);
             navigate(ROUTES.HOME);
           }}
