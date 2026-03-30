@@ -4,6 +4,9 @@ import { fetchTickers, fetchStockInfo, MOCK_TICKERS, MOCK_STOCK_INFO } from "../
 import { fetchStockDetail, fetchStockPrices } from "@/features/stock/api";
 import { mapStockDetailToStockInfo } from "../lib/mapStockDetail";
 import type { StockChartPeriod, StockPriceCandleDto } from "@/features/stock/types";
+import { fetchEvents } from "@/features/event/api/eventApi";
+import type { ApiEventItem } from "@/features/event/api/eventApi";
+import type { EventPin } from "../types";
 
 // ─── 기간 탭 → Swagger period ──────────────────────────────────────────────────
 const PERIOD_MAP: Record<PeriodTab, StockChartPeriod> = {
@@ -97,6 +100,103 @@ export function useOhlcData(
   }, [load]);
 
   return { bars, loading, error, refetch: load };
+}
+
+// ─── useOhlcDataWithEvents ──────────────────────────────────────────────────────
+
+/** 이벤트를 기간에 맞는 bar.date에 그룹핑 */
+function groupEventsByBar(
+  events: ApiEventItem[],
+  bars: OhlcBar[],
+  period: PeriodTab,
+): Map<string, EventPin[]> {
+  const map = new Map<string, EventPin[]>();
+
+  for (const e of events) {
+    const pin: EventPin = {
+      label: `${e.changePct > 0 ? "+" : ""}${e.changePct.toFixed(1)}%`,
+      positive: e.eventType === "SURGE",
+      eventId: e.eventId,
+      changePct: e.changePct,
+    };
+
+    let barDate: string | undefined;
+    const dotDate = e.startDate.replace(/-/g, ".");   // "2024.03.16"
+
+    if (period === "일") {
+      barDate = dotDate;
+    } else if (period === "월") {
+      const monthKey = dotDate.slice(0, 7);           // "2024.03"
+      barDate = bars.find((b) => b.date.slice(0, 7) === monthKey)?.date;
+    } else if (period === "년") {
+      const yearKey = dotDate.slice(0, 4);            // "2024"
+      barDate = bars.find((b) => b.date.slice(0, 4) === yearKey)?.date;
+    } else if (period === "주") {
+      // 이벤트 날짜와 ±6일 이내에서 가장 가까운 봉
+      const eventMs = new Date(e.startDate).getTime();
+      let bestBar: OhlcBar | undefined;
+      let bestDiff = Infinity;
+      for (const bar of bars) {
+        const barMs = new Date(bar.date.replace(/\./g, "-")).getTime();
+        const diff = Math.abs(eventMs - barMs);
+        if (diff < bestDiff && diff <= 6 * 86_400_000) {
+          bestDiff = diff;
+          bestBar = bar;
+        }
+      }
+      barDate = bestBar?.date;
+    }
+
+    if (!barDate) continue;
+    const existing = map.get(barDate);
+    if (existing) existing.push(pin);
+    else map.set(barDate, [pin]);
+  }
+
+  return map;
+}
+
+/**
+ * OHLCV + 이벤트 마커를 합친 bars 반환.
+ * 기간(period)에 따라 이벤트를 적절한 봉에 그룹핑하고, 여러 이벤트가 같은 봉에 있으면
+ * events 배열로 모두 포함 (changePct 절댓값 내림차순).
+ */
+export function useOhlcDataWithEvents(
+  stockId: number | undefined,
+  period: PeriodTab,
+  holdEmpty = false
+) {
+  const { bars: rawBars, loading, error, refetch } = useOhlcData(stockId, period, holdEmpty);
+  const [mergedBars, setMergedBars] = useState<OhlcBar[]>([]);
+
+  useEffect(() => {
+    if (!stockId || holdEmpty || !rawBars.length) {
+      setMergedBars(rawBars);
+      return;
+    }
+    let cancelled = false;
+    fetchEvents(stockId, undefined, 0, 200)
+      .then((events) => {
+        if (cancelled) return;
+        const grouped = groupEventsByBar(events, rawBars, period);
+        setMergedBars(
+          rawBars.map((bar) => {
+            const evList = grouped.get(bar.date);
+            if (!evList?.length) return bar;
+            const sorted = [...evList].sort(
+              (a, b) => Math.abs(b.changePct) - Math.abs(a.changePct)
+            );
+            return { ...bar, events: sorted };
+          })
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setMergedBars(rawBars);
+      });
+    return () => { cancelled = true; };
+  }, [rawBars, stockId, holdEmpty, period]);
+
+  return { bars: mergedBars, loading, error, refetch };
 }
 
 // ─── useChartStockHeader ───────────────────────────────────────────────────────

@@ -83,18 +83,23 @@ function applyZoomedVisibleRange(
 
 export function LightweightCandleChart({
   bars,
-  /** 기본 72봉. 일봉이 많을 때 최근 구간만 확대 */
+  /** 기본 120봉. 일봉이 많을 때 최근 구간만 확대 */
   visibleBars = DEFAULT_VISIBLE_BARS,
   /** 크로스헤어가 올라간 봉 — 마우스가 차트 밖이면 `null` */
   onHoverBar,
+  /** 이벤트 핀 클릭 시 호출 — eventId 전달 */
+  onEventClick,
 }: {
   bars: OhlcBar[];
   visibleBars?: number;
   onHoverBar?: (bar: OhlcBar | null) => void;
+  onEventClick?: (eventId: number) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const hoverRef = useRef(onHoverBar);
   hoverRef.current = onHoverBar;
+  const eventClickRef = useRef(onEventClick);
+  eventClickRef.current = onEventClick;
 
   useEffect(() => {
     const el = containerRef.current;
@@ -102,10 +107,12 @@ export function LightweightCandleChart({
 
     const clean = dedupeSortedByTime(bars);
 
+    // overlay가 차트 위에 겹치도록 부모를 relative로
+    el.style.position = "relative";
+
     const chart = createChart(el, {
       width: el.clientWidth,
       height: el.clientHeight,
-      /** 트랙패드/핀치/휠 스케일 — 기본값이면 충분히 넓게 허용 */
       handleScale: {
         axisPressedMouseMove: { time: true, price: true },
         axisDoubleClickReset: { time: true, price: true },
@@ -133,7 +140,6 @@ export function LightweightCandleChart({
         timeVisible: true,
         secondsVisible: false,
         rightOffset: 10,
-        /** 기본 min/max가 줌 한도를 걸 수 있어, 사실상 제한 없이 */
         barSpacing: 9,
         minBarSpacing: 0.5,
         maxBarSpacing: 1000,
@@ -183,6 +189,174 @@ export function LightweightCandleChart({
 
     applyZoomedVisibleRange(chart, clean.length, visibleBars);
 
+    // ─── HTML 오버레이 핀 (거래량 막대 위) ──────────────────────────────────
+    const eventBars = clean.filter((b) => b.events?.length);
+
+    const pinsEl = document.createElement("div");
+    pinsEl.style.cssText = [
+      "position:absolute",
+      "inset:0",
+      "pointer-events:none",
+      "overflow:visible",
+      "z-index:10",
+    ].join(";");
+    el.appendChild(pinsEl);
+
+    // 펼쳐진 핀의 bar.date를 추적
+    const expandedDates = new Set<string>();
+
+    function makeBubble(
+      label: string,
+      positive: boolean,
+      onClick?: () => void,
+    ): HTMLDivElement {
+      const color      = positive ? "#be123c" : "#1d4ed8";
+      const bg         = positive ? "#fff1f2" : "#eff6ff";
+      const border     = positive ? "#fecdd3" : "#bfdbfe";
+      const el = document.createElement("div");
+      el.style.cssText = [
+        `background:${bg}`,
+        `color:${color}`,
+        `border:1.5px solid ${border}`,
+        "border-radius:9999px",
+        "padding:3px 10px",
+        "font-size:11px",
+        "font-weight:700",
+        "white-space:nowrap",
+        "line-height:1.5",
+        "letter-spacing:-0.2px",
+        "box-shadow:0 1px 6px rgba(0,0,0,0.08)",
+        onClick ? "cursor:pointer;pointer-events:auto" : "",
+      ].join(";");
+      el.textContent = `${positive ? "↑" : "↓"} ${label}`;
+      if (onClick) el.addEventListener("click", (e) => { e.stopPropagation(); onClick(); });
+      return el;
+    }
+
+    function makePinHead(positive: boolean, onClick?: () => void): HTMLDivElement {
+      const ringBg  = positive ? "rgba(190,18,60,0.12)" : "rgba(29,78,216,0.12)";
+      const innerBg = positive ? "#be123c" : "#1d4ed8";
+
+      const outer = document.createElement("div");
+      outer.style.cssText = [
+        "width:32px", "height:32px", "border-radius:50%",
+        `background:${ringBg}`,
+        "display:flex", "align-items:center", "justify-content:center",
+        onClick ? "cursor:pointer;pointer-events:auto" : "",
+      ].join(";");
+
+      const inner = document.createElement("div");
+      inner.style.cssText = [
+        "width:22px", "height:22px", "border-radius:50%",
+        `background:${innerBg}`,
+        "display:flex", "align-items:center", "justify-content:center",
+      ].join(";");
+
+      const arrow = document.createElement("div");
+      arrow.style.cssText = positive
+        ? "width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:5px solid white;margin-bottom:1px"
+        : "width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid white;margin-top:1px";
+
+      inner.appendChild(arrow);
+      outer.appendChild(inner);
+      if (onClick) outer.addEventListener("click", (e) => { e.stopPropagation(); onClick(); });
+      return outer;
+    }
+
+    function makeStem(positive: boolean): HTMLDivElement {
+      const color = positive ? "#be123c" : "#1d4ed8";
+      const el = document.createElement("div");
+      el.style.cssText = `width:2px;height:14px;background:${color};border-radius:1px`;
+      return el;
+    }
+
+    function renderHtmlPins() {
+      pinsEl.innerHTML = "";
+      for (const b of eventBars) {
+        const evList = b.events!;        // 이미 changePct 내림차순 정렬
+        const primary = evList[0];
+        const timeKey = barToTimeKey(b) as Time;
+        const x = chart.timeScale().timeToCoordinate(timeKey);
+        const y = volSeries.priceToCoordinate(b.volume);
+        if (x === null || y === null) continue;
+
+        const isExpanded = expandedDates.has(b.date);
+        const multi = evList.length > 1;
+
+        const pin = document.createElement("div");
+        pin.style.cssText = [
+          "position:absolute",
+          `left:${x}px`,
+          `top:${y}px`,
+          "transform:translate(-50%,-100%)",
+          "display:flex",
+          "flex-direction:column",
+          "align-items:center",
+          "gap:4px",
+          "pointer-events:none",
+        ].join(";");
+
+        if (multi && isExpanded) {
+          // ── 펼쳐진 상태: 모든 이벤트 라벨을 위에서부터 나열 ──
+          for (const ev of evList) {
+            const bubble = makeBubble(ev.label, ev.positive, () => {
+              if (ev.eventId != null) eventClickRef.current?.(ev.eventId);
+            });
+            pin.appendChild(bubble);
+          }
+        } else {
+          // ── 접힌 상태: primary 라벨 (+ 추가 개수 배지) ──
+          const labelText = multi
+            ? `${primary.positive ? "↑" : "↓"} ${primary.label}  +${evList.length - 1}`
+            : undefined;
+          const bubble = makeBubble(
+            labelText ?? primary.label,
+            primary.positive,
+            multi
+              ? undefined           // 헤드 클릭으로 토글, 버블 자체 클릭은 없음
+              : () => { if (primary.eventId != null) eventClickRef.current?.(primary.eventId); },
+          );
+          if (multi) {
+            // 멀티일 때 버블 텍스트 직접 설정 (접두 화살표 중복 방지)
+            const color  = primary.positive ? "#be123c" : "#1d4ed8";
+            const bg     = primary.positive ? "#fff1f2" : "#eff6ff";
+            const border = primary.positive ? "#fecdd3" : "#bfdbfe";
+            bubble.style.cssText = [
+              `background:${bg}`, `color:${color}`,
+              `border:1.5px solid ${border}`,
+              "border-radius:9999px", "padding:3px 10px",
+              "font-size:11px", "font-weight:700",
+              "white-space:nowrap", "line-height:1.5",
+              "letter-spacing:-0.2px",
+              "box-shadow:0 1px 6px rgba(0,0,0,0.08)",
+            ].join(";");
+            bubble.textContent = `${primary.positive ? "↑" : "↓"} ${primary.label}  +${evList.length - 1}`;
+          }
+          pin.appendChild(bubble);
+        }
+
+        // 핀 헤드 — 멀티이면 클릭 시 펼치기/접기
+        const head = makePinHead(
+          primary.positive,
+          multi
+            ? () => {
+                if (expandedDates.has(b.date)) expandedDates.delete(b.date);
+                else expandedDates.add(b.date);
+                renderHtmlPins();
+              }
+            : undefined,
+        );
+        pin.appendChild(head);
+        pin.appendChild(makeStem(primary.positive));
+
+        pinsEl.appendChild(pin);
+      }
+    }
+
+    renderHtmlPins();
+    chart.timeScale().subscribeVisibleLogicalRangeChange(renderHtmlPins);
+
+    // ─── 크로스헤어 ──────────────────────────────────────────────────────────
     const crosshairHandler = (param: MouseEventParams) => {
       const cb = hoverRef.current;
       if (!cb) return;
@@ -230,17 +404,18 @@ export function LightweightCandleChart({
 
     const ro = new ResizeObserver(() => {
       if (!containerRef.current) return;
-      chart.applyOptions({
-        width: containerRef.current.clientWidth,
-        height: containerRef.current.clientHeight,
-      });
-      /** 리사이즈마다 가시범위를 다시 잡으면 사용자 줌이 풀림 → 크기만 갱신 */
+      const w = containerRef.current.clientWidth;
+      const h = containerRef.current.clientHeight;
+      chart.applyOptions({ width: w, height: h });
+      renderHtmlPins();
     });
     ro.observe(el);
 
     return () => {
+      chart.timeScale().unsubscribeVisibleLogicalRangeChange(renderHtmlPins);
       ro.disconnect();
       chart.remove();
+      if (pinsEl.parentNode === el) el.removeChild(pinsEl);
     };
   }, [bars, visibleBars]);
 
