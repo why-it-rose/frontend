@@ -11,6 +11,8 @@ import SignupModal from "@/features/auth/components/SignupModal";
 import MyPagePanel from "@/pages/MyPage/components/MyPagePanel";
 import AlertCenter from "@/features/alert/AlertCenter/AlertCenter";
 import { alertCenterListHasUnread } from "@/features/alert/AlertCenter/alertCenter.mock";
+import { logoutFromServer } from "@/features/auth/api/authApi";
+
 
 type HeaderProps = {
   onMyPageOpen?: () => void;
@@ -169,10 +171,14 @@ export default function Header({ onMyPageOpen, disableMyPagePanel = false }: Hea
       {!disableMyPagePanel && isLoggedIn && myPageOpen && (
         <MyPagePanel
           onClose={() => setMyPageOpen(false)}
-          onLogout={() => {
-            clearAuth();
-            setMyPageOpen(false);
-            navigate(ROUTES.HOME);
+          onLogout={async () => {
+              try {
+                  await logoutFromServer();
+              } finally {
+                  clearAuth();
+                  setMyPageOpen(false);
+                  navigate(ROUTES.HOME);
+              }
           }}
         />
       )}

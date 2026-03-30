@@ -6,6 +6,8 @@ import { ROUTES } from '@/shared/constants/routes';
 import MyPagePanel from '@/pages/MyPage/components/MyPagePanel';
 import Header from './Header';
 import BottomTabBar from './BottomTabBar';
+import { logoutFromServer } from '@/features/auth/api/authApi';
+
 
 /** 홈 등 내부에서 높이·스크롤을 쓰려면 main은 스크롤 금지 + min-h-0 (padding 없음) */
 export default function MobileLayout({
@@ -33,10 +35,14 @@ export default function MobileLayout({
       {isLoggedIn && myPageOpen && (
         <MyPagePanel
           onClose={() => setMyPageOpen(false)}
-          onLogout={() => {
-            clearAuth();
-            setMyPageOpen(false);
-            navigate(ROUTES.HOME);
+          onLogout={async () => {
+            try {
+              await logoutFromServer();
+            } finally {
+              clearAuth();
+              setMyPageOpen(false);
+              navigate(ROUTES.HOME);
+            }
           }}
         />
       )}
