@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router';
 import EventTab from '@/features/event/components/EventTab';
 import MemoTab from '@/features/event/components/MemoTab';
 import { useEventDetail } from '@/features/event/hooks/useEventDetail';
-import type { StockMemo } from '@/features/event/types/event.types';
+import { useMemos } from '@/features/event/hooks/useMemos';
 
 const TABS = [
   { label: '이벤트', value: 'event' },
@@ -16,28 +16,9 @@ export default function StockDetailPage() {
   const eventId = searchParams.get('eventId') ? Number(searchParams.get('eventId')) : null;
 
   const { event, loading, error } = useEventDetail(eventId);
+  const { memos, save, update, remove } = useMemos(eventId);
 
   const [tab, setTab] = useState('event');
-  const [memos, setMemos] = useState<StockMemo[]>([]);
-
-  const handleSave = (text: string) => {
-    if (!event) return;
-    setMemos((prev) => [
-      {
-        memoId: Date.now(),
-        eventType: event.eventType,
-        stockName: event.stockName,
-        changeRate: event.changeRate,
-        date: new Date().toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').slice(0, -1),
-        text,
-      },
-      ...prev,
-    ]);
-  };
-
-  const handleDelete = (memoId: number) => {
-    setMemos((prev) => prev.filter((m) => m.memoId !== memoId));
-  };
 
   if (loading) {
     return <div className="flex flex-1 items-center justify-center text-sm text-[#9ca3af]">불러오는 중...</div>;
@@ -59,8 +40,9 @@ export default function StockDetailPage() {
         <MemoTab
           memos={memos}
           eventInfo={{ eventType: event.eventType, stockName: event.stockName, changeRate: event.changeRate }}
-          onSave={handleSave}
-          onDelete={handleDelete}
+          onSave={save}
+          onUpdate={update}
+          onDelete={remove}
         />
       )}
     </div>
