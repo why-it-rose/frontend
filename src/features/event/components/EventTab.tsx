@@ -104,7 +104,6 @@ export default function EventTab({ event, onScrap }: EventTabProps) {
           <p className="font-semibold text-sm text-[#374151] mb-2.5">
             관련 뉴스
           </p>
-          <p>{event?.relatedNews.length > 0 ? `총 ${event.relatedNews}` : "관련 뉴스가 없습니다."}</p>
           <div className="space-y-2.5">
             {relatedNews.map((news) => (
               <div
