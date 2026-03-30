@@ -9,6 +9,7 @@ import MobileLayout from '@/shared/components/layout/MobileLayout';
 import { StockDetailMain } from '@/pages/Chart/components/StockDetailMain';
 import InterestStockAside from '@/pages/InterestStock/components/InterestStockAside';
 import StockDetailAside from '@/pages/StockDetail/components/StockDetailaside';
+import TodayLearningPage from '@/pages/TodayLearning';
 import LoginPage from '@/pages/Login';
 import SignupPage from '@/pages/Signup';
 
@@ -54,6 +55,16 @@ const router = createBrowserRouter([
         left={<StockDetailMain />}
         right={<NewsPage />}
         mobile={<StockDetailMain mobileMode="news" />}
+      />
+    ),
+  },
+  {
+    path: '/chart/:stockCode/today-learning',
+    element: (
+      <SplitRoute
+        left={<StockDetailMain />}
+        right={<TodayLearningPage />}
+        mobile={<StockDetailMain key="stock-detail" mobileMode="stock-detail" />}
       />
     ),
   },
