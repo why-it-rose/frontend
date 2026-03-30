@@ -12,7 +12,8 @@ import LoginModal from "@/features/auth/components/LoginModal";
 import SignupModal from "@/features/auth/components/SignupModal";
 import MyPagePanel from "@/pages/MyPage/components/MyPagePanel";
 import AlertCenter from "@/features/alert/AlertCenter/AlertCenter";
-import { alertCenterListHasUnread } from "@/features/alert/AlertCenter/alertCenter.mock";
+import { NotificationBadge } from "@/features/alert/components/NotificationBadge";
+import { useNotificationBadge } from "@/features/alert/hooks/useNotificationBadge";
 import { logoutFromServer } from "@/features/auth/api/authApi";
 
 
@@ -30,12 +31,11 @@ export default function Header({ onMyPageOpen, disableMyPagePanel = false }: Hea
   const [alertOpen, setAlertOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [alertAnchor, setAlertAnchor] = useState<"mobile" | "desktop" | null>(null);
-  const [allListMarkedRead, setAllListMarkedRead] = useState(false);
-  const [detailFullyReadIds, setDetailFullyReadIds] = useState<Set<number>>(() => new Set());
   const mobileAlertContainerRef = useRef<HTMLDivElement | null>(null);
   const desktopAlertContainerRef = useRef<HTMLDivElement | null>(null);
 
-  const hasUnread = alertCenterListHasUnread(allListMarkedRead, detailFullyReadIds);
+  const { count: unreadCount } = useNotificationBadge();
+  const hasUnread = unreadCount > 0;
 
   const renderAlertButton = (
     anchor: "mobile" | "desktop",
@@ -49,20 +49,15 @@ export default function Header({ onMyPageOpen, disableMyPagePanel = false }: Hea
           setAlertAnchor(anchor);
           setAlertOpen((prev) => (alertAnchor === anchor ? !prev : true));
         }}
-        className="flex items-center justify-center"
+        className="relative flex items-center justify-center"
       >
         <img src={hasUnread ? bellSrc : bellNotSrc} alt="알림" className="w-8.5 h-8.5" />
+        <NotificationBadge />
       </button>
       {alertOpen && alertAnchor === anchor && (
         <AlertCenter
           onClose={() => setAlertOpen(false)}
           containerRef={containerRef}
-          allListMarkedRead={allListMarkedRead}
-          onAllListMarkedRead={() => setAllListMarkedRead(true)}
-          detailFullyReadIds={detailFullyReadIds}
-          onNotificationDetailFullyRead={(notificationId) => {
-            setDetailFullyReadIds((prev) => new Set(prev).add(notificationId));
-          }}
         />
       )}
     </div>
