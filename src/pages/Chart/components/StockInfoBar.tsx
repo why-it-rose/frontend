@@ -1,12 +1,43 @@
-import { useState } from "react";
+import { useAuth } from "@/features/auth/context/AuthContext";
+import {
+  useAddInterestStockMutation,
+  useRemoveInterestStockMutation,
+} from "@/features/stock/hooks/useInterestStocks";
 import type { StockInfoBarProps } from "../types";
 import favoriteSrc from "@/assets/favorite.svg";
 import favoriteClickSrc from "@/assets/favorite_click.svg";
 
-export function StockInfoBar({ stock, onBack, onAddWatchlist }: StockInfoBarProps) {
+export function StockInfoBar({
+  stock,
+  stockId,
+  isInterested = false,
+  onBack,
+  onAddWatchlist,
+  onRequireLogin,
+}: StockInfoBarProps) {
   const changeColor = stock.positive ? "text-[#e03131]" : "text-[#1971c2]";
   const arrow = stock.positive ? "▲" : "▼";
-  const [isFavorite, setIsFavorite] = useState(false);
+  const { isLoggedIn } = useAuth();
+  const addMut = useAddInterestStockMutation();
+  const removeMut = useRemoveInterestStockMutation();
+  const pending = addMut.isPending || removeMut.isPending;
+
+  const handleFavoriteClick = () => {
+    if (!isLoggedIn) {
+      onRequireLogin?.();
+      return;
+    }
+    if (stockId == null || stockId <= 0) return;
+    if (isInterested) {
+      removeMut.mutate(stockId, {
+        onSuccess: () => onAddWatchlist?.(),
+      });
+    } else {
+      addMut.mutate(stockId, {
+        onSuccess: () => onAddWatchlist?.(),
+      });
+    }
+  };
 
   return (
     <div className="flex min-h-[44px] items-center gap-4 max-md:flex-wrap max-md:gap-x-3 max-md:gap-y-1.5">
@@ -57,21 +88,19 @@ export function StockInfoBar({ stock, onBack, onAddWatchlist }: StockInfoBarProp
 
       <button
         type="button"
-        onClick={() => {
-          setIsFavorite((prev) => !prev);
-          onAddWatchlist?.();
-        }}
-        className="ml-auto flex h-9 shrink-0 items-center justify-center gap-1 rounded-lg border border-[#e5e7eb] bg-white px-3 text-[13px] font-medium text-[#374151] transition-colors hover:bg-[#f9fafb] max-[860px]:w-9 max-[860px]:px-0 max-md:order-3"
+        onClick={handleFavoriteClick}
+        disabled={pending || (isLoggedIn && (stockId == null || stockId <= 0))}
+        className="ml-auto flex h-9 shrink-0 items-center justify-center gap-1 rounded-lg border border-[#e5e7eb] bg-white px-3 text-[13px] font-medium text-[#374151] transition-colors hover:bg-[#f9fafb] max-[860px]:w-9 max-[860px]:px-0 max-md:order-3 disabled:opacity-60"
       >
         <img
-          src={isFavorite ? favoriteClickSrc : favoriteSrc}
+          src={isInterested ? favoriteClickSrc : favoriteSrc}
           alt=""
           className="h-4.5 w-4.5 shrink-0"
           width={14}
           height={14}
           aria-hidden
         />
-        <span className="max-[860px]:hidden">관심종목 추가</span>
+        <span className="max-[860px]:hidden">{isInterested ? "관심종목 해제" : "관심종목 추가"}</span>
       </button>
     </div>
   );

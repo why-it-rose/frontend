@@ -9,6 +9,16 @@ export interface StockInfo {
   positive: boolean;
 }
 
+// ─── 이벤트 핀 ─────────────────────────────────────────────────────────────────
+export interface EventPin {
+  label: string;
+  positive: boolean;
+  /** 백엔드 이벤트 ID — 클릭 시 상세 조회에 사용 */
+  eventId?: number;
+  /** 정렬/비교용 원본 변화율 */
+  changePct: number;
+}
+
 // ─── OHLCV 캔들 데이터 ─────────────────────────────────────────────────────────
 export interface OhlcBar {
   date: string;
@@ -17,10 +27,8 @@ export interface OhlcBar {
   low: number;
   close: number;
   volume: number;
-  event?: {
-    label: string;
-    positive: boolean;
-  };
+  /** 해당 봉에 연결된 이벤트 목록 (여러 개 가능) */
+  events?: EventPin[];
 }
 
 // ─── 핀 ────────────────────────────────────────────────────────────────────────
@@ -30,6 +38,8 @@ export interface ChartPin {
   barIndex: number;
   memo: string;
   color?: string;
+  /** 연결된 백엔드 이벤트 ID */
+  eventId?: number;
 }
 
 // ─── 하단 시세 티커 ────────────────────────────────────────────────────────────
@@ -81,8 +91,14 @@ export interface OhlcSummaryBarProps {
 
 export interface StockInfoBarProps {
   stock: StockInfo;
+  /** 차트 종목 ID — 관심 추가/해제 API에 사용 */
+  stockId?: number | null;
+  /** 로그인 + 관심 목록 기준 표시 */
+  isInterested?: boolean;
   onBack?: () => void;
   onAddWatchlist?: () => void;
+  /** 비로그인 시 관심 버튼 클릭 */
+  onRequireLogin?: () => void;
 }
 
 export interface TickerBarProps {

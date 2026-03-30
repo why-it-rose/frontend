@@ -41,6 +41,11 @@
   font-family: "Noto Sans KR", "Pretendard Variable", Pretendard, sans-serif;
 }
 
+/* 검색 드롭다운·모바일 시트: 최근 검색 영역 */
+.search-recent-noto {
+  font-family: "Noto Sans KR", "Pretendard Variable", Pretendard, sans-serif;
+}
+
 .header-profile-initial {
   font-family: "OneShinhan Medium", "Pretendard Variable", Pretendard, sans-serif;
   font-weight: 600;
@@ -249,6 +254,12 @@ body {
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.13);
 }
 
+/* 데스크톱: 헤더 딤 위에만 표시(포털) — 위치는 인라인 */
+.search-dropdown--portal {
+  position: fixed;
+  z-index: 201;
+}
+
 /* 인기 검색 순위: 홈 종목 리스트와 동일하게 body(Pretendard) 상속 + 굵기 유지 */
 .search-popular-rank {
   flex-shrink: 0;
@@ -268,10 +279,20 @@ body {
   border: none;
   border-radius: 20px;
   background: #f3f4f6;
-  padding: 3px 10px;
+  padding: 5px 10px;
+  font-family: "Noto Sans KR", "Pretendard Variable", Pretendard, sans-serif;
   font-size: 12px;
   font-weight: 500;
+  line-height: 1;
   color: #374151;
+}
+
+.search-tag button {
+  font-family: inherit;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .search-tag:hover {

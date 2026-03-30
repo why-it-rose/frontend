@@ -8,6 +8,18 @@ export type StockChangeDirection = 'UP' | 'DOWN' | 'FLAT';
 
 export type StockEventType = 'SURGE' | 'DROP';
 
+/** GET /api/me/interest-stocks — result.items[] */
+export interface InterestStockItemDto {
+  stockId: number;
+  ticker: string;
+  name: string;
+  market: string;
+  logoUrl?: string | null;
+  currentPrice: number;
+  changeRate: number;
+  changeDirection: StockChangeDirection;
+}
+
 export interface StockListParams {
   market?: StockMarket;
   sort?: StockSort;
@@ -52,3 +64,53 @@ export interface ApiEnvelope<T> {
 }
 
 export type StockListResponseDto = ApiEnvelope<StockListDataDto>;
+
+/** 종목 상세 차트 — Swagger `GET /api/stocks/{stockId}/prices?period=` */
+export type StockChartPeriod = '1D' | '1W' | '1M' | '1Y';
+
+export interface StockPriceCandleDto {
+  date: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+export interface StockPricesDataDto {
+  stockId: number;
+  period: string;
+  candles: StockPriceCandleDto[];
+}
+
+export interface StockSearchItemDto {
+  stockId: number;
+  ticker: string;
+  name: string;
+  market: string;
+  logoUrl?: string | null;
+  currentPrice?: number;
+  changeRate?: number;
+  changeDirection?: StockChangeDirection;
+}
+
+/** Swagger: GET /api/stocks/{stockId} */
+export interface StockDetailDto {
+  stockId: number;
+  ticker: string;
+  name: string;
+  market: string;
+  sector?: string;
+  logoUrl?: string | null;
+  currentPrice: number;
+  priceChange: number;
+  changeRate: number;
+  changeDirection: StockChangeDirection;
+  todayOhlcv?: {
+    open: number;
+    high: number;
+    low: number;
+    volume: number;
+  };
+  isInterested?: boolean;
+}

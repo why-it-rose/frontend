@@ -24,71 +24,55 @@ import lockIco from '@/assets/lock.svg';
 import deleteIco from '@/assets/delete.svg';
 import dragHandleIco from '@/assets/button.svg';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import type { InterestStockItemDto } from '@/features/stock/types';
+import {
+  useInterestStocksQuery,
+  useRemoveInterestStockMutation,
+} from '@/features/stock/hooks/useInterestStocks';
 import { useNavigate } from 'react-router';
+import { toChartStockDetail } from '@/shared/constants/routes';
 
 type WatchRow = {
+  stockId: number;
   name: string;
   code: string;
   market: string;
   initials: string;
   logoBg: string;
+  logoUrl?: string | null;
   price: string;
   changeLabel: string;
   up: boolean;
 };
 
-const INITIAL_WATCHLIST: WatchRow[] = [
-  {
-    name: '삼성전자',
-    code: '005930',
-    market: 'KOSPI',
-    initials: '삼',
-    logoBg: '#1428a0',
-    price: '184,000',
-    changeLabel: '▼ -2.08%',
-    up: false,
-  },
-  {
-    name: 'SK하이닉스',
-    code: '000660',
-    market: 'KOSPI',
-    initials: 'SK',
-    logoBg: '#EA1917',
-    price: '915,000',
-    changeLabel: '▲ +3.21%',
-    up: true,
-  },
-  {
-    name: 'LG에너지솔루션',
-    code: '373220',
-    market: 'KOSDAQ',
-    initials: 'LG',
-    logoBg: '#a50034',
-    price: '305,500',
-    changeLabel: '▲ +5.14%',
-    up: true,
-  },
-  {
-    name: 'NAVER',
-    code: '035420',
-    market: 'KOSPI',
-    initials: 'N',
-    logoBg: '#03c75a',
-    price: '198,500',
-    changeLabel: '▲ +1.85%',
-    up: true,
-  },
-  {
-    name: '알테오젠',
-    code: '196170',
-    market: 'KOSDAQ',
-    initials: '알',
-    logoBg: '#059669',
-    price: '361,000',
-    changeLabel: '▼ -3.08%',
-    up: false,
-  },
-];
+function logoSeedColor(seed: string) {
+  const palette = ['#002C5F', '#1428a0', '#EA1917', '#a50034', '#03c75a', '#059669'];
+  const hash = seed.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  return palette[hash % palette.length];
+}
+
+function interestToWatchRow(item: InterestStockItemDto): WatchRow {
+  const up = item.changeDirection === 'UP';
+  const rate = item.changeRate ?? 0;
+  const changeLabel =
+    rate > 0
+      ? `▲ +${rate.toFixed(2)}%`
+      : rate < 0
+        ? `▼ ${rate.toFixed(2)}%`
+        : '0.00%';
+  return {
+    stockId: item.stockId,
+    name: item.name,
+    code: item.ticker,
+    market: item.market,
+    initials: item.name.trim().slice(0, 1),
+    logoBg: logoSeedColor(item.ticker),
+    logoUrl: item.logoUrl ?? null,
+    price: `${Number(item.currentPrice).toLocaleString('ko-KR')}원`,
+    changeLabel,
+    up,
+  };
+}
 
 function getWatchLogoText(row: WatchRow) {
   if (row.name === 'SK하이닉스') return 'SK';
@@ -99,12 +83,20 @@ function getWatchLogoText(row: WatchRow) {
 function WatchIdentityBlock({ row, showMarket = true }: { row: WatchRow; showMarket?: boolean }) {
   return (
     <div className="flex min-w-0 flex-1 items-center gap-2.5">
-      <div
-        className="flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-[7px] text-[9px] font-black leading-[13.5px] text-white max-md:-translate-y-[0.8px]"
-        style={{ backgroundColor: row.logoBg }}
-      >
-        <span className="max-md:translate-y-[1px]">{getWatchLogoText(row)}</span>
-      </div>
+      {row.logoUrl ? (
+        <img
+          src={row.logoUrl}
+          alt=""
+          className="h-[28px] w-[28px] shrink-0 rounded-[7px] object-cover max-md:-translate-y-[0.8px]"
+        />
+      ) : (
+        <div
+          className="flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-[7px] text-[9px] font-black leading-[13.5px] text-white max-md:-translate-y-[0.8px]"
+          style={{ backgroundColor: row.logoBg }}
+        >
+          <span className="max-md:translate-y-[1px]">{getWatchLogoText(row)}</span>
+        </div>
+      )}
       <div className="min-w-0 overflow-hidden">
         <div className="text-[12.5px] font-bold leading-[18.75px] text-[#111827]">{row.name}</div>
         <div className="font-mono text-[10px] leading-[15px] text-[#9ca3af]">
@@ -120,10 +112,10 @@ function SortableEditRow({
   onRemove,
 }: {
   row: WatchRow;
-  onRemove: (code: string) => void;
+  onRemove: (stockId: number) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: row.code,
+    id: row.stockId,
   });
 
   const style = {
@@ -150,7 +142,7 @@ function SortableEditRow({
           aria-label={`${row.name} 관심종목에서 제거`}
           onClick={(e) => {
             e.stopPropagation();
-            onRemove(row.code);
+            onRemove(row.stockId);
           }}
           onPointerDown={(e) => e.stopPropagation()}
         >
@@ -195,9 +187,19 @@ function EditRowOverlay({ row }: { row: WatchRow }) {
 export default function InterestStockAside() {
   const navigate = useNavigate();
   const { isLoggedIn } = useAuth();
+  const { data: interestData, isLoading, isError } = useInterestStocksQuery();
+  const removeMut = useRemoveInterestStockMutation();
+
   const [editMode, setEditMode] = useState(false);
-  const [items, setItems] = useState<WatchRow[]>(() => [...INITIAL_WATCHLIST]);
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [orderOverride, setOrderOverride] = useState<WatchRow[] | null>(null);
+  const [activeId, setActiveId] = useState<number | null>(null);
+
+  const baseRows = useMemo(
+    () => (interestData ?? []).map(interestToWatchRow),
+    [interestData]
+  );
+
+  const items = orderOverride ?? baseRows;
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -205,32 +207,43 @@ export default function InterestStockAside() {
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    }),
+    })
   );
 
-  const sortableIds = useMemo(() => items.map((r) => r.code), [items]);
+  const sortableIds = useMemo(() => items.map((r) => r.stockId), [items]);
 
   useEffect(() => {
     if (!isLoggedIn) setEditMode(false);
   }, [isLoggedIn]);
 
-  const removeItem = useCallback((code: string) => {
-    setItems((prev) => prev.filter((row) => row.code !== code));
-  }, []);
+  useEffect(() => {
+    setOrderOverride(null);
+  }, [interestData]);
+
+  const removeItem = useCallback(
+    (stockId: number) => {
+      removeMut.mutate(stockId);
+      setOrderOverride((prev) =>
+        prev ? prev.filter((r) => r.stockId !== stockId) : null
+      );
+    },
+    [removeMut]
+  );
 
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(String(event.active.id));
+    setActiveId(Number(event.active.id));
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
     if (!over || active.id === over.id) return;
-    setItems((prev) => {
-      const oldIndex = prev.findIndex((i) => i.code === active.id);
-      const newIndex = prev.findIndex((i) => i.code === over.id);
+    setOrderOverride((prev) => {
+      const list = prev ?? baseRows;
+      const oldIndex = list.findIndex((i) => i.stockId === active.id);
+      const newIndex = list.findIndex((i) => i.stockId === over.id);
       if (oldIndex < 0 || newIndex < 0) return prev;
-      return arrayMove(prev, oldIndex, newIndex);
+      return arrayMove(list, oldIndex, newIndex);
     });
   };
 
@@ -238,7 +251,7 @@ export default function InterestStockAside() {
     setActiveId(null);
   };
 
-  const activeRow = activeId ? items.find((r) => r.code === activeId) : null;
+  const activeRow = activeId != null ? items.find((r) => r.stockId === activeId) : null;
 
   return (
     <aside className="flex h-full w-full flex-col overflow-hidden bg-white">
@@ -268,7 +281,20 @@ export default function InterestStockAside() {
 
       {isLoggedIn ? (
         <div className="scrollbar-subtle flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
-          {editMode ? (
+          {isLoading && (
+            <div className="px-4 py-8 text-center text-sm text-[#9ca3af]">불러오는 중…</div>
+          )}
+          {isError && !isLoading && (
+            <div className="px-4 py-8 text-center text-sm text-red-500">
+              관심 종목을 불러오지 못했습니다.
+            </div>
+          )}
+          {!isLoading && !isError && items.length === 0 && (
+            <div className="px-4 py-8 text-center text-sm text-[#9ca3af]">
+              등록된 관심 종목이 없습니다.
+            </div>
+          )}
+          {!isLoading && !isError && items.length > 0 && editMode && (
             <DndContext
               sensors={sensors}
               collisionDetection={closestCorners}
@@ -278,31 +304,33 @@ export default function InterestStockAside() {
             >
               <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
                 {items.map((row) => (
-                  <SortableEditRow key={row.code} row={row} onRemove={removeItem} />
+                  <SortableEditRow key={row.stockId} row={row} onRemove={removeItem} />
                 ))}
               </SortableContext>
               <DragOverlay adjustScale={false} dropAnimation={null} className="pointer-events-none">
                 {activeRow ? <EditRowOverlay row={activeRow} /> : null}
               </DragOverlay>
             </DndContext>
-          ) : (
+          )}
+          {!isLoading && !isError && items.length > 0 && !editMode &&
             items.map((row) => {
               const priceColor = row.up ? 'text-red-600' : 'text-blue-700';
               return (
                 <div
-                  key={row.code}
-                  onClick={() => navigate('/chart/stock-detail')}
+                  key={row.stockId}
+                  onClick={() => navigate(toChartStockDetail(row.code))}
                   className="box-border grid h-[58px] w-full shrink-0 grid-cols-[minmax(0,1fr)_74px] items-center overflow-hidden border-0 border-b border-[#e5e7eb] bg-white px-4 text-left transition-colors hover:bg-[#f4f5f7]"
                 >
                   <WatchIdentityBlock row={row} showMarket={false} />
-                  <div className={`ml-auto w-[74px] text-right text-[11.5px] font-semibold leading-[17px] tabular-nums ${priceColor}`}>
+                  <div
+                    className={`ml-auto w-[74px] text-right text-[11.5px] font-semibold leading-[17px] tabular-nums ${priceColor}`}
+                  >
                     <div>{row.price}</div>
                     <div>{row.changeLabel}</div>
                   </div>
                 </div>
               );
-            })
-          )}
+            })}
         </div>
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">

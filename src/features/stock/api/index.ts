@@ -1,2 +1,7 @@
-export { fetchStockList } from './stockApi';
+export {
+  fetchStockList,
+  fetchStockPrices,
+  fetchStockSearch,
+  fetchStockDetail,
+} from './stockApi';
 
