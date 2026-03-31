@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router';
 import logoutButtonImg from '@/assets/logoutButton.svg';
 import { getApiResponseCode, updateMyNickname } from '@/features/auth/api/authApi';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { useMyStats } from '@/features/prediction/hooks/useMyStats';
 import type { MyPageTabKey } from './myPage.types';
 import MyPageAlarmTab from './MyPageAlarmTab';
 import MyPageReviewTab from './MyPageReviewTab';
@@ -41,6 +42,8 @@ export default function MyPagePanel({ onClose, onLogout, onWithdraw, withdrawMes
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [nicknameMessage, setNicknameMessage] = useState('');
   const [nicknameMessageType, setNicknameMessageType] = useState<'success' | 'error' | ''>('');
+
+  const { data: stats } = useMyStats();
 
   const displayNickname = nickname || user?.nickname || '사용자';
   const displayEmail = user?.email || '';
@@ -210,11 +213,16 @@ export default function MyPagePanel({ onClose, onLogout, onWithdraw, withdrawMes
             </div>
 
             <div className="grid w-full grid-cols-3 border-t border-[#e5e7eb]">
-              {[
-                ['75%', '예측 정답률'],
-                ['100', '총 예측'],
-                ['12', '스크랩'],
-              ].map(([val, label], i) => (
+              {([
+                [
+                  stats?.predictionAccuracy !== null && stats?.predictionAccuracy !== undefined
+                    ? `${stats.predictionAccuracy.toFixed(1)}%`
+                    : '-',
+                  '예측 정답률',
+                ],
+                [stats?.totalPredictions?.toString() ?? '-', '총 예측'],
+                [stats?.totalScraps?.toString() ?? '-', '스크랩'],
+              ] as [string, string][]).map(([val, label], i) => (
                   <div
                       key={label}
                       className={`py-3 text-center ${i < 2 ? 'border-r border-[#e5e7eb]' : ''}`}
