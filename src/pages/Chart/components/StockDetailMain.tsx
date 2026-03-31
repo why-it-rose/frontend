@@ -41,11 +41,11 @@ function visibleBarsForPeriod(tab: PeriodTab): number {
     case "일":
       return 120;
     case "주":
-      return 102;
+      return 88;
     case "월":
-      return 72;
+      return 48;
     case "년":
-      return 32;
+      return 28;
     default:
       return 120;
   }
@@ -193,7 +193,7 @@ export function StockDetailMain({
     holdEmptyChart
   );
   const stock = stockProp ?? fetchedHeader;
-  const bars = barsProp ?? fetchedBars;
+  const bars = fetchedBars ?? barsProp ?? [];
 
   useEffect(() => {
     if (!routeHasTicker) return;

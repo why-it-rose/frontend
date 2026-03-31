@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import {
   CandlestickSeries,
   ColorType,
@@ -10,12 +10,66 @@ import type { OhlcBar } from "../types";
 
 const MAIN = "#014d9d";
 
-/** `YYYY.MM.DD` / `YYYY-MM-DD` → `YYYY-MM-DD` (lightweight-charts 일봉 time) */
+/** `YYYY.MM.DD` / `YYYY-MM-DD` / 기타 → Date */
+function parseBarDate(raw: string): Date {
+  const normalized = raw.trim().replace(/\./g, "-").slice(0, 10);
+  const [y, m, d] = normalized.split("-").map(Number);
+  return new Date(Date.UTC(y, (m || 1) - 1, d || 1));
+}
+
+/** Date → `YYYY-MM-DD` */
+function toIsoDate(date: Date): string {
+  const y = date.getUTCFullYear();
+  const m = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(date.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+/** lightweight-charts time key */
 function barToTimeKey(bar: OhlcBar): string {
-  const d = bar.date.trim();
-  const m = d.match(/^(\d{4})[.-](\d{2})[.-](\d{2})/);
-  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
-  return d.slice(0, 10);
+  return toIsoDate(parseBarDate(bar.date));
+}
+
+function startOfWeekMonday(date: Date): Date {
+  const day = date.getUTCDay(); // 0=Sun
+  const diff = day === 0 ? -6 : 1 - day; // Monday start
+  const copy = new Date(date.getTime());
+  copy.setUTCDate(copy.getUTCDate() + diff);
+  return new Date(Date.UTC(copy.getUTCFullYear(), copy.getUTCMonth(), copy.getUTCDate()));
+}
+
+function getPeriodBucketKey(bar: OhlcBar, period?: string): string {
+  const dt = parseBarDate(bar.date);
+  const y = dt.getUTCFullYear();
+  const m = dt.getUTCMonth() + 1;
+
+  switch (period) {
+    case "년":
+      return `${y}`;
+    case "월":
+      return `${y}-${String(m).padStart(2, "0")}`;
+    case "주": {
+      const monday = startOfWeekMonday(dt);
+      return toIsoDate(monday);
+    }
+    case "일":
+    default:
+      return toIsoDate(dt);
+  }
+}
+
+function getDisplayDateForBucket(period: string | undefined, bucketKey: string): string {
+  switch (period) {
+    case "년":
+      return `${bucketKey}.01.01`;
+    case "월":
+      return `${bucketKey}.01`;
+    case "주":
+      return bucketKey.replace(/-/g, ".");
+    case "일":
+    default:
+      return bucketKey.replace(/-/g, ".");
+  }
 }
 
 function dedupeSortedByTime(bars: OhlcBar[]): OhlcBar[] {
@@ -31,7 +85,50 @@ function dedupeSortedByTime(bars: OhlcBar[]): OhlcBar[] {
   });
 }
 
-/** 한 화면에 넣을 최대 봉 수 — 값이 클수록 조금 더 축소(넓은 구간) */
+function aggregateBarsByPeriod(bars: OhlcBar[], period?: string): OhlcBar[] {
+  const sorted = [...bars].sort((a, b) =>
+    barToTimeKey(a).localeCompare(barToTimeKey(b)),
+  );
+
+  if (period === "일" || !period) {
+    return dedupeSortedByTime(sorted);
+  }
+
+  const grouped = new Map<string, OhlcBar[]>();
+
+  for (const bar of sorted) {
+    const key = getPeriodBucketKey(bar, period);
+    const arr = grouped.get(key);
+    if (arr) arr.push(bar);
+    else grouped.set(key, [bar]);
+  }
+
+  return [...grouped.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([bucketKey, items]) => {
+      const first = items[0];
+      const last = items[items.length - 1];
+      const high = Math.max(...items.map((v) => v.high));
+      const low = Math.min(...items.map((v) => v.low));
+      const volume = items.reduce((sum, v) => sum + (v.volume ?? 0), 0);
+
+      const allEvents = items
+        .flatMap((v) => v.events ?? [])
+        .sort((a, b) => Math.abs((b.changePct ?? 0)) - Math.abs((a.changePct ?? 0)));
+
+      return {
+        ...first,
+        date: getDisplayDateForBucket(period, bucketKey),
+        open: first.open,
+        high,
+        low,
+        close: last.close,
+        volume,
+        events: allEvents.length ? allEvents : undefined,
+      };
+    });
+}
+
 const DEFAULT_VISIBLE_BARS = 120;
 
 function timeToIsoDateKey(t: Time): string | null {
@@ -91,17 +188,11 @@ function applyZoomedVisibleRange(
 
 export function LightweightCandleChart({
   bars,
-  /** 기본 120봉. 일봉이 많을 때 최근 구간만 확대 */
   visibleBars = DEFAULT_VISIBLE_BARS,
-  /** 크로스헤어가 올라간 봉 — 마우스가 차트 밖이면 `null` */
   onHoverBar,
-  /** 이벤트 핀 클릭 시 호출 — eventId + 해당 봉 date(YYYY-MM-DD) 전달 */
   onEventClick,
-  /** 오늘의 학습 핀 데이터 — null이면 미표시 */
   learningPin,
-  /** 오늘의 학습 핀 클릭 콜백 */
   onLearningPinClick,
-  /** 이 날짜(YYYY-MM-DD 또는 YYYY.MM.DD)를 화면 중앙으로 스크롤 */
   focusDate,
   activePeriod,
 }: {
@@ -112,7 +203,6 @@ export function LightweightCandleChart({
   learningPin?: { digestDate: string; newsCount: number } | null;
   onLearningPinClick?: () => void;
   focusDate?: string;
-  /** 현재 기간 탭 — 뷰별 핀/툴팁 동작 분기에 사용 */
   activePeriod?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -120,7 +210,8 @@ export function LightweightCandleChart({
   const eventClickRef = useRef(onEventClick);
   const learningPinClickRef = useRef(onLearningPinClick);
   const focusDateRef = useRef(focusDate);
-  const activePeriodRef = useRef(activePeriod);
+  const activePeriodRef = useRef<string | undefined>(activePeriod);
+
 
   useEffect(() => {
     hoverRef.current = onHoverBar;
@@ -130,13 +221,16 @@ export function LightweightCandleChart({
     activePeriodRef.current = activePeriod;
   }, [onHoverBar, onEventClick, onLearningPinClick, focusDate, activePeriod]);
 
+  const processedBars = useMemo(() => {
+    return aggregateBarsByPeriod(bars, activePeriod);
+  }, [bars, activePeriod]);
+
   useEffect(() => {
     const el = containerRef.current;
-    if (!el || !bars.length) return;
+    if (!el || !processedBars.length) return;
 
-    const clean = dedupeSortedByTime(bars);
+    const clean = dedupeSortedByTime(processedBars);
 
-    // overlay가 차트 위에 겹치도록 부모를 relative로
     el.style.position = "relative";
 
     const chart = createChart(el, {
@@ -212,6 +306,7 @@ export function LightweightCandleChart({
         close: b.close,
       })),
     );
+
     volSeries.setData(
       clean.map((b) => ({
         time: barToTimeKey(b),
@@ -222,23 +317,20 @@ export function LightweightCandleChart({
 
     applyZoomedVisibleRange(chart, clean.length, visibleBars);
 
-    // focusDate가 있으면 해당 날짜 근처를 화면 중앙으로
     const fd = focusDateRef.current;
     if (fd) {
-      const targetKey = fd.replace(/\./g, "-").slice(0, 10);
-      let targetIdx = clean.findIndex((b) => barToTimeKey(b) === targetKey);
-      if (targetIdx < 0) {
-        // 정확한 날짜 없으면 가장 가까운 봉으로
-        const targetMs = new Date(targetKey).getTime();
-        let minDist = Infinity;
-        clean.forEach((b, i) => {
-          const dist = Math.abs(new Date(barToTimeKey(b)).getTime() - targetMs);
-          if (dist < minDist) {
-            minDist = dist;
-            targetIdx = i;
-          }
-        });
-      }
+      const fdDate = parseBarDate(fd);
+      let targetIdx = -1;
+      let minDist = Infinity;
+
+      clean.forEach((b, i) => {
+        const dist = Math.abs(parseBarDate(b.date).getTime() - fdDate.getTime());
+        if (dist < minDist) {
+          minDist = dist;
+          targetIdx = i;
+        }
+      });
+
       if (targetIdx >= 0) {
         const windowSize = Math.min(visibleBars, clean.length);
         const half = Math.floor(windowSize / 2);
@@ -248,7 +340,6 @@ export function LightweightCandleChart({
       }
     }
 
-    // ─── HTML 오버레이 핀 (거래량 막대 위) ──────────────────────────────────
     const eventBars = clean.filter((b) => b.events?.length);
 
     const pinsEl = document.createElement("div");
@@ -261,10 +352,8 @@ export function LightweightCandleChart({
     ].join(";");
     el.appendChild(pinsEl);
 
-    // 펼쳐진 핀의 bar.date를 추적 (일 뷰 멀티 펼침)
     const expandedDates = new Set<string>();
 
-    /** changePct를 부호 포함 퍼센트 문자열로 변환 */
     function pctLabel(positive: boolean, changePct: number): string {
       return `${positive ? "+" : "-"}${Math.abs(changePct).toFixed(1)}%`;
     }
@@ -328,11 +417,14 @@ export function LightweightCandleChart({
 
       inner.appendChild(arrow);
       outer.appendChild(inner);
-      if (onClick)
+
+      if (onClick) {
         outer.addEventListener("click", (e) => {
           e.stopPropagation();
           onClick();
         });
+      }
+
       return outer;
     }
 
@@ -348,7 +440,7 @@ export function LightweightCandleChart({
       // 차트가 렌더링된 후 정확한 pane 너비로 클립 영역 갱신
       pinsEl.style.width = `${chart.paneSize().width}px`;
       for (const b of eventBars) {
-        const evList = b.events!; // 이미 changePct 내림차순 정렬
+        const evList = b.events!;
         const primary = evList[0];
         const timeKey = barToTimeKey(b) as Time;
         const x = chart.timeScale().timeToCoordinate(timeKey);
@@ -373,7 +465,6 @@ export function LightweightCandleChart({
         ].join(";");
 
         if (period === "일") {
-          // ── 일: 캡슐 표시 (클릭 없음), 핀 헤드로 이벤트 이동 ──
           if (multi && isExpanded) {
             for (const ev of evList) {
               const bubble = makeBubble(
@@ -384,8 +475,9 @@ export function LightweightCandleChart({
               bubble.style.cursor = "pointer";
               bubble.addEventListener("click", (e) => {
                 e.stopPropagation();
-                if (ev.eventId != null)
+                if (ev.eventId != null) {
                   eventClickRef.current?.(ev.eventId, b.date);
+                }
               });
               pin.appendChild(bubble);
             }
@@ -402,14 +494,14 @@ export function LightweightCandleChart({
               bubble.style.cursor = "pointer";
               bubble.addEventListener("click", (e) => {
                 e.stopPropagation();
-                if (primary.eventId != null)
+                if (primary.eventId != null) {
                   eventClickRef.current?.(primary.eventId, b.date);
+                }
               });
             }
             pin.appendChild(bubble);
           }
 
-          // 핀 헤드: 단일이면 이벤트 이동, 멀티이면 펼치기/접기
           const head = makePinHead(
             primary.positive,
             multi
@@ -419,15 +511,13 @@ export function LightweightCandleChart({
                   renderHtmlPins();
                 }
               : () => {
-                  if (primary.eventId != null)
+                  if (primary.eventId != null) {
                     eventClickRef.current?.(primary.eventId, b.date);
+                  }
                 },
           );
           pin.appendChild(head);
         } else {
-          // ── 년/월/주: 핀 헤드만 표시, 호버 시 캡슐 표시 ──
-
-          // 호버 시 표시할 캡슐 컨테이너
           const hoverArea = document.createElement("div");
           hoverArea.style.cssText = [
             "display:none",
@@ -438,7 +528,6 @@ export function LightweightCandleChart({
           ].join(";");
 
           if (period === "년") {
-            // n건 — 중립 색상
             const cap = document.createElement("div");
             cap.style.cssText = [
               "background:#f3f4f6",
@@ -456,7 +545,6 @@ export function LightweightCandleChart({
             cap.textContent = `${evList.length}건`;
             hoverArea.appendChild(cap);
           } else if (period === "월") {
-            // ↑ n건 / ↓ n건
             const posCount = evList.filter((e) => e.positive).length;
             const negCount = evList.filter((e) => !e.positive).length;
             const cap = document.createElement("div");
@@ -489,7 +577,6 @@ export function LightweightCandleChart({
             cap.appendChild(downSpan);
             hoverArea.appendChild(cap);
           } else {
-            // 주: ↑ +n.n% / ↓ -n.n% (여러 개 스택)
             for (const ev of evList) {
               hoverArea.appendChild(
                 makeBubble(pctLabel(ev.positive, ev.changePct), ev.positive),
@@ -500,15 +587,18 @@ export function LightweightCandleChart({
           pin.appendChild(hoverArea);
 
           const head = makePinHead(primary.positive, () => {
-            if (primary.eventId != null)
+            if (primary.eventId != null) {
               eventClickRef.current?.(primary.eventId, b.date);
+            }
           });
+
           head.addEventListener("mouseenter", () => {
             hoverArea.style.display = "flex";
           });
           head.addEventListener("mouseleave", () => {
             hoverArea.style.display = "none";
           });
+
           pin.appendChild(head);
         }
 
@@ -519,7 +609,6 @@ export function LightweightCandleChart({
 
     renderHtmlPins();
 
-    // ─── 오늘의 학습 핀 (마름모) ────────────────────────────────────────────
     const learningPinEl = document.createElement("div");
     learningPinEl.style.cssText = [
       "position:absolute",
@@ -532,22 +621,28 @@ export function LightweightCandleChart({
 
     function renderLearningPin() {
       learningPinEl.innerHTML = "";
+      if (!learningPin) return;
+
+      const targetDate = parseBarDate(learningPin.digestDate);
+      let targetBar = clean[clean.length - 1];
+      let minDist = Infinity;
+
+      clean.forEach((b) => {
+        const dist = Math.abs(parseBarDate(b.date).getTime() - targetDate.getTime());
+        if (dist < minDist) {
+          minDist = dist;
+          targetBar = b;
+        }
+      });
+      
       learningPinEl.style.width = `${chart.paneSize().width}px`;
       if (!el || !learningPin) return;
 
-      // digestDate("yyyy-MM-dd")를 bars에서 찾고, 없으면 마지막 봉 사용
-      const targetKey = learningPin.digestDate.slice(0, 10); // "yyyy-MM-dd"
-      const targetBar =
-        clean.find((b) => barToTimeKey(b) === targetKey) ??
-        clean[clean.length - 1];
       if (!targetBar) return;
 
-      const x = chart
-        .timeScale()
-        .timeToCoordinate(barToTimeKey(targetBar) as Time);
+      const x = chart.timeScale().timeToCoordinate(barToTimeKey(targetBar) as Time);
       if (x === null) return;
 
-      // 이벤트 핀과 동일하게 거래량 바 상단 좌표 기준
       const y = volSeries.priceToCoordinate(targetBar.volume);
       if (y === null) return;
 
@@ -564,12 +659,10 @@ export function LightweightCandleChart({
         "pointer-events:none",
       ].join(";");
 
-      // 줄기
       const stem = makeStem(false);
       stem.style.background = "#EAB308";
 
-      // 핀 헤드 — 노란색
-      const head = ((): HTMLDivElement => {
+      const head = (() => {
         const outer = document.createElement("div");
         outer.style.cssText = [
           "width:32px",
@@ -582,6 +675,7 @@ export function LightweightCandleChart({
           "cursor:pointer",
           "pointer-events:auto",
         ].join(";");
+
         const inner = document.createElement("div");
         inner.style.cssText = [
           "width:22px",
@@ -592,6 +686,7 @@ export function LightweightCandleChart({
           "align-items:center",
           "justify-content:center",
         ].join(";");
+
         const icon = document.createElement("div");
         icon.style.cssText = [
           "width:8px",
@@ -600,14 +695,17 @@ export function LightweightCandleChart({
           "transform:rotate(45deg)",
           "border-radius:1px",
         ].join(";");
+
         inner.appendChild(icon);
         outer.appendChild(inner);
         outer.addEventListener("click", (e) => {
           e.stopPropagation();
           learningPinClickRef.current?.();
         });
+
         return outer;
       })();
+
       wrapper.appendChild(stem);
       wrapper.appendChild(head);
       learningPinEl.appendChild(wrapper);
@@ -619,14 +717,15 @@ export function LightweightCandleChart({
       renderHtmlPins();
       renderLearningPin();
     }
+
     chart.timeScale().subscribeVisibleLogicalRangeChange(renderAll);
     // 첫 페인트 후 pane 너비가 확정되면 핀 재렌더 (가격 축 클리핑 정상화)
     const initRafId = window.requestAnimationFrame(renderAll);
 
-    // ─── 크로스헤어 ──────────────────────────────────────────────────────────
     const crosshairHandler = (param: MouseEventParams) => {
       const cb = hoverRef.current;
       if (!cb) return;
+
       if (
         param.time === undefined ||
         param.point === undefined ||
@@ -636,18 +735,22 @@ export function LightweightCandleChart({
         cb(null);
         return;
       }
+
       const candle = param.seriesData.get(candleSeries);
       if (!isCandlePoint(candle)) {
         cb(null);
         return;
       }
+
       const key = timeToIsoDateKey(param.time);
       if (!key) {
         cb(null);
         return;
       }
+
       const row = clean.find((b) => barToTimeKey(b) === key);
       const hist = param.seriesData.get(volSeries);
+
       let volume = row?.volume ?? 0;
       if (
         hist &&
@@ -657,6 +760,7 @@ export function LightweightCandleChart({
       ) {
         volume = (hist as { value: number }).value;
       }
+
       const displayDate = row?.date ?? key.replace(/-/g, ".");
       cb({
         date: displayDate,
@@ -665,8 +769,10 @@ export function LightweightCandleChart({
         low: candle.low,
         close: candle.close,
         volume,
+        events: row?.events,
       });
     };
+
     chart.subscribeCrosshairMove(crosshairHandler);
 
     const ro = new ResizeObserver(() => {
@@ -687,9 +793,9 @@ export function LightweightCandleChart({
       if (pinsEl.parentNode === el) el.removeChild(pinsEl);
       if (learningPinEl.parentNode === el) el.removeChild(learningPinEl);
     };
-  }, [bars, visibleBars, learningPin, focusDate, activePeriod]);
+  }, [processedBars, visibleBars, learningPin, focusDate, activePeriod]);
 
-  if (!bars.length) {
+  if (!processedBars.length) {
     return (
       <div className="flex h-full w-full min-h-50 items-center justify-center text-sm text-gray-300">
         데이터 없음
