@@ -212,6 +212,7 @@ export function LightweightCandleChart({
   const focusDateRef = useRef(focusDate);
   const activePeriodRef = useRef<string | undefined>(activePeriod);
 
+
   useEffect(() => {
     hoverRef.current = onHoverBar;
     eventClickRef.current = onEventClick;
@@ -346,7 +347,7 @@ export function LightweightCandleChart({
       "position:absolute",
       "inset:0",
       "pointer-events:none",
-      "overflow:visible",
+      "overflow:hidden",
       "z-index:10",
     ].join(";");
     el.appendChild(pinsEl);
@@ -436,7 +437,8 @@ export function LightweightCandleChart({
 
     function renderHtmlPins() {
       pinsEl.innerHTML = "";
-
+      // 차트가 렌더링된 후 정확한 pane 너비로 클립 영역 갱신
+      pinsEl.style.width = `${chart.paneSize().width}px`;
       for (const b of eventBars) {
         const evList = b.events!;
         const primary = evList[0];
@@ -612,7 +614,7 @@ export function LightweightCandleChart({
       "position:absolute",
       "inset:0",
       "pointer-events:none",
-      "overflow:visible",
+      "overflow:hidden",
       "z-index:11",
     ].join(";");
     el.appendChild(learningPinEl);
@@ -632,6 +634,9 @@ export function LightweightCandleChart({
           targetBar = b;
         }
       });
+      
+      learningPinEl.style.width = `${chart.paneSize().width}px`;
+      if (!el || !learningPin) return;
 
       if (!targetBar) return;
 
@@ -714,6 +719,8 @@ export function LightweightCandleChart({
     }
 
     chart.timeScale().subscribeVisibleLogicalRangeChange(renderAll);
+    // 첫 페인트 후 pane 너비가 확정되면 핀 재렌더 (가격 축 클리핑 정상화)
+    const initRafId = window.requestAnimationFrame(renderAll);
 
     const crosshairHandler = (param: MouseEventParams) => {
       const cb = hoverRef.current;
@@ -779,6 +786,7 @@ export function LightweightCandleChart({
     ro.observe(el);
 
     return () => {
+      window.cancelAnimationFrame(initRafId);
       chart.timeScale().unsubscribeVisibleLogicalRangeChange(renderAll);
       ro.disconnect();
       chart.remove();
