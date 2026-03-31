@@ -21,7 +21,7 @@ import { CSS } from '@dnd-kit/utilities';
 import arrowIco from '@/assets/arrow.svg';
 import deleteIco from '@/assets/delete.svg';
 import dragHandleIco from '@/assets/button.svg';
-import { fetchMyScraps, removeScrap, type ScrapEventDto } from '@/features/event/api/eventApi';
+import { fetchMyScraps, removeEventScrap, type ScrapEventDto } from '@/features/event/api/eventApi';
 import type { ScrapItem } from './myPage.types';
 import MyPageSearchPlaceholder from './MyPageSearchPlaceholder';
 import { useNavigate } from 'react-router';
@@ -224,7 +224,7 @@ export default function MyPageScrapTab({
         if (!target) return;
 
         try {
-          await removeScrap(target.eventId);
+          await removeEventScrap(target.eventId);
           setItems((prev) => prev.filter((row) => row.id !== id));
         } catch {
           setErrorMessage('스크랩 해제 중 오류가 발생했습니다.');
