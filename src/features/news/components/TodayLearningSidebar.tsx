@@ -1,5 +1,9 @@
+import { useState } from 'react';
+import { useUpsertPrediction } from '@/features/prediction/hooks/useUpsertPrediction';
+import type { PredictionDirection } from '@/features/prediction/types/prediction.types';
 import { useTodayLearning } from '@/features/news/hooks/useTodayLearning';
 import type { PredictionInfo } from '@/features/news/types/news.types';
+import { getApiResponseCode } from '@/features/auth/api/authApi';
 
 interface TodayLearningSidebarProps {
   stockId: number | undefined;
@@ -49,26 +53,41 @@ const DIRECTION_OPTIONS = [
 interface PredictionSectionProps {
   isLoggedIn: boolean;
   prediction: PredictionInfo | undefined;
+  isPending: boolean;
+  pendingDirection: PredictionDirection | null;
   onLoginRequired: () => void;
+  onPredict: (direction: PredictionDirection) => void;
 }
 
-function PredictionSection({ isLoggedIn, prediction, onLoginRequired }: PredictionSectionProps) {
+function PredictionSection({
+  isLoggedIn,
+  prediction,
+  isPending,
+  pendingDirection,
+  onLoginRequired,
+  onPredict,
+}: PredictionSectionProps) {
   return (
     <div className="rounded-[10px] p-4 mb-4" style={{ background: '#fff', border: '1px solid #e5e7eb' }}>
       <p className="text-[13px] font-semibold text-[#374151] mb-3">오를까? 내릴까?</p>
       <div className="grid grid-cols-3 gap-2">
         {DIRECTION_OPTIONS.map(({ value, label, Icon, activeColor, activeBg }) => {
-          // 예측 완료: 해당 방향 활성화, 나머지 비활성
-          const isDone = isLoggedIn && prediction !== undefined;
-          const isActive = isDone && prediction.direction === value;
-          const isDisabled = isDone && prediction.direction !== value;
+          const isActive = isLoggedIn && prediction?.direction === value;
+          const isDisabled = isPending;
+          const isThisPending = isPending && pendingDirection === value;
 
           return (
             <button
               key={value}
               type="button"
-              disabled={isDisabled}
-              onClick={!isLoggedIn ? onLoginRequired : undefined}
+              disabled={isDisabled || isPending}
+              onClick={() => {
+                if (!isLoggedIn) {
+                  onLoginRequired();
+                  return;
+                }
+                onPredict(value);
+              }}
               className="flex flex-col items-center gap-1.5 py-3 rounded-[10px] transition-all active:opacity-70 disabled:opacity-40"
               style={
                 isActive
@@ -76,7 +95,13 @@ function PredictionSection({ isLoggedIn, prediction, onLoginRequired }: Predicti
                   : { color: '#9ca3af', background: '#f9fafb', border: '1.5px solid #e5e7eb' }
               }
             >
-              <Icon />
+              {isThisPending ? (
+                <div className="w-[26px] h-[26px] flex items-center justify-center">
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : (
+                <Icon />
+              )}
               <span className="text-[13px] font-semibold">{label}</span>
             </button>
           );
@@ -100,7 +125,29 @@ export default function TodayLearningSidebar({
   isLoggedIn,
   onLoginRequired,
 }: TodayLearningSidebarProps) {
-  const { data, isLoading, isError } = useTodayLearning(stockId, isOpen);
+  const { data, isLoading, isError, refetch } = useTodayLearning(stockId, isOpen);
+  const { mutate: upsertPrediction, isPending, variables } = useUpsertPrediction();
+  const [predictError, setPredictError] = useState<string | null>(null);
+
+  const pendingDirection = isPending ? (variables?.direction ?? null) : null;
+
+  function handlePredict(direction: PredictionDirection) {
+    if (!data || stockId == null) return;
+    setPredictError(null);
+    upsertPrediction(
+      { digestId: data.digestId, stockId, direction },
+      {
+        onSuccess: () => void refetch(),
+        onError: (error) => {
+          const code = getApiResponseCode(error);
+          if (code === 4031) setPredictError('오늘의 학습에서만 예측할 수 있습니다.');
+          else if (code === 4030) setPredictError('학습 정보를 찾을 수 없습니다.');
+          else if (code === 4032) setPredictError('종목 정보를 찾을 수 없습니다.');
+          else setPredictError('예측 등록에 실패했습니다. 다시 시도해 주세요.');
+        },
+      },
+    );
+  }
 
   if (!isOpen) return null;
 
@@ -177,8 +224,16 @@ export default function TodayLearningSidebar({
             <PredictionSection
               isLoggedIn={isLoggedIn}
               prediction={data.prediction}
+              isPending={isPending}
+              pendingDirection={pendingDirection}
               onLoginRequired={onLoginRequired}
+              onPredict={handlePredict}
             />
+            {predictError && (
+              <p className="-mt-2 mb-3 rounded-lg bg-[#FFF0F0] px-3 py-2 text-[12px] text-[#e03131]">
+                {predictError}
+              </p>
+            )}
 
             {/* 섹션 C — 관련 뉴스 */}
             <div className="mb-4">

@@ -39,6 +39,7 @@ export interface LearningNewsItem {
 }
 
 export interface TodayLearningResult {
+  digestId: number;
   digestDate: string;          // "yyyy.MM.dd (요일)"
   stockName: string;
   changeRate?: string;         // "+1.23%" / "-2.76%", 키 자체가 없을 수 있음
