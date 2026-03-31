@@ -50,6 +50,14 @@ function timeToIsoDateKey(t: Time): string | null {
   return null;
 }
 
+function formatHoverDateTimeLabel(t: Time): string {
+  const key = timeToIsoDateKey(t);
+  if (!key) return "";
+  const m = key.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return key;
+  return `${m[1]}년 ${m[2]}월 ${m[3]}일`;
+}
+
 function isCandlePoint(
   o: unknown
 ): o is { open: number; high: number; low: number; close: number } {
@@ -137,6 +145,7 @@ export function LightweightCandleChart({
         background: { type: ColorType.Solid, color: "#ffffff" },
         textColor: "#64748b",
         fontSize: 11,
+        attributionLogo: false,
       },
       grid: {
         vertLines: { color: "#eff1f8" },
@@ -155,6 +164,9 @@ export function LightweightCandleChart({
       crosshair: {
         vertLine: { color: `${MAIN}40`, width: 1 },
         horzLine: { color: `${MAIN}40`, width: 1 },
+      },
+      localization: {
+        timeFormatter: (time: Time) => formatHoverDateTimeLabel(time),
       },
     });
 

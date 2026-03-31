@@ -51,18 +51,28 @@ export type TickerRow = MarketTickerDef & {
 
 /** 한국 시세 UI: 상승 빨강 — change·sign 기준 */
 export function isUpQuote(sign: string, change: number): boolean {
-  if (change > 0) return true;
-  if (change < 0) return false;
-  return sign === '1' || sign === '2';
+  if (sign === '1' || sign === '2') return true;
+  if (sign === '4' || sign === '5') return false;
+  return change > 0;
 }
 
 export function formatPrice(n: number): string {
   return Math.round(n).toLocaleString('ko-KR');
 }
 
-export function formatChange(change: number): string {
+function signToDirection(sign: string): -1 | 0 | 1 {
+  if (sign === '5' || sign === '4') return -1;
+  if (sign === '1' || sign === '2') return 1;
+  return 0;
+}
+
+export function formatChange(change: number, sign: string): string {
   if (change === 0) return '0';
-  return change > 0 ? `+${formatPrice(change)}` : formatPrice(change);
+  const abs = Math.abs(change);
+  const dir = signToDirection(sign);
+  if (dir < 0) return `-${formatPrice(abs)}`;
+  if (dir > 0) return `+${formatPrice(abs)}`;
+  return formatPrice(change);
 }
 
 export function formatPct(p: number): string {

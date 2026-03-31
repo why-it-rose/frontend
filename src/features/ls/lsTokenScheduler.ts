@@ -44,12 +44,6 @@ function msUntilNextSixAM(): number {
   return next.getTime() - now.getTime();
 }
 
-function logDevTokenOk(prefix: string): void {
-  if (import.meta.env.DEV) {
-    console.info('[LS OAuth] 발급 성공 · 토큰 앞 12자:', `${prefix.slice(0, 12)}…`);
-  }
-}
-
 function logDevTokenFail(status: number, detail: string): void {
   if (import.meta.env.DEV) {
     console.warn('[LS OAuth] 발급 실패', status, detail);
@@ -106,7 +100,6 @@ export async function fetchLsAccessToken(): Promise<string | null> {
   const token = json.access_token;
   if (typeof token === 'string' && token.length > 0) {
     accessToken = token;
-    logDevTokenOk(token);
     try {
       sessionStorage.setItem(STORAGE_KEY, token);
     } catch {

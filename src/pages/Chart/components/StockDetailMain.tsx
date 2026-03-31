@@ -22,10 +22,15 @@ import MarketIndexBar from "@/pages/widgets/MarketIndexBar/MarketIndexBar";
 import EventTab from "@/features/event/components/EventTab";
 import MemoTab from "@/features/event/components/MemoTab";
 import StockDetailAside from "@/pages/StockDetail/components/StockDetailaside";
+import { prefetchFssCompanyOverview } from "@/features/corp/fetchCorpBasicInfo";
 import { useEventDetail } from "@/features/event/hooks/useEventDetail";
 import { useMemos } from "@/features/event/hooks/useMemos";
 import { useLearningPin } from "@/features/news/hooks/useLearningPin";
 import TodayLearningSidebar from "@/features/news/components/TodayLearningSidebar";
+
+function normalizeTicker(t: string): string {
+  return t.replace(/\D/g, "").padStart(6, "0").slice(-6);
+}
 
 
 /** 기간별로 한 화면에 보일 최대 봉 수(많을수록 조금 더 축소된 느낌) — 봉이 적으면 전체 표시 */
@@ -83,7 +88,8 @@ export function StockDetailMain({
     fetchStockSearch(stockCodeParam, 20)
       .then((items) => {
         if (cancelled) return;
-        const exact = items.find((i) => i.ticker === stockCodeParam) ?? items[0];
+        const codeNorm = normalizeTicker(stockCodeParam);
+        const exact = items.find((i) => normalizeTicker(i.ticker) === codeNorm);
         setResolvedTickerStockId(exact?.stockId);
         setSearchedCode(stockCodeParam);
       })
@@ -147,6 +153,13 @@ export function StockDetailMain({
   );
   const stock = stockProp ?? fetchedHeader;
   const bars = barsProp ?? fetchedBars;
+
+  useEffect(() => {
+    if (!routeHasTicker) return;
+    const nm = stock?.name?.trim();
+    if (!nm || nm === "—") return;
+    prefetchFssCompanyOverview(nm);
+  }, [routeHasTicker, stock?.name]);
 
   const [hoverBar, setHoverBar] = useState<OhlcBar | null>(null);
 
