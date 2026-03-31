@@ -246,8 +246,13 @@ export default function TodayLearningSidebar({
                     <a
                       key={item.newsId}
                       href={item.url}
-                      target="_blank"
                       rel="noopener noreferrer"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        window.innerWidth > 768
+                          ? window.open(item.url, "_blank", "width=800,height=600,noopener,noreferrer")
+                          : window.open(item.url, "_blank");
+                      }}
                       className="block bg-white rounded-[10px] p-[12px_14px] hover:bg-[#f9fafb] transition-colors"
                       style={{ border: '1px solid #e5e7eb' }}
                     >

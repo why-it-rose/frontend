@@ -127,11 +127,9 @@ export default function EventTab({
               <div
                 key={news.newsId}
                 onClick={() =>
-                  window.open(
-                    news.url,
-                    "_blank",
-                    "width=800,height=600,noopener,noreferrer",
-                  )
+                  window.innerWidth > 768
+                    ? window.open(news.url, "_blank", "width=800,height=600,noopener,noreferrer")
+                    : window.open(news.url, "_blank")
                 }
                 className="block bg-white rounded-[10px] p-[12px_14px] active:bg-bg-subtle md:hover:bg-bg-subtle transition-colors cursor-pointer"
                 style={{ border: "1px solid #e5e7eb" }}
