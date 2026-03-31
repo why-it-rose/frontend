@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { StockEvent } from '../types/event.types';
-import { addScrap, fetchEventDetail, fetchMyScraps, removeScrap, type ScrapApiError } from '../api/eventApi';
+import { addEventScrap, fetchEventDetail, fetchMyScraps, removeEventScrap, type ScrapApiError } from '../api/eventApi';
 
 const DEFAULT_ERROR_MESSAGE = 'Something went wrong.';
 
@@ -49,9 +49,9 @@ export function useEventDetail(eventId: number | null) {
 
     try {
       if (nextScrapped) {
-        await addScrap(targetEventId);
+        await addEventScrap(targetEventId);
       } else {
-        await removeScrap(targetEventId);
+        await removeEventScrap(targetEventId);
       }
     } catch (e: unknown) {
       setEvent((prev) => {
