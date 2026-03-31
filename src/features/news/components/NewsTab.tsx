@@ -141,7 +141,7 @@ export default function NewsTab({ news }: NewsTabProps) {
                       .slice(0, -1)}
                   </span>
                   <span className="text-[11px] text-[#4b5563] bg-[#f3f4f6] px-2 py-0.5 rounded-full">
-                    {item.tags?.join(', ')}
+                    {item.tags}
                   </span>
                 </div>
               </div>
