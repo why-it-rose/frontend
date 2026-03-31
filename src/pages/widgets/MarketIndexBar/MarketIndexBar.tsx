@@ -18,7 +18,7 @@ function TickerStrip({ stripKey, rows }: { stripKey: string; rows: TickerRow[] }
         const titleName = (q?.hname && q.hname.trim()) || item.label;
         const pending = !item.loaded && !item.error;
         const priceStr = pending ? '…' : q != null ? formatPrice(q.price) : '—';
-        const changeStr = pending ? '…' : q != null ? formatChange(q.change) : '—';
+        const changeStr = pending ? '…' : q != null ? formatChange(q.change, q.sign) : '—';
         const pctStr = pending ? '…' : q != null ? `(${formatPct(q.diffPct)})` : '(—)';
         const up = q != null ? isUpQuote(q.sign, q.change) : true;
 
@@ -39,8 +39,8 @@ function TickerStrip({ stripKey, rows }: { stripKey: string; rows: TickerRow[] }
               <span
                 className={
                   up
-                    ? 'text-red-500 transition-colors group-hover:text-red-600'
-                    : 'text-blue-500 transition-colors group-hover:text-blue-600'
+                    ? 'ml-1 text-red-500 transition-colors group-hover:text-red-600'
+                    : 'ml-1 text-blue-500 transition-colors group-hover:text-blue-600'
                 }
               >
                 {changeStr} {pctStr}
