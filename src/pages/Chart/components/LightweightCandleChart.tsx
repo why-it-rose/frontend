@@ -115,19 +115,22 @@ export function LightweightCandleChart({
   /** 현재 기간 탭 — 뷰별 핀/툴팁 동작 분기에 사용 */
   activePeriod?: string;
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const hoverRef = useRef(onHoverBar);
-  hoverRef.current = onHoverBar;
-  const eventClickRef = useRef(onEventClick);
-  eventClickRef.current = onEventClick;
-  const learningPinClickRef = useRef(onLearningPinClick);
-  learningPinClickRef.current = onLearningPinClick;
-  const focusDateRef = useRef(focusDate);
-  focusDateRef.current = focusDate;
-  const activePeriodRef = useRef(activePeriod);
-  activePeriodRef.current = activePeriod;
+const containerRef = useRef<HTMLDivElement>(null);
+const hoverRef = useRef(onHoverBar);
+const eventClickRef = useRef(onEventClick);
+const learningPinClickRef = useRef(onLearningPinClick);
+const focusDateRef = useRef(focusDate);
+const activePeriodRef = useRef<string | undefined>(activePeriod);
 
-  useEffect(() => {
+useEffect(() => {
+  hoverRef.current = onHoverBar;
+  eventClickRef.current = onEventClick;
+  learningPinClickRef.current = onLearningPinClick;
+  focusDateRef.current = focusDate;
+  activePeriodRef.current = activePeriod;
+}, [onHoverBar, onEventClick, onLearningPinClick, focusDate, activePeriod]);
+
+useEffect(() => {
     const el = containerRef.current;
     if (!el || !bars.length) return;
 
@@ -678,7 +681,7 @@ export function LightweightCandleChart({
       if (pinsEl.parentNode === el) el.removeChild(pinsEl);
       if (learningPinEl.parentNode === el) el.removeChild(learningPinEl);
     };
-  }, [bars, visibleBars, learningPin]);
+  }, [bars, visibleBars, learningPin, focusDate, activePeriod]);
 
   if (!bars.length) {
     return (
