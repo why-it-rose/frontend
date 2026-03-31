@@ -8,7 +8,7 @@ export type EventDetailApiResponse<T = unknown> = {
 export async function fetchEventDetail<T = unknown>(
   eventId: number,
 ): Promise<EventDetailApiResponse<T>> {
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/events/${eventId}`, {
+  const response = await fetch(`/events/${eventId}`, {
     method: "GET",
     credentials: "include",
   });

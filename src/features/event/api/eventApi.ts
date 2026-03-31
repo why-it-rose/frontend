@@ -1,6 +1,6 @@
 import type { StockEvent } from "../types/event.types";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
+const BASE_URL = '';
 
 // ─── 백엔드 응답 타입 ────────────────────────────────────────────────────────────
 
