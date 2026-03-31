@@ -266,6 +266,7 @@ export default function MyPagePanel({ onClose, onLogout, onWithdraw, withdrawMes
                     manageMode={scrapManageMode}
                     onManageStart={() => setScrapManageMode(true)}
                     onManageEnd={() => setScrapManageMode(false)}
+                    onSelectScrap={onClose}
                 />
             )}
             {activeTab === 'review' && <MyPageReviewTab />}

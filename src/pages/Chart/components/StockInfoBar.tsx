@@ -16,6 +16,7 @@ export function StockInfoBar({
   onRequireLogin,
 }: StockInfoBarProps) {
   const changeColor = stock.positive ? "text-[#e03131]" : "text-[#1971c2]";
+  const priceColor = stock.positive ? "text-[#e03131]" : "text-[#1971c2]";
   const arrow = stock.positive ? "▲" : "▼";
   const { isLoggedIn } = useAuth();
   const addMut = useAddInterestStockMutation();
@@ -58,7 +59,7 @@ export function StockInfoBar({
         {stock.code} · {stock.market}
       </span>
 
-      <span className="hidden shrink-0 self-center text-[18px] font-bold tabular-nums leading-none tracking-tight text-[#1f4fc9] md:text-[20px] max-md:order-4 max-md:basis-full max-md:pl-9 md:inline">
+      <span className={`hidden shrink-0 self-center text-[18px] font-bold tabular-nums leading-none tracking-tight ${priceColor} md:text-[20px] max-md:order-4 max-md:basis-full max-md:pl-9 md:inline`}>
         {stock.price}
       </span>
 
@@ -73,7 +74,7 @@ export function StockInfoBar({
       </div>
 
       <div className="hidden max-md:order-4 max-md:flex max-md:basis-full max-md:items-end max-md:gap-2 max-md:pl-9">
-        <span className="shrink-0 text-[22px] font-bold tabular-nums leading-none tracking-tight text-[#1f4fc9]">
+        <span className={`shrink-0 text-[22px] font-bold tabular-nums leading-none tracking-tight ${priceColor}`}>
           {stock.price}
         </span>
         <span className={`inline-flex items-center gap-1 text-[12px] font-medium leading-none ${changeColor}`}>
