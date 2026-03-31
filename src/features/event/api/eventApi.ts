@@ -1,8 +1,6 @@
 import type { StockEvent } from '../types/event.types';
 import apiClient from '@/shared/api/axios';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
-
 interface ApiNewsItem {
   newsId: number;
   title: string;
@@ -65,40 +63,6 @@ function toStockEvent(d: ApiEventDetail): StockEvent {
   };
 }
 
-async function ensureApiSuccess(
-    res: Response,
-    ignoreResponseCodes: number[] = [],
-    ignoreHttpStatuses: number[] = [],
-): Promise<void> {
-  const text = await res.text();
-  let json: ApiResponse<unknown> | null = null;
-
-  if (text) {
-    try {
-      json = JSON.parse(text) as ApiResponse<unknown>;
-    } catch {
-      json = null;
-    }
-  }
-
-  if (!res.ok) {
-    if (ignoreHttpStatuses.includes(res.status)) return;
-    if (json && ignoreResponseCodes.includes(json.responseCode)) return;
-    const e = new Error(json?.responseMessage || `event request failed: ${res.status}`) as ScrapApiError;
-    if (json) e.responseCode = json.responseCode;
-    throw e;
-  }
-
-  if (res.status === 204 || !json) return;
-
-  if (ignoreResponseCodes.includes(json.responseCode)) return;
-  if (typeof json.isSuccess === 'boolean' && !json.isSuccess) {
-    const e = new Error(json.responseMessage || 'event request failed') as ScrapApiError;
-    e.responseCode = json.responseCode;
-    throw e;
-  }
-}
-
 export async function fetchEvents(
     stockId: number,
     type?: 'SURGE' | 'DROP',
@@ -113,47 +77,49 @@ export async function fetchEvents(
 
   if (type) params.set('type', type);
 
-  const res = await fetch(`${BASE_URL}/events?${params.toString()}`, {
-    credentials: 'include',
-  });
-
-  if (!res.ok) throw new Error(`fetchEvents failed: ${res.status}`);
-
-  const json: ApiResponse<ApiEventItem[]> = await res.json();
-  if (!json.isSuccess) throw new Error(json.responseMessage);
-
-  return json.result;
+  const { data } = await apiClient.get<ApiResponse<ApiEventItem[]>>(`/events?${params.toString()}`);
+  if (!data.isSuccess) throw new Error(data.responseMessage);
+  return data.result;
 }
 
 export async function fetchEventDetail(eventId: number): Promise<StockEvent> {
-  const res = await fetch(`${BASE_URL}/events/${eventId}`, {
-    credentials: 'include',
-  });
-
-  if (!res.ok) throw new Error(`fetchEventDetail failed: ${res.status}`);
-
-  const json: ApiResponse<ApiEventDetail> = await res.json();
-  if (!json.isSuccess) throw new Error(json.responseMessage);
-
-  return toStockEvent(json.result);
+  const { data } = await apiClient.get<ApiResponse<ApiEventDetail>>(`/events/${eventId}`);
+  if (!data.isSuccess) throw new Error(data.responseMessage);
+  return toStockEvent(data.result);
 }
 
 export async function addEventScrap(eventId: number): Promise<void> {
-  const res = await fetch(`${BASE_URL}/events/${eventId}/scraps`, {
-    method: 'POST',
-    credentials: 'include',
-  });
+  try {
+    await apiClient.post<ApiResponse<unknown>>(`/events/${eventId}/scraps`);
+  } catch (error: unknown) {
+    const e = error as { response?: { status?: number; data?: { responseCode?: number; responseMessage?: string } }; message?: string };
+    const status = e.response?.status;
+    const responseCode = e.response?.data?.responseCode;
 
-  await ensureApiSuccess(res, [4022], [409]);
+    // 이미 스크랩 상태는 성공으로 간주
+    if (status === 409 || responseCode === 4022) return;
+
+    const wrapped = new Error(e.response?.data?.responseMessage || e.message || 'event request failed') as ScrapApiError;
+    wrapped.responseCode = responseCode;
+    throw wrapped;
+  }
 }
 
 export async function removeEventScrap(eventId: number): Promise<void> {
-  const res = await fetch(`${BASE_URL}/events/${eventId}/scraps`, {
-    method: 'DELETE',
-    credentials: 'include',
-  });
+  try {
+    await apiClient.delete<ApiResponse<unknown>>(`/events/${eventId}/scraps`);
+  } catch (error: unknown) {
+    const e = error as { response?: { status?: number; data?: { responseCode?: number; responseMessage?: string } }; message?: string };
+    const status = e.response?.status;
+    const responseCode = e.response?.data?.responseCode;
 
-  await ensureApiSuccess(res, [4020], [404]);
+    // 이미 미스크랩 상태는 성공으로 간주
+    if (status === 404 || responseCode === 4020) return;
+
+    const wrapped = new Error(e.response?.data?.responseMessage || e.message || 'event request failed') as ScrapApiError;
+    wrapped.responseCode = responseCode;
+    throw wrapped;
+  }
 }
 
 export type ScrapEventDto = {
@@ -186,20 +152,4 @@ export async function fetchMyScraps(): Promise<ScrapEventDto[]> {
   if (Array.isArray(result?.content)) return result.content;
   if (Array.isArray(result?.scraps)) return result.scraps;
   return [];
-}
-
-export async function addScrap(eventId: number): Promise<void> {
-  try {
-    await addEventScrap(eventId);
-  } catch (error: unknown) {
-    throw error as ScrapApiError;
-  }
-}
-
-export async function removeScrap(eventId: number): Promise<void> {
-  try {
-    await removeEventScrap(eventId);
-  } catch (error: unknown) {
-    throw error as ScrapApiError;
-  }
 }

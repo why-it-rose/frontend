@@ -43,10 +43,6 @@ export default defineConfig(({ mode }) => {
           target: apiTarget,
           changeOrigin: true,
         },
-        '/scraps': {
-          target: apiTarget,
-          changeOrigin: true,
-        },
         /** LS Open API OAuth (브라우저 CORS 회피) — POST /ls-oauth/oauth2/token */
         '/ls-oauth': {
           target: 'https://openapi.ls-sec.co.kr:8080',
