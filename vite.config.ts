@@ -42,6 +42,24 @@ export default defineConfig({
         secure: true,
         rewrite: (path) => path.replace(/^\/ls-api/, ''),
       },
+      '/kis-api': {
+        target: 'https://openapi.koreainvestment.com:9443',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/kis-api/, ''),
+      },
+      '/kis-oauth': {
+        target: 'https://openapi.koreainvestment.com:9443',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/kis-oauth/, ''),
+      },
+      '/data-go': {
+        target: 'https://apis.data.go.kr',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/data-go/, ''),
+      },
     },
   },
 

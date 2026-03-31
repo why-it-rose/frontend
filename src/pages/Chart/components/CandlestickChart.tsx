@@ -103,11 +103,12 @@ export function CandlestickChart({
 
         {/* ── 이벤트 어노테이션 ── */}
         {bars.map((bar, i) => {
-          if (!bar.event) return null;
+          const ev = bar.events?.[0];
+          if (!ev) return null;
           const x    = bx(i);
           const tipY = py(bar.high) - 18;
-          const c    = bar.event.positive ? "#e03131" : "#1971c2";
-          const bg   = bar.event.positive ? "#fff0f0" : "#f0f5ff";
+          const c    = ev.positive ? "#e03131" : "#1971c2";
+          const bg   = ev.positive ? "#fff0f0" : "#f0f5ff";
           return (
             <g key={`ev-${i}`}>
               <line x1={x} y1={py(bar.high) - 2} x2={x} y2={tipY + 14}
@@ -116,7 +117,7 @@ export function CandlestickChart({
                 rx={3} fill={bg} stroke={c} strokeWidth="0.5" />
               <text x={x} y={tipY - 2}
                 textAnchor="middle" fontSize="7" fill={c} fontWeight="600">
-                {bar.event.positive ? "▲" : "▼"} {bar.event.label}
+                {ev.positive ? "▲" : "▼"} {ev.label}
               </text>
             </g>
           );
