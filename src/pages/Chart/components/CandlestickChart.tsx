@@ -28,15 +28,21 @@ export function CandlestickChart({
   const chartH = height - volH - 20;
 
   const PAD_L = 36,
+   
     PAD_R = 8,
+   
     PAD_T = 20,
+   
     PAD_B = 4;
 
   if (!bars.length) {
     return (
       <div
+       
         ref={containerRef}
+       
         className="w-full h-full flex items-center justify-center text-gray-300 text-sm"
+      
       >
         데이터 없음
       </div>
@@ -83,20 +89,31 @@ export function CandlestickChart({
           <g key={i}>
             <line
               x1={PAD_L}
+             
               y1={py(v)}
+             
               x2={width - PAD_R}
+             
               y2={py(v)}
               stroke="#e5e9f0"
+             
               strokeWidth="0.5"
+             
               strokeDasharray="3 3"
             />
             <text
+             
               x={PAD_L - 4}
+             
               y={py(v)}
               textAnchor="end"
+             
               fontSize="9"
+             
               fill="#8da0b3"
+             
               dominantBaseline="middle"
+            
             >
               {Math.round(v / 1000)}k
             </text>
@@ -114,20 +131,32 @@ export function CandlestickChart({
           return (
             <g key={i}>
               <line
+               
                 x1={x}
+               
                 y1={py(bar.high)}
+               
                 x2={x}
+               
                 y2={py(bar.low)}
                 stroke={color}
+               
                 strokeWidth="0.8"
+             
               />
               <rect
+               
                 x={x - candleW / 2}
+               
                 y={bodyTop}
                 width={candleW}
+               
                 height={bodyH}
+               
                 fill={color}
+               
                 rx="0.5"
+             
               />
             </g>
           );
@@ -137,18 +166,39 @@ export function CandlestickChart({
         {bars.map((bar, i) => {
           const ev = bar.events?.[0];
           if (!ev) return null;
-          const x    = bx(i);
+          const x = bx(i);
           const tipY = py(bar.high) - 18;
-          const c    = ev.positive ? "#e03131" : "#1971c2";
-          const bg   = ev.positive ? "#fff0f0" : "#f0f5ff";
+          const c = ev.positive ? "#e03131" : "#1971c2";
+          const bg = ev.positive ? "#fff0f0" : "#f0f5ff";
           return (
             <g key={`ev-${i}`}>
-              <line x1={x} y1={py(bar.high) - 2} x2={x} y2={tipY + 14}
-                stroke={c} strokeWidth="0.8" strokeDasharray="2 2" />
-              <rect x={x - 18} y={tipY - 10} width={36} height={14}
-                rx={3} fill={bg} stroke={c} strokeWidth="0.5" />
-              <text x={x} y={tipY - 2}
-                textAnchor="middle" fontSize="7" fill={c} fontWeight="600">
+              <line
+                x1={x}
+                y1={py(bar.high) - 2}
+                x2={x}
+                y2={tipY + 14}
+                stroke={c}
+                strokeWidth="0.8"
+                strokeDasharray="2 2"
+              />
+              <rect
+                x={x - 18}
+                y={tipY - 10}
+                width={36}
+                height={14}
+                rx={3}
+                fill={bg}
+                stroke={c}
+                strokeWidth="0.5"
+              />
+              <text
+                x={x}
+                y={tipY - 2}
+                textAnchor="middle"
+                fontSize="7"
+                fill={c}
+                fontWeight="600"
+              >
                 {ev.positive ? "▲" : "▼"} {ev.label}
               </text>
             </g>
@@ -192,16 +242,20 @@ export function CandlestickChart({
               {/* 줄기 */}
               <line
                 x1={x}
+               
                 y1={stemTopY}
                 x2={x}
+               
                 y2={stemBotY}
                 stroke={c}
+               
                 strokeWidth="1.2"
               />
 
               {/* 핀 원 */}
               <circle
                 cx={x}
+               
                 cy={cy}
                 r={isHovered ? PIN_R + 1 : PIN_R}
                 fill="white"
@@ -217,26 +271,34 @@ export function CandlestickChart({
                 <g>
                   <rect
                     x={bubbleX}
+                   
                     y={bubbleY}
                     width={bubbleW}
+                   
                     height={bubbleH}
                     rx={4}
+                   
                     fill="#1a2236"
+                   
                     opacity={0.92}
                   />
                   {/* 꼬리 */}
                   <polygon
                     points={`${x - 4},${bubbleY + bubbleH} ${x + 4},${bubbleY + bubbleH} ${x},${bubbleY + bubbleH + 5}`}
                     fill="#1a2236"
+                   
                     opacity={0.92}
                   />
                   <text
                     x={bubbleX + bubbleW / 2}
                     y={bubbleY + bubbleH / 2 + 1}
                     textAnchor="middle"
+                   
                     dominantBaseline="middle"
                     fontSize="9"
+                   
                     fill="white"
+                   
                     fontWeight="500"
                   >
                     {label}
@@ -249,28 +311,40 @@ export function CandlestickChart({
 
         {/* ── 구분선 ── */}
         <line
+         
           x1={PAD_L}
+         
           y1={volBaseY - 2}
+         
           x2={width - PAD_R}
+         
           y2={volBaseY - 2}
           stroke="#e5e9f0"
+         
           strokeWidth="0.5"
+       
         />
 
         {/* ── X축 날짜 레이블 ── */}
         {bars.map((bar, i) =>
           bar.date && shouldShowDateLabel(i) ? (
             <text
+             
               key={`d-${i}`}
+             
               x={bx(i)}
+             
               y={chartH + 14}
               textAnchor="middle"
+             
               fontSize="8"
+             
               fill="#8da0b3"
+            
             >
               {bar.date}
             </text>
-          ) : null,
+          ) : null
         )}
 
         {/* ── 거래량 바 ── */}
@@ -280,13 +354,17 @@ export function CandlestickChart({
           const bh = (bar.volume / maxVol) * volH;
           return (
             <rect
+             
               key={`vol-${i}`}
               x={x - candleW / 2}
+             
               y={volBaseY + volH - bh}
               width={candleW}
+             
               height={bh}
               fill={isUp ? "#ffa8a8" : "#a5c8f4"}
               rx="0.5"
+             
               opacity="0.8"
             />
           );
@@ -295,3 +373,4 @@ export function CandlestickChart({
     </div>
   );
 }
+

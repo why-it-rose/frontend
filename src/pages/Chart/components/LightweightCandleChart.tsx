@@ -115,22 +115,22 @@ export function LightweightCandleChart({
   /** 현재 기간 탭 — 뷰별 핀/툴팁 동작 분기에 사용 */
   activePeriod?: string;
 }) {
-const containerRef = useRef<HTMLDivElement>(null);
-const hoverRef = useRef(onHoverBar);
-const eventClickRef = useRef(onEventClick);
-const learningPinClickRef = useRef(onLearningPinClick);
-const focusDateRef = useRef(focusDate);
-const activePeriodRef = useRef<string | undefined>(activePeriod);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const hoverRef = useRef(onHoverBar);
+  const eventClickRef = useRef(onEventClick);
+  const learningPinClickRef = useRef(onLearningPinClick);
+  const focusDateRef = useRef(focusDate);
+  const activePeriodRef = useRef(activePeriod);
 
-useEffect(() => {
-  hoverRef.current = onHoverBar;
-  eventClickRef.current = onEventClick;
-  learningPinClickRef.current = onLearningPinClick;
-  focusDateRef.current = focusDate;
-  activePeriodRef.current = activePeriod;
-}, [onHoverBar, onEventClick, onLearningPinClick, focusDate, activePeriod]);
+  useEffect(() => {
+    hoverRef.current = onHoverBar;
+    eventClickRef.current = onEventClick;
+    learningPinClickRef.current = onLearningPinClick;
+    focusDateRef.current = focusDate;
+    activePeriodRef.current = activePeriod;
+  }, [onHoverBar, onEventClick, onLearningPinClick, focusDate, activePeriod]);
 
-useEffect(() => {
+  useEffect(() => {
     const el = containerRef.current;
     if (!el || !bars.length) return;
 
@@ -256,7 +256,7 @@ useEffect(() => {
       "position:absolute",
       "inset:0",
       "pointer-events:none",
-      "overflow:visible",
+      "overflow:hidden",
       "z-index:10",
     ].join(";");
     el.appendChild(pinsEl);
@@ -345,6 +345,8 @@ useEffect(() => {
 
     function renderHtmlPins() {
       pinsEl.innerHTML = "";
+      // 차트가 렌더링된 후 정확한 pane 너비로 클립 영역 갱신
+      pinsEl.style.width = `${chart.paneSize().width}px`;
       for (const b of eventBars) {
         const evList = b.events!; // 이미 changePct 내림차순 정렬
         const primary = evList[0];
@@ -523,13 +525,14 @@ useEffect(() => {
       "position:absolute",
       "inset:0",
       "pointer-events:none",
-      "overflow:visible",
+      "overflow:hidden",
       "z-index:11",
     ].join(";");
     el.appendChild(learningPinEl);
 
     function renderLearningPin() {
       learningPinEl.innerHTML = "";
+      learningPinEl.style.width = `${chart.paneSize().width}px`;
       if (!el || !learningPin) return;
 
       // digestDate("yyyy-MM-dd")를 bars에서 찾고, 없으면 마지막 봉 사용
@@ -617,6 +620,8 @@ useEffect(() => {
       renderLearningPin();
     }
     chart.timeScale().subscribeVisibleLogicalRangeChange(renderAll);
+    // 첫 페인트 후 pane 너비가 확정되면 핀 재렌더 (가격 축 클리핑 정상화)
+    const initRafId = window.requestAnimationFrame(renderAll);
 
     // ─── 크로스헤어 ──────────────────────────────────────────────────────────
     const crosshairHandler = (param: MouseEventParams) => {
@@ -675,6 +680,7 @@ useEffect(() => {
     ro.observe(el);
 
     return () => {
+      window.cancelAnimationFrame(initRafId);
       chart.timeScale().unsubscribeVisibleLogicalRangeChange(renderAll);
       ro.disconnect();
       chart.remove();
