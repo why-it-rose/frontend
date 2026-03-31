@@ -6,12 +6,14 @@ interface EventTabProps {
   event: StockEvent;
   scrapping?: boolean;
   onScrap?: (eventId: number, isScrapped: boolean) => Promise<void> | void;
+  scrapErrorMessage?: string | null;
 }
 
 export default function EventTab({
   event,
   scrapping = false,
   onScrap,
+  scrapErrorMessage,
 }: EventTabProps) {
   const {
     eventId,
@@ -186,6 +188,9 @@ export default function EventTab({
         >
           {scrapButtonLabel}
         </button>
+        {scrapErrorMessage && (
+            <p className="mt-2 text-center text-[12px] text-[#dc2626]">{scrapErrorMessage}</p>
+        )}
       </div>
     </div>
   );
