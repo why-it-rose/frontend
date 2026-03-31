@@ -10,7 +10,7 @@ import type {
 type StockListPeriod = NonNullable<StockListParams['period']>;
 type StockListQuery = StockListParams;
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || 'http://localhost:8080';
+const BASE_URL = '';
 
 function mapPeriodToApi(period?: StockListPeriod): StockListPeriod | undefined {
   if (!period) return undefined;
