@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { StockEvent } from '../types/event.types';
-import { addEventScrap, fetchEventDetail, fetchMyScraps, removeEventScrap, type ScrapApiError } from '../api/eventApi';
+import { fetchEventDetail } from '../api/eventApi';
+import { addEventScrap, fetchMyScraps, removeEventScrap, type ScrapApiError } from '@/features/scrap/api/scrapApi';
 
 const DEFAULT_ERROR_MESSAGE = 'Something went wrong.';
 
