@@ -232,14 +232,10 @@ export function buildCompanyInfoFromSources(
     low52w = Math.round(lo).toLocaleString('ko-KR');
   }
 
-  const overviewFromLs = t3320
-    ? `${String(getLsField(m, ['company', 'hname']) ?? detail.name)}${industry !== '—' ? ` — ${industry}` : ''}`.trim() ||
-      '—'
-    : [detail.name, sector || undefined, detail.market].filter(Boolean).join(' · ') || '—';
   const overview =
     fssOverview != null && fssOverview.trim().length > 0
       ? fssOverview.trim()
-      : overviewFromLs;
+      : '기업 개요를 불러오는 중입니다.';
 
   const cats: string[] = [];
   if (sector) cats.push(sector);

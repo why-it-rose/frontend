@@ -190,10 +190,16 @@ export function useCompanyInfoPanel(stockCode: string | undefined): {
         });
 
         void fssOverviewPromise.then((fssOverview) => {
-          if (cancelled || !fssOverview?.trim()) return;
+          if (cancelled) return;
           setCompany((prev) => {
             if (prev.code !== detail.ticker) return prev;
-            return { ...prev, overview: fssOverview.trim() };
+            if (fssOverview?.trim()) {
+              return { ...prev, overview: fssOverview.trim() };
+            }
+            return {
+              ...prev,
+              overview: '기업 개요 정보를 불러오지 못했습니다.',
+            };
           });
         });
 

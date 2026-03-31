@@ -6,7 +6,7 @@ import { ROUTES } from '@/shared/constants/routes';
 import MyPagePanel from '@/pages/MyPage/components/MyPagePanel';
 import Header from './Header';
 import BottomTabBar from './BottomTabBar';
-import { logoutFromServer } from '@/features/auth/api/authApi';
+import { deleteMyAccount, getApiResponseCode, logoutFromServer } from '@/features/auth/api/authApi';
 
 
 /** 홈 등 내부에서 높이·스크롤을 쓰려면 main은 스크롤 금지 + min-h-0 (padding 없음) */
@@ -18,6 +18,9 @@ export default function MobileLayout({
   const navigate = useNavigate();
   const { isLoggedIn, clearAuth } = useAuth();
   const [myPageOpen, setMyPageOpen] = useState(false);
+  const [withdrawMessage, setWithdrawMessage] = useState('');
+  const [withdrawMessageType, setWithdrawMessageType] = useState<'success' | 'error' | ''>('');
+
 
   const openMyPage = () => {
     if (!isLoggedIn) {
@@ -33,18 +36,53 @@ export default function MobileLayout({
       <main className="flex min-h-0 flex-1 flex-col overflow-hidden">{content}</main>
       <BottomTabBar onMyPageOpen={openMyPage} myPageActive={myPageOpen} />
       {isLoggedIn && myPageOpen && (
-        <MyPagePanel
-          onClose={() => setMyPageOpen(false)}
-          onLogout={async () => {
-            try {
-              await logoutFromServer();
-            } finally {
-              clearAuth();
-              setMyPageOpen(false);
-              navigate(ROUTES.HOME);
-            }
-          }}
-        />
+          <MyPagePanel
+              onClose={() => {
+                setMyPageOpen(false);
+                setWithdrawMessage('');
+                setWithdrawMessageType('');
+              }}
+              onLogout={async () => {
+                try {
+                  await logoutFromServer();
+                } finally {
+                  clearAuth();
+                  setMyPageOpen(false);
+                  navigate(ROUTES.HOME);
+                }
+              }}
+              onWithdraw={async () => {
+                try {
+                  await deleteMyAccount();
+                  clearAuth();
+                  setMyPageOpen(false);
+                  navigate('/login');
+                } catch (error: unknown) {
+                  const code = getApiResponseCode(error);
+
+                  if (code === 2952) {
+                    setWithdrawMessage('로그인이 필요합니다.');
+                    setWithdrawMessageType('error');
+                    clearAuth();
+                    setMyPageOpen(false);
+                    navigate('/login');
+                    return;
+                  }
+
+                  if (code === 4013) {
+                    setWithdrawMessage('이미 탈퇴한 계정입니다.');
+                    setWithdrawMessageType('error');
+                    return;
+                  }
+
+                  setWithdrawMessage('회원 탈퇴 중 오류가 발생했습니다.');
+                  setWithdrawMessageType('error');
+                }
+              }}
+              withdrawMessage={withdrawMessage}
+              withdrawMessageType={withdrawMessageType}
+          />
+
       )}
     </div>
   );

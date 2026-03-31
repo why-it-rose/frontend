@@ -14,18 +14,19 @@ import {
   ohlcBarToSummary,
 } from "../hook";
 import { LightweightCandleChart } from "./LightweightCandleChart";
+import { LearningPin } from "./LearningPin";
 import { StockInfoBar } from "./StockInfoBar";
 import { PeriodTabs } from "./PeriodTabs";
 import { OhlcSummaryBar } from "./OhlcSummaryBar";
 import MarketIndexBar from "@/pages/widgets/MarketIndexBar/MarketIndexBar";
 import EventTab from "@/features/event/components/EventTab";
 import MemoTab from "@/features/event/components/MemoTab";
-import NewsTab from "@/features/news/components/NewsTab";
 import StockDetailAside from "@/pages/StockDetail/components/StockDetailaside";
 import { prefetchFssCompanyOverview } from "@/features/corp/fetchCorpBasicInfo";
 import { useEventDetail } from "@/features/event/hooks/useEventDetail";
 import { useMemos } from "@/features/event/hooks/useMemos";
-import type { TodayNews } from "@/features/news/types/news.types";
+import { useLearningPin } from "@/features/news/hooks/useLearningPin";
+import TodayLearningSidebar from "@/features/news/components/TodayLearningSidebar";
 
 function normalizeTicker(t: string): string {
   return t.replace(/\D/g, "").padStart(6, "0").slice(-6);
@@ -47,24 +48,6 @@ function visibleBarsForPeriod(tab: PeriodTab): number {
       return 120;
   }
 }
-const MOCK_NEWS: TodayNews = {
-  newsId: 1,
-  stockCode: "005930",
-  stockName: "삼성전자",
-  eventType: "PLUNGE",
-  occurredAt: "2026-03-17T09:00:00",
-  changeRate: 2.08,
-  priceBefore: 188000,
-  priceAfter: 184000,
-  aiSummary:
-    "이 구간에서는 엔비디아 GTC 컨퍼런스 이후 HBM3E 공급 기대감이 급격히 확대되었습니다. 삼성전자의 AI 칩 납품 재개 가능성이 보도되며 외국인 매수세가 집중된 것으로 확인됩니다.",
-  relatedNews: [
-    { newsId: 1, title: "외국인, 삼성전자 3일 연속 순매수 2조원 돌파", body: "외국인 투자자들이 삼성전자를 3거래일 연속 순매수하며 코스피 상승을 이끌었다.", source: "연합인포맥스", publishedAt: "2026-03-16T10:00:00", url: "#", tag: "외국인" },
-    { newsId: 2, title: "외국인, 삼성전자 3일 연속 순매수 2조원 돌파", body: "외국인 투자자들이 삼성전자를 3거래일 연속 순매수하며 코스피 상승을 이끌었다.", source: "연합인포맥스", publishedAt: "2026-03-16T11:00:00", url: "#", tag: "외국인" },
-    { newsId: 3, title: "외국인, 삼성전자 3일 연속 순매수 2조원 돌파", body: "외국인 투자자들이 삼성전자를 3거래일 연속 순매수하며 코스피 상승을 이끌었다.", source: "연합인포맥스", publishedAt: "2026-03-16T12:00:00", url: "#", tag: "외국인" },
-  ],
-};
-
 
 export interface StockDetailMainAllProps extends StockDetailMainProps {
   /** 티커 폴백 (라우트에 없을 때만) */
@@ -72,7 +55,7 @@ export interface StockDetailMainAllProps extends StockDetailMainProps {
   /** 직접 전달 시 검색 생략 — `GET /api/stocks/{stockId}/prices` */
   stockId?: number;
   useMock?: boolean;
-  mobileMode?: "stock-detail" | "event" | "news";
+  mobileMode?: "stock-detail" | "event" | "news" | "today-learning";
 }
 
 export function StockDetailMain({
@@ -84,7 +67,7 @@ export function StockDetailMain({
   mobileMode = "stock-detail",
 }: StockDetailMainAllProps) {
   const navigate = useNavigate();
-  const { refreshAuth } = useAuth();
+  const { refreshAuth, isLoggedIn } = useAuth();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const { stockCode: stockCodeParam } = useParams<{ stockCode?: string }>();
   const [searchParams] = useSearchParams();
@@ -137,16 +120,17 @@ export function StockDetailMain({
 
   const { activePeriod, setActivePeriod } = useChartPeriod("일");
   const [mobileTab, setMobileTab] = useState<
-    "차트" | "기업 정보" | "이벤트" | "메모" | "오늘의 뉴스"
+    "차트" | "기업 정보" | "이벤트" | "메모" | "오늘의 뉴스" | "오늘의 학습"
   >(
     mobileMode === "event"
       ? "이벤트"
       : mobileMode === "news"
         ? "오늘의 뉴스"
-        : "차트"
+        : "기업 정보"
   );
+  const { data: learningPinData } = useLearningPin(chartStockId);
 
-  const { event: mobileEvent } = useEventDetail(
+  const { event: mobileEvent, scrapping: mobileEventScrapping, toggleScrap } = useEventDetail(
     mobileMode === "event" ? mobileEventId : null
   );
   const { memos, save: saveMemo, update: updateMemo, remove: removeMemo } = useMemos(
@@ -198,7 +182,9 @@ export function StockDetailMain({
       ? (["차트", "이벤트", "메모"] as const)
       : mobileMode === "news"
         ? (["차트", "오늘의 뉴스"] as const)
-        : (["차트", "기업 정보"] as const);
+        : learningPinData !== null
+          ? (["차트", "기업 정보", "오늘의 학습"] as const)
+          : (["차트", "기업 정보"] as const);
 
   const mobileEventChips = useMemo(() => {
     const chips: { label: string; positive: boolean; date: string }[] = [];
@@ -229,7 +215,7 @@ export function StockDetailMain({
           />
         </div>
 
-        <div className={`grid shrink-0 border-b border-[#eff1f8] ${mobileMode === "event" ? "grid-cols-3" : "grid-cols-2"}`}>
+        <div className={`grid shrink-0 border-b border-[#eff1f8] ${mobileTabs.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
           {mobileTabs.map((tab) => (
             <button
               key={tab}
@@ -267,6 +253,12 @@ export function StockDetailMain({
                   이벤트 핀 데이터가 없습니다.
                 </div>
               )}
+              {learningPinData !== null && learningPinData !== undefined && (
+                <LearningPin
+                  data={learningPinData}
+                  onClick={() => setMobileTab("오늘의 학습")}
+                />
+              )}
             </div>
 
             <div className="shrink-0 bg-white px-4 py-2.5">
@@ -282,12 +274,24 @@ export function StockDetailMain({
                 visibleBars={chartVisibleBars}
                 onHoverBar={handleHoverBar}
                 onEventClick={handleEventClick}
+                learningPin={learningPinData}
+                onLearningPinClick={() => setMobileTab("오늘의 학습")}
               />
             </div>
           </>
         )}
 
-        {mobileTab === "오늘의 뉴스" && <NewsTab news={MOCK_NEWS} />}
+        {mobileTab === "오늘의 학습" && (
+          <div className="flex-1 min-h-0">
+            <TodayLearningSidebar
+              stockId={chartStockId}
+              isOpen
+              onClose={() => setMobileTab("차트")}
+              isLoggedIn={isLoggedIn}
+              onLoginRequired={() => setLoginModalOpen(true)}
+            />
+          </div>
+        )}
 
         {mobileTab === "기업 정보" && (
           <div className="flex-1 min-h-0 overflow-y-auto">
@@ -298,7 +302,8 @@ export function StockDetailMain({
         {mobileTab === "이벤트" && mobileEvent && (
           <EventTab
             event={mobileEvent}
-            onScrap={(id, s) => console.log(id, s)}
+            scrapping={mobileEventScrapping}
+            onScrap={toggleScrap}
           />
         )}
 
@@ -341,6 +346,8 @@ export function StockDetailMain({
             visibleBars={chartVisibleBars}
             onHoverBar={handleHoverBar}
             onEventClick={handleEventClick}
+            learningPin={learningPinData}
+            onLearningPinClick={() => navigate(`/chart/${stockCodeParam ?? ""}/today-learning`)}
           />
         </main>
 

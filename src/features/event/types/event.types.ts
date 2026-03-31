@@ -15,7 +15,7 @@ export interface RelatedNews {
   source: string;
   publishedAt: string; // ISO string
   url: string;
-  tag: string;
+  tags: string[];
 }
 
 export interface StockEvent {

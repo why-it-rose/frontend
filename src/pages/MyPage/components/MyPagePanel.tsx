@@ -13,7 +13,10 @@ import WithdrawConfirmModal from './WithdrawConfirmModal';
 
 export interface MyPagePanelProps {
   onClose: () => void;
-  onLogout: () => void;
+  onLogout: () => Promise<void>;
+  onWithdraw: () => Promise<void>;
+  withdrawMessage?: string;
+  withdrawMessageType?: 'success' | 'error' | '';
 }
 
 const TABS: { key: MyPageTabKey; label: string }[] = [
@@ -23,7 +26,7 @@ const TABS: { key: MyPageTabKey; label: string }[] = [
   { key: 'settings', label: '설정' },
 ];
 
-export default function MyPagePanel({ onClose, onLogout }: MyPagePanelProps) {
+export default function MyPagePanel({ onClose, onLogout, onWithdraw, withdrawMessage = '', withdrawMessageType = '', }: MyPagePanelProps) {
   const navigate = useNavigate();
   const { user, nickname, refreshAuth, clearAuth } = useAuth();
 
@@ -35,12 +38,13 @@ export default function MyPagePanel({ onClose, onLogout }: MyPagePanelProps) {
   const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [nicknameDraft, setNicknameDraft] = useState('');
   const [isSavingNickname, setIsSavingNickname] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [nicknameMessage, setNicknameMessage] = useState('');
   const [nicknameMessageType, setNicknameMessageType] = useState<'success' | 'error' | ''>('');
 
   const displayNickname = nickname || user?.nickname || '사용자';
   const displayEmail = user?.email || '';
-  const profileInitial = Array.from(displayNickname.trim())[0] ?? '유';
+  const profileInitial = Array.from(displayNickname.trim())[0] ?? '닉';
 
   useEffect(() => {
     setNicknameDraft(displayNickname);
@@ -109,6 +113,17 @@ export default function MyPagePanel({ onClose, onLogout }: MyPagePanelProps) {
     setIsEditingNickname(false);
     setNicknameMessage('');
     setNicknameMessageType('');
+  };
+
+  const handleConfirmWithdraw = async () => {
+    if (isWithdrawing) return;
+    try {
+      setIsWithdrawing(true);
+      setShowWithdrawModal(false);
+      await onWithdraw();
+    } finally {
+      setIsWithdrawing(false);
+    }
   };
 
   const panel = (
@@ -259,7 +274,7 @@ export default function MyPagePanel({ onClose, onLogout }: MyPagePanelProps) {
               <div className="hidden shrink-0 flex-col items-center gap-2 border-t border-[#eff1f8] px-[21px] pt-6 pb-4 md:flex">
                 <button
                     type="button"
-                    onClick={onLogout}
+                    onClick={() => void onLogout()}
                     className="w-full cursor-pointer overflow-hidden rounded-lg border-0 bg-transparent p-0 shadow-none"
                 >
                   <img src={logoutButtonImg} alt="로그아웃" className="block h-auto w-full" width={348} height={37} />
@@ -271,13 +286,24 @@ export default function MyPagePanel({ onClose, onLogout }: MyPagePanelProps) {
                 >
                   회원 탈퇴
                 </button>
+
+                {withdrawMessage && (
+                    <p
+                        className={`text-[11px] ${
+                            withdrawMessageType === 'error' ? 'text-[#dc2626]' : 'text-[#059669]'
+                        }`}
+                    >
+                      {withdrawMessage}
+                    </p>
+                )}
+
               </div>
           )}
           {activeTab === 'settings' && (
               <div className="flex shrink-0 flex-col items-center gap-2 border-t border-[#eff1f8] px-[21px] pt-6 pb-4 md:hidden">
                 <button
                     type="button"
-                    onClick={onLogout}
+                    onClick={() => void onLogout()}
                     className="w-full cursor-pointer overflow-hidden rounded-lg border-0 bg-transparent p-0 shadow-none"
                 >
                   <img src={logoutButtonImg} alt="로그아웃" className="block h-auto w-full" width={348} height={37} />
@@ -289,6 +315,17 @@ export default function MyPagePanel({ onClose, onLogout }: MyPagePanelProps) {
                 >
                   회원 탈퇴
                 </button>
+
+                {withdrawMessage && (
+                    <p
+                        className={`text-[11px] ${
+                            withdrawMessageType === 'error' ? 'text-[#dc2626]' : 'text-[#059669]'
+                        }`}
+                    >
+                      {withdrawMessage}
+                    </p>
+                )}
+
               </div>
           )}
         </div>
@@ -296,7 +333,7 @@ export default function MyPagePanel({ onClose, onLogout }: MyPagePanelProps) {
         <WithdrawConfirmModal
             open={showWithdrawModal}
             onClose={() => setShowWithdrawModal(false)}
-            onConfirmWithdraw={onLogout}
+            onConfirmWithdraw={handleConfirmWithdraw}
         />
       </>
   );
