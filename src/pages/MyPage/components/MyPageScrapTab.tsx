@@ -21,15 +21,19 @@ import { CSS } from '@dnd-kit/utilities';
 import arrowIco from '@/assets/arrow.svg';
 import deleteIco from '@/assets/delete.svg';
 import dragHandleIco from '@/assets/button.svg';
-import { fetchMyScraps, removeScrap, type ScrapEventDto } from '@/features/scrap/api/scrapApi';
+import { fetchMyScraps, removeScrap, type ScrapEventDto } from '@/features/event/api/eventApi';
 import type { ScrapItem } from './myPage.types';
 import MyPageSearchPlaceholder from './MyPageSearchPlaceholder';
+import { useNavigate } from 'react-router';
+import { toChartStockEvent } from '@/shared/constants/routes';
 
 export interface MyPageScrapTabProps {
-  manageMode: boolean;
-  onManageStart: () => void;
-  onManageEnd: () => void;
+    manageMode: boolean;
+    onManageStart: () => void;
+    onManageEnd: () => void;
+    onSelectScrap?: () => void;
 }
+
 
 type ScrapRow = ScrapItem & { id: string; eventId: number };
 
@@ -164,6 +168,7 @@ export default function MyPageScrapTab({
                                          manageMode,
                                          onManageStart,
                                          onManageEnd,
+                                         onSelectScrap,
                                        }: MyPageScrapTabProps) {
   const [items, setItems] = useState<ScrapRow[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -190,9 +195,9 @@ export default function MyPageScrapTab({
           if (!mounted) return;
           setItems(rows.map(mapScrapRow));
         })
-        .catch(() => {
-          if (!mounted) return;
-          setErrorMessage('스크랩 목록을 불러오지 못했습니다.');
+        .catch((e: unknown) => {
+            if (!mounted) return;
+            setErrorMessage(e instanceof Error ? e.message : '스크랩 목록을 불러오지 못했습니다.');
         })
         .finally(() => {
           if (mounted) setLoading(false);
@@ -250,8 +255,9 @@ export default function MyPageScrapTab({
   };
 
   const activeRow = activeId ? items.find((r) => r.id === activeId) : null;
+  const navigate = useNavigate();
 
-  return (
+    return (
       <div className="px-[21px] py-4">
         <MyPageSearchPlaceholder
             placeholder="종목명, 이벤트 검색"
@@ -325,6 +331,13 @@ export default function MyPageScrapTab({
                             <button
                                 key={s.id}
                                 type="button"
+                                onClick={() => {
+                                    onSelectScrap?.(); // 패널 먼저 닫기
+                                    navigate({
+                                        pathname: toChartStockEvent(s.code),
+                                        search: `?eventId=${s.eventId}`,
+                                    });
+                                }}
                                 className="flex h-auto w-full shrink-0 cursor-pointer items-center justify-between border-b border-[#eff1f8] bg-white px-[21px] py-3 text-left transition-colors hover:bg-[#f4f5f7]"
                             >
                               <div className="flex min-w-0 flex-1 items-center gap-2.5">

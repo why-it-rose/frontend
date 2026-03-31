@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { StockEvent } from '../types/event.types';
-import { fetchEventDetail } from '../api/eventApi';
-import { addScrap, removeScrap, type ScrapApiError } from '@/features/scrap/api/scrapApi';
+import { addScrap, fetchEventDetail, fetchMyScraps, removeScrap, type ScrapApiError } from '../api/eventApi';
 
 const DEFAULT_ERROR_MESSAGE = 'Something went wrong.';
 
@@ -15,13 +14,22 @@ export function useEventDetail(eventId: number | null) {
   useEffect(() => {
     if (eventId === null) {
       setEvent(null);
+      setScrapError(null);
       return;
     }
 
     setLoading(true);
     setError(null);
-    fetchEventDetail(eventId)
-        .then(setEvent)
+    setScrapError(null);
+
+    Promise.all([
+      fetchEventDetail(eventId),
+      fetchMyScraps().catch(() => []), // 목록 실패해도 상세는 보여주기
+    ])
+        .then(([detail, scraps]) => {
+          const isScrapped = scraps.some((s) => s.eventId === eventId);
+          setEvent({ ...detail, isScrapped });
+        })
         .catch((e: unknown) => {
           setError(e instanceof Error ? e.message : DEFAULT_ERROR_MESSAGE);
         })
