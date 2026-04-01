@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router';
 import logoutButtonImg from '@/assets/logoutButton.svg';
@@ -8,6 +9,7 @@ import {
   updateMyPushEnabled,
 } from '@/features/auth/api/authApi';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { clearAuthTransitionQueries } from '@/features/auth/query/authQuerySync';
 import { useMyStats } from '@/features/prediction/hooks/useMyStats';
 import type { MyPageTabKey } from './myPage.types';
 import MyPageAlarmTab from './MyPageAlarmTab';
@@ -39,6 +41,7 @@ export default function MyPagePanel({
                                       withdrawMessageType = '',
                                     }: MyPagePanelProps) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user, nickname, refreshAuth, clearAuth } = useAuth();
 
   const [activeTab, setActiveTab] = useState<MyPageTabKey>('scrap');
@@ -124,6 +127,7 @@ export default function MyPagePanel({
         setNicknameMessage('로그인이 필요합니다.');
         setNicknameMessageType('error');
         clearAuth();
+        await clearAuthTransitionQueries(queryClient);
         onClose();
         navigate('/login');
         return;
@@ -166,6 +170,7 @@ export default function MyPagePanel({
         setNotificationMessage('로그인이 필요합니다.');
         setNotificationMessageType('error');
         clearAuth();
+        await clearAuthTransitionQueries(queryClient);
         onClose();
         navigate('/login');
         return;

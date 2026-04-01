@@ -1,6 +1,11 @@
 import { useState, useRef, type RefObject } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "@/features/auth/context/AuthContext";
+import {
+  clearAuthTransitionQueries,
+  invalidateAuthTransitionQueries,
+} from "@/features/auth/query/authQuerySync";
 import { ROUTES } from "@/shared/constants/routes";
 import logoSrc from "@/assets/logo.svg";
 import bellSrc from "@/assets/bell.svg";
@@ -30,6 +35,7 @@ export default function Header({
   disableMyPagePanel = false,
 }: HeaderProps) {
   const { isLoggedIn, nickname, refreshAuth, clearAuth } = useAuth();
+  const queryClient = useQueryClient();
   const profileInitial = Array.from(nickname.trim())[0] ?? "유";
   const navigate = useNavigate();
   const [modal, setModal] = useState<"login" | "signup" | null>(null);
@@ -217,6 +223,7 @@ export default function Header({
           onSignup={() => setModal("signup")}
           onLoginSuccess={async () => {
             await refreshAuth();
+            await invalidateAuthTransitionQueries(queryClient);
             setModal(null);
           }}
         />
@@ -244,6 +251,7 @@ export default function Header({
               await logoutFromServer();
             } finally {
               clearAuth();
+              await clearAuthTransitionQueries(queryClient);
               setMyPageOpen(false);
               navigate(ROUTES.HOME);
             }
@@ -252,6 +260,7 @@ export default function Header({
             try {
               await deleteMyAccount();
               clearAuth();
+              await clearAuthTransitionQueries(queryClient);
               setMyPageOpen(false);
               navigate("/login");
             } catch (error: unknown) {
@@ -261,6 +270,7 @@ export default function Header({
                 setWithdrawMessage("로그인이 필요합니다.");
                 setWithdrawMessageType("error");
                 clearAuth();
+                await clearAuthTransitionQueries(queryClient);
                 setMyPageOpen(false);
                 navigate("/login");
                 return;

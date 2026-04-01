@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams, useSearchParams } from "react-router";
 import LoginModal from "@/features/auth/components/LoginModal";
 import { useAuth } from "@/features/auth/context/AuthContext";
+import { invalidateAuthTransitionQueries } from "@/features/auth/query/authQuerySync";
 import { fetchStockSearch } from "@/features/stock/api";
 import { useInterestStocksQuery } from "@/features/stock/hooks/useInterestStocks";
+import { buildAuthQueryScope } from "@/shared/queryKeys";
 import { ROUTES } from "@/shared/constants/routes";
 import type { OhlcBar, PeriodTab, StockDetailMainProps } from "../types";
 import {
@@ -69,7 +72,8 @@ export function StockDetailMain({
   mobileMode = "stock-detail",
 }: StockDetailMainAllProps) {
   const navigate = useNavigate();
-  const { refreshAuth, isLoggedIn } = useAuth();
+  const queryClient = useQueryClient();
+  const { refreshAuth, isLoggedIn, user } = useAuth();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const { stockCode: stockCodeParam } = useParams<{ stockCode?: string }>();
   const [searchParams] = useSearchParams();
@@ -111,6 +115,7 @@ export function StockDetailMain({
   const displayCode = stockCodeParam ?? code ?? "";
   const routeHasTicker = Boolean(stockCodeParam);
   const holdEmptyChart = Boolean(stockCodeParam && !stockId && !searchSettled);
+  const authScope = buildAuthQueryScope(isLoggedIn, user?.userId);
 
   const isInterested = useMemo(
     () =>
@@ -190,7 +195,8 @@ export function StockDetailMain({
   const { bars: fetchedBars } = useOhlcDataWithEvents(
     chartStockId,
     activePeriod,
-    holdEmptyChart
+    holdEmptyChart,
+    authScope,
   );
   const stock = stockProp ?? fetchedHeader;
   const bars = fetchedBars ?? barsProp ?? [];
@@ -442,6 +448,7 @@ export function StockDetailMain({
         }}
         onLoginSuccess={async () => {
           await refreshAuth();
+          await invalidateAuthTransitionQueries(queryClient);
           setLoginModalOpen(false);
         }}
       />

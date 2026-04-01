@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { invalidateAuthTransitionQueries } from '@/features/auth/query/authQuerySync';
 import { fetchStockSearch } from '@/features/stock/api';
 import LoginModal from '@/features/auth/components/LoginModal';
 import TodayLearningSidebar from '@/features/news/components/TodayLearningSidebar';
@@ -8,6 +10,7 @@ import TodayLearningSidebar from '@/features/news/components/TodayLearningSideba
 export default function TodayLearningPage() {
   const { stockCode } = useParams<{ stockCode: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { isLoggedIn, refreshAuth } = useAuth();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
 
@@ -50,6 +53,7 @@ export default function TodayLearningPage() {
           }}
           onLoginSuccess={async () => {
             await refreshAuth();
+            await invalidateAuthTransitionQueries(queryClient);
             setLoginModalOpen(false);
           }}
         />
