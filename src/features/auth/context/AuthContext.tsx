@@ -33,10 +33,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(me);
       setIsLoggedIn(true);
 
-      // FCM 유지
-      requestFcmToken().then((token) => {
-        if (token) saveFcmToken(token).catch(() => {});
-      });
+      if (me.pushEnabled) {
+        requestFcmToken().then((token) => {
+          if (token) saveFcmToken(token).catch(() => {});
+        });
+      }
     } catch {
       setUser(null);
       setIsLoggedIn(false);
@@ -44,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsAuthLoading(false);
     }
   }, []);
+
 // clearAuth는 로컬 상태만 초기화한다. 서버 로그아웃 API 호출은 호출부(Header/MobileLayout)에서 수행한다.
   const clearAuth = useCallback(() => {
     setUser(null);

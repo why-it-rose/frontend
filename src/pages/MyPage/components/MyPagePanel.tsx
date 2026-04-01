@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router';
 import logoutButtonImg from '@/assets/logoutButton.svg';
-import { getApiResponseCode, updateMyNickname } from '@/features/auth/api/authApi';
+import {
+  getApiResponseCode,
+  updateMyNickname,
+  updateMyPushEnabled,
+} from '@/features/auth/api/authApi';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { useMyStats } from '@/features/prediction/hooks/useMyStats';
 import type { MyPageTabKey } from './myPage.types';
@@ -27,21 +31,36 @@ const TABS: { key: MyPageTabKey; label: string }[] = [
   { key: 'settings', label: '설정' },
 ];
 
-export default function MyPagePanel({ onClose, onLogout, onWithdraw, withdrawMessage = '', withdrawMessageType = '', }: MyPagePanelProps) {
+export default function MyPagePanel({
+                                      onClose,
+                                      onLogout,
+                                      onWithdraw,
+                                      withdrawMessage = '',
+                                      withdrawMessageType = '',
+                                    }: MyPagePanelProps) {
   const navigate = useNavigate();
   const { user, nickname, refreshAuth, clearAuth } = useAuth();
 
   const [activeTab, setActiveTab] = useState<MyPageTabKey>('scrap');
   const [scrapManageMode, setScrapManageMode] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(
+      user?.pushEnabled ?? true,
+  );
+  const [isUpdatingNotifications, setIsUpdatingNotifications] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState('');
+  const [notificationMessageType, setNotificationMessageType] = useState<
+      'success' | 'error' | ''
+  >('');
 
   const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [nicknameDraft, setNicknameDraft] = useState('');
   const [isSavingNickname, setIsSavingNickname] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [nicknameMessage, setNicknameMessage] = useState('');
-  const [nicknameMessageType, setNicknameMessageType] = useState<'success' | 'error' | ''>('');
+  const [nicknameMessageType, setNicknameMessageType] = useState<
+      'success' | 'error' | ''
+  >('');
 
   const { data: stats } = useMyStats();
 
@@ -52,6 +71,12 @@ export default function MyPagePanel({ onClose, onLogout, onWithdraw, withdrawMes
   useEffect(() => {
     setNicknameDraft(displayNickname);
   }, [displayNickname]);
+
+  useEffect(() => {
+    if (typeof user?.pushEnabled === 'boolean') {
+      setNotificationsEnabled(user.pushEnabled);
+    }
+  }, [user?.pushEnabled]);
 
   const handleNicknameSave = async () => {
     const trimmedNickname = nicknameDraft.trim();
@@ -116,6 +141,41 @@ export default function MyPagePanel({ onClose, onLogout, onWithdraw, withdrawMes
     setIsEditingNickname(false);
     setNicknameMessage('');
     setNicknameMessageType('');
+  };
+
+  const handleNotificationsChange = async (enabled: boolean) => {
+    if (isUpdatingNotifications) return;
+
+    const prev = notificationsEnabled;
+    setNotificationsEnabled(enabled);
+    setIsUpdatingNotifications(true);
+    setNotificationMessage('');
+    setNotificationMessageType('');
+
+    try {
+      await updateMyPushEnabled(enabled);
+      await refreshAuth();
+
+      setNotificationMessage(enabled ? '알림을 켰습니다.' : '알림을 껐습니다.');
+      setNotificationMessageType('success');
+    } catch (error: unknown) {
+      setNotificationsEnabled(prev);
+
+      const responseCode = getApiResponseCode(error);
+      if (responseCode === 2952) {
+        setNotificationMessage('로그인이 필요합니다.');
+        setNotificationMessageType('error');
+        clearAuth();
+        onClose();
+        navigate('/login');
+        return;
+      }
+
+      setNotificationMessage('알림 설정 변경 중 오류가 발생했습니다.');
+      setNotificationMessageType('error');
+    } finally {
+      setIsUpdatingNotifications(false);
+    }
   };
 
   const handleConfirmWithdraw = async () => {
@@ -216,17 +276,14 @@ export default function MyPagePanel({ onClose, onLogout, onWithdraw, withdrawMes
               {([
                 [
                   stats?.predictionAccuracy !== null && stats?.predictionAccuracy !== undefined
-                    ? `${stats.predictionAccuracy.toFixed(1)}%`
-                    : '-',
+                      ? `${stats.predictionAccuracy.toFixed(1)}%`
+                      : '-',
                   '예측 정답률',
                 ],
                 [stats?.totalPredictions?.toString() ?? '-', '총 예측'],
                 [stats?.totalScraps?.toString() ?? '-', '스크랩'],
               ] as [string, string][]).map(([val, label], i) => (
-                  <div
-                      key={label}
-                      className={`py-3 text-center ${i < 2 ? 'border-r border-[#e5e7eb]' : ''}`}
-                  >
+                  <div key={label} className={`py-3 text-center ${i < 2 ? 'border-r border-[#e5e7eb]' : ''}`}>
                     <div className="text-lg font-bold text-primary">{val}</div>
                     <div className="mt-0.5 text-[11px] text-[#9ca3af]">{label}</div>
                   </div>
@@ -255,7 +312,11 @@ export default function MyPagePanel({ onClose, onLogout, onWithdraw, withdrawMes
           </div>
 
           <div
-              className={`${activeTab === 'scrap' || activeTab === 'review' || activeTab === 'alarm' ? 'scrollbar-faint' : 'scrollbar-subtle'} ${
+              className={`${
+                  activeTab === 'scrap' || activeTab === 'review' || activeTab === 'alarm'
+                      ? 'scrollbar-faint'
+                      : 'scrollbar-subtle'
+              } ${
                   activeTab === 'scrap' || activeTab === 'review' || activeTab === 'alarm'
                       ? 'scrollbar-overlay-right'
                       : ''
@@ -272,10 +333,22 @@ export default function MyPagePanel({ onClose, onLogout, onWithdraw, withdrawMes
             {activeTab === 'review' && <MyPageReviewTab />}
             {activeTab === 'alarm' && <MyPageAlarmTab />}
             {activeTab === 'settings' && (
-                <MyPageSettingsTab
-                    notificationsEnabled={notificationsEnabled}
-                    onNotificationsChange={setNotificationsEnabled}
-                />
+                <div className="flex flex-1 flex-col">
+                  <MyPageSettingsTab
+                      notificationsEnabled={notificationsEnabled}
+                      onNotificationsChange={handleNotificationsChange}
+                      disabled={isUpdatingNotifications}
+                  />
+                  {notificationMessage && (
+                      <p
+                          className={`px-[21px] pb-3 text-[11px] ${
+                              notificationMessageType === 'error' ? 'text-[#dc2626]' : 'text-[#059669]'
+                          }`}
+                      >
+                        {notificationMessage}
+                      </p>
+                  )}
+                </div>
             )}
           </div>
 
@@ -297,17 +370,13 @@ export default function MyPagePanel({ onClose, onLogout, onWithdraw, withdrawMes
                 </button>
 
                 {withdrawMessage && (
-                    <p
-                        className={`text-[11px] ${
-                            withdrawMessageType === 'error' ? 'text-[#dc2626]' : 'text-[#059669]'
-                        }`}
-                    >
+                    <p className={`text-[11px] ${withdrawMessageType === 'error' ? 'text-[#dc2626]' : 'text-[#059669]'}`}>
                       {withdrawMessage}
                     </p>
                 )}
-
               </div>
           )}
+
           {activeTab === 'settings' && (
               <div className="flex shrink-0 flex-col items-center gap-2 border-t border-[#eff1f8] px-[21px] pt-6 pb-4 md:hidden">
                 <button
@@ -326,15 +395,10 @@ export default function MyPagePanel({ onClose, onLogout, onWithdraw, withdrawMes
                 </button>
 
                 {withdrawMessage && (
-                    <p
-                        className={`text-[11px] ${
-                            withdrawMessageType === 'error' ? 'text-[#dc2626]' : 'text-[#059669]'
-                        }`}
-                    >
+                    <p className={`text-[11px] ${withdrawMessageType === 'error' ? 'text-[#dc2626]' : 'text-[#059669]'}`}>
                       {withdrawMessage}
                     </p>
                 )}
-
               </div>
           )}
         </div>
