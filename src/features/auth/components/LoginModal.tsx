@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { loginWithEmail } from '@/features/auth/api/authApi';
 import loginLogo from '@/assets/logo.svg';
-import googleIcon from '@/assets/google.svg';
-import kakaoIcon from '@/assets/kakao.svg';
 
 type LoginModalProps = {
     onClose: () => void;
@@ -41,7 +39,11 @@ export default function LoginModal({ onClose, onSignup, onLoginSuccess }: LoginM
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ width: 390, height: 621 }}>
+            <div
+                className="modal-box"
+                onClick={(e) => e.stopPropagation()}
+                style={{ width: 390, maxHeight: '90vh', overflowY: 'auto' }}
+            >
                 <button
                     type="button"
                     onClick={onClose}
@@ -135,52 +137,13 @@ export default function LoginModal({ onClose, onSignup, onLoginSuccess }: LoginM
                 <button
                     type="button"
                     className="btn-primary"
-                    style={{ marginTop: 12, marginBottom: 20, width: 'calc(100% - 12px)', marginLeft: 8 }}
+                    style={{ marginTop: 12, marginBottom: 14, width: 'calc(100% - 12px)', marginLeft: 8 }}
                     onClick={handleLogin}
                     disabled={isSubmitting}
                 >
                     {isSubmitting ? '로그인 중...' : '로그인'}
                 </button>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-                    <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
-                    <span style={{ fontFamily: 'Noto Sans KR', fontSize: 12, color: '#9ca3af' }}>또는 소셜 로그인</span>
-                    <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
-                    <button
-                        type="button"
-                        className="btn-social"
-                        disabled
-                        aria-disabled="true"
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: 8,
-                            width: 'calc(100% - 12px)',
-                            marginLeft: 8,
-                        }}
-                    >
-                        <img src={googleIcon} alt="" aria-hidden style={{ width: 18, height: 18 }} />
-                        <span>Google로 로그인</span>
-                    </button>
-                    <button
-                        type="button"
-                        className="btn-social"
-                        disabled
-                        aria-disabled="true"
-                        style={{ width: 'calc(100% - 12px)', marginLeft: 8 }}
-                    >
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 12, color: '#3A1D1D' }}>
-                            <img src={kakaoIcon} alt="" aria-hidden style={{ width: 18, height: 18 }} />
-                            <span>카카오로 로그인</span>
-                        </span>
-                    </button>
-                </div>
-
-                <div style={{ textAlign: 'center', marginTop: -10 }}>
+                <div style={{ textAlign: 'center', marginTop: 0 }}>
                     <span style={{ fontFamily: 'Noto Sans KR', fontSize: 13, color: '#6b7280', marginRight: 6 }}>계정이 없으신가요?</span>
                     <button
                         type="button"
