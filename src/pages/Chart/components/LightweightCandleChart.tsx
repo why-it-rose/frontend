@@ -291,10 +291,10 @@ export function LightweightCandleChart({
     });
 
     candleSeries.priceScale().applyOptions({
-      scaleMargins: { top: 0.08, bottom: 0.22 },
+      scaleMargins: { top: 0.08, bottom: 0.32 },
     });
     volSeries.priceScale().applyOptions({
-      scaleMargins: { top: 0.82, bottom: 0 },
+      scaleMargins: { top: 0.87, bottom: 0 },
     });
 
     candleSeries.setData(
@@ -621,7 +621,7 @@ export function LightweightCandleChart({
 
     function renderLearningPin() {
       learningPinEl.innerHTML = "";
-      if (!learningPin) return;
+      if (!learningPin || activePeriodRef.current !== "일") return;
 
       const targetDate = parseBarDate(learningPin.digestDate);
       let targetBar = clean[clean.length - 1];
@@ -661,6 +661,14 @@ export function LightweightCandleChart({
 
       const stem = makeStem(false);
       stem.style.background = "#EAB308";
+      // 이벤트 핀과 같은 날짜면 스템을 늘려 이벤트 핀 위로 쌓기
+      const hasEventPin = eventBars.some(
+        (b) => barToTimeKey(b) === barToTimeKey(targetBar),
+      );
+      if (hasEventPin) {
+        const eventPinH = activePeriodRef.current === "일" ? 80 : 50;
+        stem.style.height = `${14 + eventPinH + 8}px`;
+      }
 
       const head = (() => {
         const outer = document.createElement("div");
@@ -706,8 +714,8 @@ export function LightweightCandleChart({
         return outer;
       })();
 
-      wrapper.appendChild(stem);
       wrapper.appendChild(head);
+      wrapper.appendChild(stem);
       learningPinEl.appendChild(wrapper);
     }
 
