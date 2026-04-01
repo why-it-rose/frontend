@@ -35,14 +35,13 @@ function normalizeTicker(t: string): string {
   return t.replace(/\D/g, "").padStart(6, "0").slice(-6);
 }
 
-
 /** 기간별로 한 화면에 보일 최대 봉 수(많을수록 조금 더 축소된 느낌) — 봉이 적으면 전체 표시 */
 const PERIOD_ORDER = ["년", "월", "주", "일"] as const;
 
 function visibleBarsForPeriod(tab: PeriodTab): number {
   switch (tab) {
     case "일":
-      return 120;
+      return 100;
     case "주":
       return 88;
     case "월":
@@ -83,9 +82,13 @@ export function StockDetailMain({
   }, [searchParams]);
   const { data: interestItems = [] } = useInterestStocksQuery();
 
-  const [resolvedTickerStockId, setResolvedTickerStockId] = useState<number | undefined>(undefined);
+  const [resolvedTickerStockId, setResolvedTickerStockId] = useState<
+    number | undefined
+  >(undefined);
   // 검색이 완료된 코드 — stockCodeParam과 다르면 아직 검색 중
-  const [searchedCode, setSearchedCode] = useState<string | undefined>(undefined);
+  const [searchedCode, setSearchedCode] = useState<string | undefined>(
+    undefined,
+  );
 
   useEffect(() => {
     if (stockId != null || !stockCodeParam) return;
@@ -105,13 +108,17 @@ export function StockDetailMain({
           setSearchedCode(stockCodeParam);
         }
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [stockId, stockCodeParam]);
 
   // 검색 완료 여부: stockId 직접 제공 / stockCodeParam 없음 / 현재 코드 검색 완료
-  const searchSettled = stockId != null || !stockCodeParam || searchedCode === stockCodeParam;
+  const searchSettled =
+    stockId != null || !stockCodeParam || searchedCode === stockCodeParam;
   // stockCodeParam 없으면 stale resolvedTickerStockId 무시
-  const chartStockId = stockId ?? (stockCodeParam ? resolvedTickerStockId : undefined);
+  const chartStockId =
+    stockId ?? (stockCodeParam ? resolvedTickerStockId : undefined);
   const displayCode = stockCodeParam ?? code ?? "";
   const routeHasTicker = Boolean(stockCodeParam);
   const holdEmptyChart = Boolean(stockCodeParam && !stockId && !searchSettled);
@@ -122,7 +129,7 @@ export function StockDetailMain({
       chartStockId != null &&
       chartStockId > 0 &&
       interestItems.some((i) => i.stockId === chartStockId),
-    [chartStockId, interestItems]
+    [chartStockId, interestItems],
   );
 
   const { activePeriod, setActivePeriod } = useChartPeriod("일");
@@ -133,64 +140,94 @@ export function StockDetailMain({
       ? "이벤트"
       : mobileMode === "news"
         ? "오늘의 뉴스"
-        : "차트"
+        : "차트",
   );
   const { data: learningPinData } = useLearningPin(chartStockId);
 
-  const { event: mobileEvent, scrapping: mobileEventScrapping, toggleScrap } = useEventDetail(
-    mobileMode === "event" ? mobileEventId : null
-  );
-  const { memos, save: saveMemo, update: updateMemo, remove: removeMemo } = useMemos(
-    mobileMode === "event" ? mobileEventId : null
-  );
+  const {
+    event: mobileEvent,
+    scrapping: mobileEventScrapping,
+    toggleScrap,
+  } = useEventDetail(mobileMode === "event" ? mobileEventId : null);
+  const {
+    memos,
+    save: saveMemo,
+    update: updateMemo,
+    remove: removeMemo,
+  } = useMemos(mobileMode === "event" ? mobileEventId : null);
 
   const [selectedEventId, setSelectedEventId] = useState<number | null>(
-    mobileMode === "event" && mobileEventId ? mobileEventId : null
+    mobileMode === "event" && mobileEventId ? mobileEventId : null,
   );
-  const [eventPanelTab, setEventPanelTab] = useState<"이벤트" | "메모">("이벤트");
-  const { event: selectedEvent, scrapping: selectedScrapping, toggleScrap: toggleSelectedScrap } = useEventDetail(selectedEventId);
-  const { memos: selectedMemos, save: saveSelected, update: updateSelected, remove: removeSelected } = useMemos(selectedEventId);
+  const [eventPanelTab, setEventPanelTab] = useState<"이벤트" | "메모">(
+    "이벤트",
+  );
+  const {
+    event: selectedEvent,
+    scrapping: selectedScrapping,
+    toggleScrap: toggleSelectedScrap,
+  } = useEventDetail(selectedEventId);
+  const {
+    memos: selectedMemos,
+    save: saveSelected,
+    update: updateSelected,
+    remove: removeSelected,
+  } = useMemos(selectedEventId);
 
   const [focusDate, setFocusDate] = useState<string | undefined>(undefined);
-  const[chartAnimClass, setChartAnimClass] = useState<"chart-drill-in" | "chart-drill-out" | "">("");
+  const [chartAnimClass, setChartAnimClass] = useState<
+    "chart-drill-in" | "chart-drill-out" | ""
+  >("");
   const [chartKey, setChartKey] = useState(0);
 
-  const changePeriod = useCallback((next: typeof activePeriod, currentPeriod: typeof activePeriod) => {
-    const dir = PERIOD_ORDER.indexOf(next) > PERIOD_ORDER.indexOf(currentPeriod) ? "chart-drill-in" : "chart-drill-out";
-    setChartAnimClass(dir);
-    setChartKey((k) => k + 1);
-    setActivePeriod(next);
-  }, [setActivePeriod]);
+  const changePeriod = useCallback(
+    (next: typeof activePeriod, currentPeriod: typeof activePeriod) => {
+      const dir =
+        PERIOD_ORDER.indexOf(next) > PERIOD_ORDER.indexOf(currentPeriod)
+          ? "chart-drill-in"
+          : "chart-drill-out";
+      setChartAnimClass(dir);
+      setChartKey((k) => k + 1);
+      setActivePeriod(next);
+    },
+    [setActivePeriod],
+  );
 
-  const handlePeriodChange = useCallback((p: typeof activePeriod) => {
-    changePeriod(p, activePeriod);
-    setFocusDate(undefined);
-  }, [activePeriod, changePeriod]);
+  const handlePeriodChange = useCallback(
+    (p: typeof activePeriod) => {
+      changePeriod(p, activePeriod);
+      setFocusDate(undefined);
+    },
+    [activePeriod, changePeriod],
+  );
 
-  const handleEventClick = useCallback((eventId: number, date: string) => {
-    if (activePeriod === "년") {
-      changePeriod("월", activePeriod);
-      setFocusDate(date);
-    } else if (activePeriod === "월") {
-      changePeriod("주", activePeriod);
-      setFocusDate(date);
-    } else if (activePeriod === "주") {
-      changePeriod("일", activePeriod);
-      setFocusDate(date);
-    } else {
-      if (window.innerWidth < 768) {
-        setSelectedEventId(eventId);
-        setEventPanelTab("이벤트");
+  const handleEventClick = useCallback(
+    (eventId: number, date: string) => {
+      if (activePeriod === "년") {
+        changePeriod("월", activePeriod);
+        setFocusDate(date);
+      } else if (activePeriod === "월") {
+        changePeriod("주", activePeriod);
+        setFocusDate(date);
+      } else if (activePeriod === "주") {
+        changePeriod("일", activePeriod);
+        setFocusDate(date);
       } else {
-        const code = stockCodeParam ?? "";
-        navigate(`/chart/${code}/event?eventId=${eventId}`);
+        if (window.innerWidth < 768) {
+          setSelectedEventId(eventId);
+          setEventPanelTab("이벤트");
+        } else {
+          const code = stockCodeParam ?? "";
+          navigate(`/chart/${code}/event?eventId=${eventId}`);
+        }
       }
-    }
-  }, [activePeriod, navigate, stockCodeParam, changePeriod]);
+    },
+    [activePeriod, navigate, stockCodeParam, changePeriod],
+  );
   const { stock: fetchedHeader } = useChartStockHeader(
     chartStockId,
     displayCode,
-    routeHasTicker
+    routeHasTicker,
   );
   const { bars: fetchedBars } = useOhlcDataWithEvents(
     chartStockId,
@@ -233,211 +270,231 @@ export function StockDetailMain({
           ? (["차트", "기업 정보", "오늘의 학습"] as const)
           : (["차트", "기업 정보"] as const);
 
-
   return (
     <>
-    <div
-      className={`flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f4f6fb] ${className}`}
-    >
-      {/* 모바일 레이아웃 */}
-      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white md:hidden">
-        <div className="shrink-0 bg-white px-4 py-2.5">
-          <StockInfoBar
-            stock={stock}
-            stockId={chartStockId}
-            isInterested={isInterested}
-            onBack={() => navigate(ROUTES.HOME)}
-            onAddWatchlist={() => {}}
-            onRequireLogin={() => setLoginModalOpen(true)}
-          />
-        </div>
-
-        <div className={`grid shrink-0 border-b border-[#eff1f8] ${mobileTabs.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
-          {mobileTabs.map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              className={`border-b-2 py-2.5 text-sm font-medium ${
-                mobileTab === tab
-                  ? "border-[#014d9d] text-[#014d9d]"
-                  : "border-transparent text-[#9ca3af]"
-              }`}
-              onClick={() => setMobileTab(tab)}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-
-        {mobileTab === "차트" && (
-          <>
-            {learningPinData !== null && learningPinData !== undefined && (
-              <div className="scrollbar-hide flex flex-nowrap gap-2 overflow-x-auto border-b border-[#eef2f7] px-4 py-3">
-                <LearningPin
-                  data={learningPinData}
-                  onClick={() => setMobileTab("오늘의 학습")}
-                />
-              </div>
-            )}
-
-            <div className="shrink-0 bg-white px-4 py-2.5">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <PeriodTabs active={activePeriod} onChange={handlePeriodChange} />
-                {summary && <OhlcSummaryBar summary={summary} />}
-              </div>
-            </div>
-
-            <div key={chartKey} className={`min-h-0 flex-1 px-1 pt-2 ${chartAnimClass}`}>
-              <LightweightCandleChart
-                bars={bars}
-                visibleBars={chartVisibleBars}
-                onHoverBar={handleHoverBar}
-                onEventClick={handleEventClick}
-                learningPin={learningPinData}
-                onLearningPinClick={() => setMobileTab("오늘의 학습")}
-                focusDate={focusDate}
-                activePeriod={activePeriod}
-              />
-            </div>
-          </>
-        )}
-
-        {mobileTab === "오늘의 학습" && (
-          <div className="flex-1 min-h-0">
-            <TodayLearningSidebar
+      <div
+        className={`flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f4f6fb] ${className}`}
+      >
+        {/* 모바일 레이아웃 */}
+        <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white md:hidden">
+          <div className="shrink-0 bg-white px-4 py-2.5">
+            <StockInfoBar
+              stock={stock}
               stockId={chartStockId}
-              isOpen
-              onClose={() => setMobileTab("차트")}
-              isLoggedIn={isLoggedIn}
-              onLoginRequired={() => setLoginModalOpen(true)}
+              isInterested={isInterested}
+              onBack={() => navigate(ROUTES.HOME)}
+              onAddWatchlist={() => {}}
+              onRequireLogin={() => setLoginModalOpen(true)}
             />
           </div>
-        )}
 
-        {mobileTab === "기업 정보" && (
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            <StockDetailAside hideHeader />
-          </div>
-        )}
-
-        {mobileTab === "이벤트" && mobileEvent && (
-          <EventTab
-            event={mobileEvent}
-            scrapping={mobileEventScrapping}
-            onScrap={toggleScrap}
-          />
-        )}
-
-        {mobileTab === "메모" && (
-          <MemoTab
-            memos={memos}
-            eventInfo={mobileEvent ? {
-              eventType: mobileEvent.eventType,
-              stockName: mobileEvent.stockName,
-              changeRate: mobileEvent.changeRate,
-            } : undefined}
-            onSave={saveMemo}
-            onUpdate={updateMemo}
-            onDelete={removeMemo}
-          />
-        )}
-
-        {/* 이벤트 상세 오버레이 */}
-        {selectedEventId !== null && (
-          <div className="absolute inset-0 z-20 flex flex-col bg-white md:hidden">
-            <div className="flex shrink-0 items-center justify-between border-b border-[#eff1f8] px-1">
-              <div className="flex">
-                {(["이벤트", "메모"] as const).map((tab) => (
-                  <button
-                    key={tab}
-                    type="button"
-                    onClick={() => setEventPanelTab(tab)}
-                    className={`px-5 py-2.5 text-sm font-medium border-b-2 ${
-                      eventPanelTab === tab
-                        ? "border-primary text-primary"
-                        : "border-transparent text-[#9ca3af]"
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
+          <div
+            className={`grid shrink-0 border-b border-[#eff1f8] ${mobileTabs.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}
+          >
+            {mobileTabs.map((tab) => (
               <button
+                key={tab}
                 type="button"
-                onClick={() => {
-                  setSelectedEventId(null);
-                  if (mobileMode === "event") {
-                    navigate(`/chart/${stockCodeParam ?? ""}/stock-detail`);
-                  }
-                }}
-                className="mr-2 flex h-8 w-8 items-center justify-center rounded-full text-[#9ca3af] hover:bg-[#f3f4f6]"
-                aria-label="닫기"
+                className={`border-b-2 py-2.5 text-sm font-medium ${
+                  mobileTab === tab
+                    ? "border-[#014d9d] text-[#014d9d]"
+                    : "border-transparent text-[#9ca3af]"
+                }`}
+                onClick={() => setMobileTab(tab)}
               >
-                ✕
+                {tab}
               </button>
-            </div>
-            <div className="min-h-0 flex-1 overflow-hidden flex flex-col">
-              {eventPanelTab === "이벤트" && selectedEvent && (
-                <EventTab
-                  event={selectedEvent}
-                  scrapping={selectedScrapping}
-                  onScrap={toggleSelectedScrap}
-                />
-              )}
-              {eventPanelTab === "메모" && (
-                <MemoTab
-                  memos={selectedMemos}
-                  eventInfo={selectedEvent ? {
-                    eventType: selectedEvent.eventType,
-                    stockName: selectedEvent.stockName,
-                    changeRate: selectedEvent.changeRate,
-                  } : undefined}
-                  onSave={saveSelected}
-                  onUpdate={updateSelected}
-                  onDelete={removeSelected}
-                />
-              )}
-            </div>
+            ))}
           </div>
-        )}
-      </div>
 
-      {/* 데스크톱 레이아웃 */}
-      <div className="hidden min-h-0 flex-1 flex-col md:flex">
-        <div className="shrink-0 bg-white px-5 py-2.5">
-          <StockInfoBar
-            stock={stock}
-            stockId={chartStockId}
-            isInterested={isInterested}
-            onBack={() => navigate(ROUTES.HOME)}
-            onAddWatchlist={() => {}}
-            onRequireLogin={() => setLoginModalOpen(true)}
-          />
+          {mobileTab === "차트" && (
+            <>
+              {learningPinData !== null && learningPinData !== undefined && (
+                <div className="scrollbar-hide flex flex-nowrap gap-2 overflow-x-auto border-b border-[#eef2f7] px-4 py-3">
+                  <LearningPin
+                    data={learningPinData}
+                    onClick={() => setMobileTab("오늘의 학습")}
+                  />
+                </div>
+              )}
 
-          <div className="mt-2.5 flex flex-wrap items-center justify-between gap-3 border-t border-[#eff1f8] pt-2.5">
-            <PeriodTabs active={activePeriod} onChange={handlePeriodChange} />
-            {summary && <OhlcSummaryBar summary={summary} />}
-          </div>
+              <div className="shrink-0 bg-white px-4 py-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <PeriodTabs
+                    active={activePeriod}
+                    onChange={handlePeriodChange}
+                  />
+                  {summary && <OhlcSummaryBar summary={summary} />}
+                </div>
+              </div>
+
+              <div
+                key={chartKey}
+                className={`min-h-0 flex-1 px-1 pt-2 ${chartAnimClass}`}
+              >
+                <LightweightCandleChart
+                  bars={bars}
+                  visibleBars={chartVisibleBars}
+                  onHoverBar={handleHoverBar}
+                  onEventClick={handleEventClick}
+                  learningPin={learningPinData}
+                  onLearningPinClick={() => setMobileTab("오늘의 학습")}
+                  focusDate={focusDate}
+                  activePeriod={activePeriod}
+                />
+              </div>
+            </>
+          )}
+
+          {mobileTab === "오늘의 학습" && (
+            <div className="flex-1 min-h-0">
+              <TodayLearningSidebar
+                stockId={chartStockId}
+                isOpen
+                onClose={() => setMobileTab("차트")}
+                isLoggedIn={isLoggedIn}
+                onLoginRequired={() => setLoginModalOpen(true)}
+              />
+            </div>
+          )}
+
+          {mobileTab === "기업 정보" && (
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <StockDetailAside hideHeader />
+            </div>
+          )}
+
+          {mobileTab === "이벤트" && mobileEvent && (
+            <EventTab
+              event={mobileEvent}
+              scrapping={mobileEventScrapping}
+              onScrap={toggleScrap}
+            />
+          )}
+
+          {mobileTab === "메모" && (
+            <MemoTab
+              memos={memos}
+              eventInfo={
+                mobileEvent
+                  ? {
+                      eventType: mobileEvent.eventType,
+                      stockName: mobileEvent.stockName,
+                      changeRate: mobileEvent.changeRate,
+                    }
+                  : undefined
+              }
+              onSave={saveMemo}
+              onUpdate={updateMemo}
+              onDelete={removeMemo}
+            />
+          )}
+
+          {/* 이벤트 상세 오버레이 */}
+          {selectedEventId !== null && (
+            <div className="absolute inset-0 z-20 flex flex-col bg-white md:hidden">
+              <div className="flex shrink-0 items-center justify-between border-b border-[#eff1f8] px-1">
+                <div className="flex">
+                  {(["이벤트", "메모"] as const).map((tab) => (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => setEventPanelTab(tab)}
+                      className={`px-5 py-2.5 text-sm font-medium border-b-2 ${
+                        eventPanelTab === tab
+                          ? "border-primary text-primary"
+                          : "border-transparent text-[#9ca3af]"
+                      }`}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedEventId(null);
+                    if (mobileMode === "event") {
+                      navigate(`/chart/${stockCodeParam ?? ""}/stock-detail`);
+                    }
+                  }}
+                  className="mr-2 flex h-8 w-8 items-center justify-center rounded-full text-[#9ca3af] hover:bg-[#f3f4f6]"
+                  aria-label="닫기"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-hidden flex flex-col">
+                {eventPanelTab === "이벤트" && selectedEvent && (
+                  <EventTab
+                    event={selectedEvent}
+                    scrapping={selectedScrapping}
+                    onScrap={toggleSelectedScrap}
+                  />
+                )}
+                {eventPanelTab === "메모" && (
+                  <MemoTab
+                    memos={selectedMemos}
+                    eventInfo={
+                      selectedEvent
+                        ? {
+                            eventType: selectedEvent.eventType,
+                            stockName: selectedEvent.stockName,
+                            changeRate: selectedEvent.changeRate,
+                          }
+                        : undefined
+                    }
+                    onSave={saveSelected}
+                    onUpdate={updateSelected}
+                    onDelete={removeSelected}
+                  />
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
-        <main key={chartKey} className={`min-h-0 flex-1 overflow-hidden border-t border-[#eff1f8] bg-white ${chartAnimClass}`}>
-          <LightweightCandleChart
-            bars={bars}
-            visibleBars={chartVisibleBars}
-            onHoverBar={handleHoverBar}
-            onEventClick={handleEventClick}
-            learningPin={learningPinData}
-            onLearningPinClick={() => navigate(`/chart/${stockCodeParam ?? ""}/today-learning`)}
-            focusDate={focusDate}
-            activePeriod={activePeriod}
-          />
-        </main>
+        {/* 데스크톱 레이아웃 */}
+        <div className="hidden min-h-0 flex-1 flex-col md:flex">
+          <div className="shrink-0 bg-white px-5 py-2.5">
+            <StockInfoBar
+              stock={stock}
+              stockId={chartStockId}
+              isInterested={isInterested}
+              onBack={() => navigate(ROUTES.HOME)}
+              onAddWatchlist={() => {}}
+              onRequireLogin={() => setLoginModalOpen(true)}
+            />
 
-        <div className="shrink-0 border-t border-[#eff1f8] bg-[#f9fafc]">
-          <MarketIndexBar />
+            <div className="mt-2.5 flex flex-wrap items-center justify-between gap-3 border-t border-[#eff1f8] pt-2.5">
+              <PeriodTabs active={activePeriod} onChange={handlePeriodChange} />
+              {summary && <OhlcSummaryBar summary={summary} />}
+            </div>
+          </div>
+
+          <main
+            key={chartKey}
+            className={`min-h-0 flex-1 overflow-hidden border-t border-[#eff1f8] bg-white ${chartAnimClass}`}
+          >
+            <LightweightCandleChart
+              bars={bars}
+              visibleBars={chartVisibleBars}
+              onHoverBar={handleHoverBar}
+              onEventClick={handleEventClick}
+              learningPin={learningPinData}
+              onLearningPinClick={() =>
+                navigate(`/chart/${stockCodeParam ?? ""}/today-learning`)
+              }
+              focusDate={focusDate}
+              activePeriod={activePeriod}
+            />
+          </main>
+
+          <div className="shrink-0 border-t border-[#eff1f8] bg-[#f9fafc]">
+            <MarketIndexBar />
+          </div>
         </div>
       </div>
-    </div>
 
     {loginModalOpen && (
       <LoginModal
