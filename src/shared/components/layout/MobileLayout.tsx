@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { ROUTES } from '@/shared/constants/routes';
@@ -7,6 +8,7 @@ import MyPagePanel from '@/pages/MyPage/components/MyPagePanel';
 import Header from './Header';
 import BottomTabBar from './BottomTabBar';
 import { deleteMyAccount, getApiResponseCode, logoutFromServer } from '@/features/auth/api/authApi';
+import { clearAuthTransitionQueries } from '@/features/auth/query/authQuerySync';
 
 
 /** 홈 등 내부에서 높이·스크롤을 쓰려면 main은 스크롤 금지 + min-h-0 (padding 없음) */
@@ -16,6 +18,7 @@ export default function MobileLayout({
   content: ReactNode;
 }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { isLoggedIn, clearAuth } = useAuth();
   const [myPageOpen, setMyPageOpen] = useState(false);
   const [withdrawMessage, setWithdrawMessage] = useState('');
@@ -47,6 +50,7 @@ export default function MobileLayout({
                   await logoutFromServer();
                 } finally {
                   clearAuth();
+                  await clearAuthTransitionQueries(queryClient);
                   setMyPageOpen(false);
                   navigate(ROUTES.HOME);
                 }
@@ -55,6 +59,7 @@ export default function MobileLayout({
                 try {
                   await deleteMyAccount();
                   clearAuth();
+                  await clearAuthTransitionQueries(queryClient);
                   setMyPageOpen(false);
                   navigate('/login');
                 } catch (error: unknown) {
@@ -64,6 +69,7 @@ export default function MobileLayout({
                     setWithdrawMessage('로그인이 필요합니다.');
                     setWithdrawMessageType('error');
                     clearAuth();
+                    await clearAuthTransitionQueries(queryClient);
                     setMyPageOpen(false);
                     navigate('/login');
                     return;

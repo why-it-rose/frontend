@@ -164,7 +164,8 @@ function groupEventsByBar(
 export function useOhlcDataWithEvents(
   stockId: number | undefined,
   period: PeriodTab,
-  holdEmpty = false
+  holdEmpty = false,
+  authScope?: string,
 ) {
   const { bars: rawBars, loading, error, refetch } = useOhlcData(stockId, period, holdEmpty);
   const [mergedBars, setMergedBars] = useState<OhlcBar[]>([]);
@@ -194,7 +195,7 @@ export function useOhlcDataWithEvents(
         if (!cancelled) setMergedBars(rawBars);
       });
     return () => { cancelled = true; };
-  }, [rawBars, stockId, holdEmpty, period]);
+  }, [rawBars, stockId, holdEmpty, period, authScope]);
 
   return { bars: mergedBars, loading, error, refetch };
 }
