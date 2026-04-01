@@ -13,7 +13,7 @@ export interface InvestorTrend {
   amount: number;
 }
 
-/** 우측 기업 정보 패널 — LS·백엔드 매핑용 */
+/** 우측 기업 정보 패널 — 백엔드 company API 매핑용 */
 export interface CompanyInfo {
   name: string;
   code: string;

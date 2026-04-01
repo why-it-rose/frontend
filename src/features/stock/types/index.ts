@@ -14,6 +14,9 @@ export type {
   StockPriceCandleDto,
   StockPricesDataDto,
   StockSearchItemDto,
+  StockCompanyDto,
+  StockCompanyFinancialsDto,
+  StockCompanyInvestorTradingDto,
   StockDetailDto,
   StockSort,
 } from './stock.types';
