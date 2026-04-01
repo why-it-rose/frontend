@@ -37,7 +37,11 @@ export interface MyPageScrapTabProps {
 
 type ScrapRow = ScrapItem & { id: string; eventId: number };
 
-function ScrapAvatar({ initials, bg }: { initials: string; bg: string }) {
+function ScrapAvatar({ initials, bg, logoUrl }: { initials: string; bg: string; logoUrl?: string | null }) {
+    if (logoUrl) {
+        return <img src={logoUrl} alt="" className="h-7 w-7 shrink-0 rounded-[7px] object-cover" />;
+    }
+
     return (
         <div
             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[7px] text-[9px] font-black leading-[13.5px] text-white"
@@ -75,7 +79,7 @@ function ScrapSortableEditRow({
             {...listeners}
         >
             <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                <ScrapAvatar initials={row.ini} bg={row.color} />
+                <ScrapAvatar initials={row.ini} bg={row.color} logoUrl={row.logoUrl} />
                 <div className="min-w-0">
                     <div className="text-[12.5px] font-bold leading-[18.75px] text-[#111827]">{row.name}</div>
                     <div className="mypage-scrap-kr text-[10px] leading-[15px] text-[#9ca3af]">
@@ -116,7 +120,7 @@ function ScrapEditRowOverlay({ row }: { row: ScrapRow }) {
     return (
         <div className="mypage-scrap-kr box-border flex w-full min-w-[240px] cursor-grabbing items-center justify-between border-b border-[#eff1f8] bg-white px-[21px] py-3 shadow-sm">
             <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                <ScrapAvatar initials={row.ini} bg={row.color} />
+                <ScrapAvatar initials={row.ini} bg={row.color} logoUrl={row.logoUrl} />
                 <div className="min-w-0">
                     <div className="text-[12.5px] font-bold leading-[18.75px] text-[#111827]">{row.name}</div>
                     <div className="mypage-scrap-kr text-[10px] leading-[15px] text-[#9ca3af]">
@@ -158,6 +162,7 @@ function mapScrapRow(item: MyScrapSearchItemDto, index: number): ScrapRow {
         code: item.ticker ?? '-',
         color: '#014d9d',
         ini: initials,
+        logoUrl: item.logoUrl ?? null,
         date: formatDate(item.startDate),
         eventType: mapEventType(item.eventType),
         chg: `${sign}${change.toFixed(2)}%`,
@@ -317,7 +322,7 @@ export default function MyPageScrapTab({
                                             className="flex h-auto w-full shrink-0 cursor-pointer items-center justify-between border-b border-[#eff1f8] bg-white px-[21px] py-3 text-left transition-colors hover:bg-[#f4f5f7]"
                                         >
                                             <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                                                <ScrapAvatar initials={s.ini} bg={s.color} />
+                                                <ScrapAvatar initials={s.ini} bg={s.color} logoUrl={s.logoUrl} />
                                                 <div className="min-w-0">
                                                     <div className="text-[12.5px] font-bold leading-[18.75px] text-[#111827]">{s.name}</div>
                                                     <div className="mypage-scrap-kr text-[10px] leading-[15px] text-[#9ca3af]">

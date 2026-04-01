@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import {
+    fetchMyScraps,
     fetchMyScrapsSearch,
     type MyScrapSearchItemDto,
+    type ScrapEventDto,
 } from '@/features/scrap/api/scrapApi';
 
 type UseMyScrapSearchParams = {
@@ -25,6 +27,19 @@ function isRequestCanceled(error: unknown): boolean {
         return (error as { code?: string }).code === 'ERR_CANCELED';
     }
     return false;
+}
+
+function toSearchItem(item: ScrapEventDto): MyScrapSearchItemDto {
+    return {
+        eventId: item.eventId,
+        stockName: item.stockName,
+        ticker: item.ticker,
+        eventType: item.eventType,
+        startDate: item.startDate,
+        changePct: item.changePct,
+        logoUrl: item.logoUrl ?? null,
+        isScrapped: item.isScrapped ?? item.scrapped ?? true,
+    };
 }
 
 export function useMyScrapSearch({
@@ -60,8 +75,34 @@ export function useMyScrapSearch({
         setLoading(true);
         setError('');
 
+        const keyword = debouncedQuery.trim();
+
+        if (!keyword) {
+            fetchMyScraps()
+                .then((list) => {
+                    if (reqSeq !== requestSeqRef.current) return;
+                    const normalized = list.map(toSearchItem);
+                    setItems(normalized);
+                    setPageInfo({
+                        page: 0,
+                        size,
+                        totalElements: normalized.length,
+                        totalPages: Math.max(1, Math.ceil(normalized.length / size)),
+                    });
+                })
+                .catch((e: unknown) => {
+                    if (reqSeq !== requestSeqRef.current) return;
+                    setError(e instanceof Error ? e.message : '스크랩 목록을 불러오지 못했습니다.');
+                })
+                .finally(() => {
+                    if (reqSeq === requestSeqRef.current) setLoading(false);
+                });
+
+            return () => controller.abort();
+        }
+
         fetchMyScrapsSearch({
-            q: debouncedQuery,
+            q: keyword,
             page,
             size,
             sort,

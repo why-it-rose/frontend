@@ -4,6 +4,7 @@ export type ScrapItem = {
   name: string;
   code: string;
   color: string;
+  logoUrl?: string | null;
   ini: string;
   date: string;
   eventType: string;
