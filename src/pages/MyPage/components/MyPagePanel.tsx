@@ -157,7 +157,7 @@ export default function MyPagePanel({
       await refreshAuth();
 
       setNotificationMessage(enabled ? '알림을 켰습니다.' : '알림을 껐습니다.');
-      setNotificationMessageType('success');
+      setNotificationMessageType(enabled ? 'success' : 'error');
     } catch (error: unknown) {
       setNotificationsEnabled(prev);
 
