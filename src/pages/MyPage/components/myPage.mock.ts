@@ -7,7 +7,6 @@ export const MY_PAGE_SCRAPS: ScrapItem[] = [
     color: '#1428a0',
     ini: '삼',
     date: '2026.02.26',
-    eventType: '기업·실적',
     chg: '+19.47%',
   },
   {
@@ -16,7 +15,6 @@ export const MY_PAGE_SCRAPS: ScrapItem[] = [
     color: '#1428a0',
     ini: '삼',
     date: '2026.01.22',
-    eventType: '시장 수요',
     chg: '+7.4%',
   },
   {
@@ -25,7 +23,6 @@ export const MY_PAGE_SCRAPS: ScrapItem[] = [
     color: '#EA1917',
     ini: 'SK',
     date: '2026.04.19',
-    eventType: '기업·실적',
     chg: '-5.9%',
   },
   {
@@ -34,7 +31,6 @@ export const MY_PAGE_SCRAPS: ScrapItem[] = [
     color: '#002c5f',
     ini: 'H',
     date: '2026.04.19',
-    eventType: '기업·실적',
     chg: '-5.9%',
   },
 ];

@@ -82,9 +82,7 @@ function ScrapSortableEditRow({
                 <ScrapAvatar initials={row.ini} bg={row.color} logoUrl={row.logoUrl} />
                 <div className="min-w-0">
                     <div className="text-[12.5px] font-bold leading-[18.75px] text-[#111827]">{row.name}</div>
-                    <div className="mypage-scrap-kr text-[10px] leading-[15px] text-[#9ca3af]">
-                        {row.date} · {row.eventType}
-                    </div>
+                    <div className="mypage-scrap-kr text-[10px] leading-[15px] text-[#9ca3af]">{row.date}</div>
                 </div>
             </div>
             <div className="flex shrink-0 cursor-grab items-center gap-2.5 pl-2 active:cursor-grabbing">
@@ -123,9 +121,7 @@ function ScrapEditRowOverlay({ row }: { row: ScrapRow }) {
                 <ScrapAvatar initials={row.ini} bg={row.color} logoUrl={row.logoUrl} />
                 <div className="min-w-0">
                     <div className="text-[12.5px] font-bold leading-[18.75px] text-[#111827]">{row.name}</div>
-                    <div className="mypage-scrap-kr text-[10px] leading-[15px] text-[#9ca3af]">
-                        {row.date} · {row.eventType}
-                    </div>
+                    <div className="mypage-scrap-kr text-[10px] leading-[15px] text-[#9ca3af]">{row.date}</div>
                 </div>
             </div>
             <div className="flex shrink-0 items-center gap-2.5 pl-2 opacity-60">
@@ -144,12 +140,6 @@ function formatDate(value: string): string {
     return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function mapEventType(eventType: string): string {
-    if (eventType === 'DROP') return '급락';
-    if (eventType === 'SURGE') return '급등';
-    return eventType;
-}
-
 function mapScrapRow(item: MyScrapSearchItemDto, index: number): ScrapRow {
     const change = Number(item.changePct ?? 0);
     const sign = change >= 0 ? '+' : '';
@@ -164,7 +154,6 @@ function mapScrapRow(item: MyScrapSearchItemDto, index: number): ScrapRow {
         ini: initials,
         logoUrl: item.logoUrl ?? null,
         date: formatDate(item.startDate),
-        eventType: mapEventType(item.eventType),
         chg: `${sign}${change.toFixed(2)}%`,
     };
 }
@@ -242,7 +231,7 @@ export default function MyPageScrapTab({
 
     return (
         <div className="px-[21px] py-4">
-            <MyPageSearchPlaceholder placeholder="종목명, 이벤트 검색" value={searchQuery} onChange={setSearchQuery} />
+            <MyPageSearchPlaceholder placeholder="종목명, 종목코드 검색" value={searchQuery} onChange={setSearchQuery} />
 
             {loading && <div className="py-6 text-center text-sm text-[#9ca3af]">스크랩 불러오는 중...</div>}
             {!loading && errorMessage && <div className="py-6 text-center text-sm text-[#dc2626]">{errorMessage}</div>}
@@ -325,9 +314,7 @@ export default function MyPageScrapTab({
                                                 <ScrapAvatar initials={s.ini} bg={s.color} logoUrl={s.logoUrl} />
                                                 <div className="min-w-0">
                                                     <div className="text-[12.5px] font-bold leading-[18.75px] text-[#111827]">{s.name}</div>
-                                                    <div className="mypage-scrap-kr text-[10px] leading-[15px] text-[#9ca3af]">
-                                                        {s.date} · {s.eventType}
-                                                    </div>
+                                                    <div className="mypage-scrap-kr text-[10px] leading-[15px] text-[#9ca3af]">{s.date}</div>
                                                 </div>
                                             </div>
                                             <div
