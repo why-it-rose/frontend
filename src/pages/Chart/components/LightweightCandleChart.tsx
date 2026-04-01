@@ -465,6 +465,15 @@ export function LightweightCandleChart({
         ].join(";");
 
         if (period === "일") {
+          const hoverArea = document.createElement("div");
+          hoverArea.style.cssText = [
+            "display:none",
+            "flex-direction:column",
+            "align-items:center",
+            "gap:3px",
+            "pointer-events:none",
+          ].join(";");
+
           if (multi && isExpanded) {
             for (const ev of evList) {
               const bubble = makeBubble(
@@ -479,7 +488,7 @@ export function LightweightCandleChart({
                   eventClickRef.current?.(ev.eventId, b.date);
                 }
               });
-              pin.appendChild(bubble);
+              hoverArea.appendChild(bubble);
             }
           } else {
             const bubble = makeBubble(
@@ -499,8 +508,10 @@ export function LightweightCandleChart({
                 }
               });
             }
-            pin.appendChild(bubble);
+            hoverArea.appendChild(bubble);
           }
+
+          pin.appendChild(hoverArea);
 
           const head = makePinHead(
             primary.positive,
@@ -516,6 +527,16 @@ export function LightweightCandleChart({
                   }
                 },
           );
+
+          head.addEventListener("mouseenter", () => {
+            hoverArea.style.display = "flex";
+            pin.style.zIndex = "100";
+          });
+          head.addEventListener("mouseleave", () => {
+            hoverArea.style.display = "none";
+            pin.style.zIndex = "";
+          });
+
           pin.appendChild(head);
         } else {
           const hoverArea = document.createElement("div");
@@ -594,9 +615,11 @@ export function LightweightCandleChart({
 
           head.addEventListener("mouseenter", () => {
             hoverArea.style.display = "flex";
+            pin.style.zIndex = "100";
           });
           head.addEventListener("mouseleave", () => {
             hoverArea.style.display = "none";
+            pin.style.zIndex = "";
           });
 
           pin.appendChild(head);
