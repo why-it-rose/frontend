@@ -35,14 +35,6 @@ export default defineConfig(({ mode }) => {
           target: apiTarget,
           changeOrigin: true,
         },
-        '/events': {
-          target: apiTarget,
-          changeOrigin: true,
-        },
-        '/memos': {
-          target: apiTarget,
-          changeOrigin: true,
-        },
         '/ls-oauth': {
           target: 'https://openapi.ls-sec.co.kr:8080',
           changeOrigin: true,

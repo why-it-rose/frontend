@@ -50,7 +50,7 @@ export type MyScrapSearchParams = {
 
 export async function addEventScrap(eventId: number): Promise<void> {
     try {
-        await apiClient.post<ApiResponse<unknown>>(`/events/${eventId}/scraps`);
+        await apiClient.post<ApiResponse<unknown>>(`/api/events/${eventId}/scraps`);
     } catch (error: unknown) {
         const e = error as { response?: { status?: number; data?: { responseCode?: number; responseMessage?: string } }; message?: string };
         const status = e.response?.status;
@@ -66,7 +66,7 @@ export async function addEventScrap(eventId: number): Promise<void> {
 
 export async function removeEventScrap(eventId: number): Promise<void> {
     try {
-        await apiClient.delete<ApiResponse<unknown>>(`/events/${eventId}/scraps`);
+        await apiClient.delete<ApiResponse<unknown>>(`/api/events/${eventId}/scraps`);
     } catch (error: unknown) {
         const e = error as { response?: { status?: number; data?: { responseCode?: number; responseMessage?: string } }; message?: string };
         const status = e.response?.status;
@@ -83,7 +83,7 @@ export async function removeEventScrap(eventId: number): Promise<void> {
 export async function fetchMyScraps(): Promise<ScrapEventDto[]> {
     const { data } = await apiClient.get<ApiResponse<
         ScrapEventDto[] | { items?: ScrapEventDto[]; content?: ScrapEventDto[]; scraps?: ScrapEventDto[] }
-    >>('/scraps/my');
+    >>('/api/scraps/my');
 
     if (!data?.isSuccess) {
         const e = new Error(data?.responseMessage || '스크랩 목록 조회 실패') as ScrapApiError;
@@ -115,7 +115,7 @@ export async function fetchMyScrapsSearch({
     qs.set('sort', sort);
 
     const { data } = await apiClient.get<ApiResponse<MyScrapSearchPageDto>>(
-        `/scraps/my/search?${qs.toString()}`,
+        `/api/scraps/my/search?${qs.toString()}`,
         { signal },
     );
 
