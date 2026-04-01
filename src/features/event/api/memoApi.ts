@@ -1,6 +1,5 @@
 import type { StockMemo } from '../types/event.types';
-
-const BASE_URL = '';
+import apiClient from '@/shared/api/axios';
 
 interface ApiResponse<T> {
   isSuccess: boolean;
@@ -9,38 +8,25 @@ interface ApiResponse<T> {
   result: T;
 }
 
-async function request<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(url, { credentials: 'include', ...options });
-  if (!res.ok) throw new Error(`${options?.method ?? 'GET'} ${url} failed: ${res.status}`);
-  const json: ApiResponse<T> = await res.json();
-  if (!json.isSuccess) throw new Error(json.responseMessage);
-  return json.result;
-}
-
 export async function fetchMemos(eventId: number): Promise<StockMemo[]> {
-  return request<StockMemo[]>(`${BASE_URL}/events/${eventId}/memos`);
+  const { data } = await apiClient.get<ApiResponse<StockMemo[]>>(`/api/events/${eventId}/memos`);
+  if (!data.isSuccess) throw new Error(data.responseMessage);
+  return data.result;
 }
 
 export async function createMemo(eventId: number, content: string): Promise<StockMemo> {
-  return request<StockMemo>(`${BASE_URL}/events/${eventId}/memos`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ content }),
-  });
+  const { data } = await apiClient.post<ApiResponse<StockMemo>>(`/api/events/${eventId}/memos`, { content });
+  if (!data.isSuccess) throw new Error(data.responseMessage);
+  return data.result;
 }
 
 export async function updateMemo(memoId: number, content: string): Promise<StockMemo> {
-  return request<StockMemo>(`${BASE_URL}/memos/${memoId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ content }),
-  });
+  const { data } = await apiClient.put<ApiResponse<StockMemo>>(`/api/memos/${memoId}`, { content });
+  if (!data.isSuccess) throw new Error(data.responseMessage);
+  return data.result;
 }
 
 export async function deleteMemo(memoId: number): Promise<void> {
-  const res = await fetch(`${BASE_URL}/memos/${memoId}`, {
-    method: 'DELETE',
-    credentials: 'include',
-  });
-  if (!res.ok) throw new Error(`DELETE /memos/${memoId} failed: ${res.status}`);
+  const { data } = await apiClient.delete<ApiResponse<null>>(`/api/memos/${memoId}`);
+  if (!data.isSuccess) throw new Error(data.responseMessage);
 }

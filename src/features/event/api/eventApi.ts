@@ -77,13 +77,13 @@ export async function fetchEvents(
 
   if (type) params.set('type', type);
 
-  const { data } = await apiClient.get<ApiResponse<ApiEventItem[]>>(`/events?${params.toString()}`);
+  const { data } = await apiClient.get<ApiResponse<ApiEventItem[]>>(`/api/events?${params.toString()}`);
   if (!data.isSuccess) throw new Error(data.responseMessage);
   return data.result;
 }
 
 export async function fetchEventDetail(eventId: number): Promise<StockEvent> {
-  const { data } = await apiClient.get<ApiResponse<ApiEventDetail>>(`/events/${eventId}`);
+  const { data } = await apiClient.get<ApiResponse<ApiEventDetail>>(`/api/events/${eventId}`);
   if (!data.isSuccess) throw new Error(data.responseMessage);
   return toStockEvent(data.result);
 }
