@@ -16,6 +16,7 @@ export type ScrapEventDto = {
     eventType: 'SURGE' | 'DROP' | string;
     startDate: string;
     changePct: number;
+    logoUrl?: string | null;
     isScrapped?: boolean;
     scrapped?: boolean;
 };
@@ -27,6 +28,7 @@ export type MyScrapSearchItemDto = {
     eventType: 'SURGE' | 'DROP' | string;
     startDate: string;
     changePct: number;
+    logoUrl?: string | null;
     isScrapped: boolean;
 };
 
