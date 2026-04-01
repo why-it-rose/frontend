@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { loginWithEmail } from '@/features/auth/api/authApi';
 import loginLogo from '@/assets/logo.svg';
 
@@ -14,7 +14,10 @@ export default function LoginModal({ onClose, onSignup, onLoginSuccess }: LoginM
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
 
-    const handleLogin = async () => {
+    const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (isSubmitting) return;
+
         if (!email.trim() || !password) {
             setErrorMessage('이메일과 비밀번호를 입력하세요.');
             return;
@@ -82,67 +85,68 @@ export default function LoginModal({ onClose, onSignup, onLoginSuccess }: LoginM
           </span>
                 </div>
 
-                <div style={{ marginBottom: 14, marginLeft: 8 }}>
-                    <label
-                        style={{
-                            display: 'block',
-                            fontFamily: 'Noto Sans KR',
-                            fontSize: 13,
-                            fontWeight: 500,
-                            color: '#374151',
-                            marginBottom: 6,
-                            marginLeft: 3,
-                        }}
+                <form onSubmit={handleLogin}>
+                    <div style={{ marginBottom: 14, marginLeft: 8 }}>
+                        <label
+                            style={{
+                                display: 'block',
+                                fontFamily: 'Noto Sans KR',
+                                fontSize: 13,
+                                fontWeight: 500,
+                                color: '#374151',
+                                marginBottom: 6,
+                                marginLeft: 3,
+                            }}
+                        >
+                            이메일
+                        </label>
+                        <input
+                            className="input-field"
+                            style={{ width: 'calc(100% - 16px)', marginLeft: 4}}
+                            type="email"
+                            placeholder="example@email.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
+                    </div>
+
+                    <div style={{ marginBottom: 10, marginLeft: 8 }}>
+                        <label
+                            style={{
+                                display: 'block',
+                                fontFamily: 'Noto Sans KR',
+                                fontSize: 13,
+                                fontWeight: 500,
+                                color: '#374151',
+                                marginBottom: 6,
+                                marginLeft: 4,
+                            }}
+                        >
+                            비밀번호
+                        </label>
+                        <input
+                            className="input-field"
+                            style={{ width: 'calc(100% - 16px)', marginLeft: 4 }}
+                            type="password"
+                            placeholder="••••••••"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+                    </div>
+
+                    {errorMessage && (
+                        <p style={{ margin: '0 0 12px 12px', fontSize: 12, color: '#dc2626' }}>{errorMessage}</p>
+                    )}
+
+                    <button
+                        type="submit"
+                        className="btn-primary"
+                        style={{ marginTop: 12, marginBottom: 14, width: 'calc(100% - 12px)', marginLeft: 8 }}
+                        disabled={isSubmitting}
                     >
-                        이메일
-                    </label>
-                    <input
-                        className="input-field"
-                        style={{ width: 'calc(100% - 16px)', marginLeft: 4}}
-                        type="email"
-                        placeholder="example@email.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                    />
-                </div>
-
-                <div style={{ marginBottom: 10, marginLeft: 8 }}>
-                    <label
-                        style={{
-                            display: 'block',
-                            fontFamily: 'Noto Sans KR',
-                            fontSize: 13,
-                            fontWeight: 500,
-                            color: '#374151',
-                            marginBottom: 6,
-                            marginLeft: 4,
-                        }}
-                    >
-                        비밀번호
-                    </label>
-                    <input
-                        className="input-field"
-                        style={{ width: 'calc(100% - 16px)', marginLeft: 4 }}
-                        type="password"
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                </div>
-
-                {errorMessage && (
-                    <p style={{ margin: '0 0 12px 12px', fontSize: 12, color: '#dc2626' }}>{errorMessage}</p>
-                )}
-
-                <button
-                    type="button"
-                    className="btn-primary"
-                    style={{ marginTop: 12, marginBottom: 14, width: 'calc(100% - 12px)', marginLeft: 8 }}
-                    onClick={handleLogin}
-                    disabled={isSubmitting}
-                >
-                    {isSubmitting ? '로그인 중...' : '로그인'}
-                </button>
+                        {isSubmitting ? '로그인 중...' : '로그인'}
+                    </button>
+                </form>
                 <div style={{ textAlign: 'center', marginTop: 0 }}>
                     <span style={{ fontFamily: 'Noto Sans KR', fontSize: 13, color: '#6b7280', marginRight: 6 }}>계정이 없으신가요?</span>
                     <button
