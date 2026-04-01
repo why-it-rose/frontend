@@ -1,4 +1,4 @@
-import { useState, type MouseEvent } from 'react';
+import { useState, type FormEvent, type MouseEvent } from 'react';
 import axios from 'axios';
 import { signupWithEmail } from '@/features/auth/api/authApi';
 import signupLogo from '@/assets/logo.svg';
@@ -21,7 +21,10 @@ export default function SignupModal({ onClose, onLogin }: SignupModalProps) {
     const isPasswordValid = (value: string) =>
         /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/.test(value);
 
-    const handleSignup = async () => {
+    const handleSignup = async (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (isSubmitting) return;
+
         const trimmedName = name.trim();
         const trimmedNickname = nickname.trim();
         const trimmedEmail = email.trim();
@@ -117,7 +120,7 @@ export default function SignupModal({ onClose, onLogin }: SignupModalProps) {
                     <img src={signupLogo} alt="왜 올랐지 로고" style={{ height: 54, width: 'auto' }} />
                 </div>
 
-                <div style={{ marginLeft: 8, marginRight: 8 }}>
+                <form onSubmit={handleSignup} style={{ marginLeft: 8, marginRight: 8 }}>
                     <div style={{ marginBottom: 18 }}>
                         <span style={{ fontFamily: 'Noto Sans KR Black', fontWeight: 900, fontSize: 20, color: '#111827' }}>회원가입</span>
                     </div>
@@ -237,15 +240,14 @@ export default function SignupModal({ onClose, onLogin }: SignupModalProps) {
                     )}
 
                     <button
-                        type="button"
+                        type="submit"
                         className="btn-primary"
                         style={{ marginBottom: 12 }}
-                        onClick={handleSignup}
                         disabled={isSubmitting}
                     >
                         {isSubmitting ? '가입 중...' : '가입하기'}
                     </button>
-                </div>
+                </form>
 
                 <div style={{ textAlign: 'center', marginBottom: 14 }}>
                     <span style={{ fontFamily: 'Noto Sans KR', fontSize: 13, color: '#6b7280', marginRight: 6 }}>이미 계정이 있으신가요?</span>
