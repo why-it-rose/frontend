@@ -13,10 +13,14 @@ export type LoginRequest = {
     password: string;
 };
 
-export type AuthUser = {
+export type LoginUser = {
     userId: number;
     email: string;
     nickname: string;
+};
+
+export type AuthUser = LoginUser & {
+    pushEnabled: boolean;
 };
 
 export type SignupRequest = {
@@ -76,4 +80,8 @@ export async function logoutFromServer(): Promise<void> {
 export async function signupWithEmail(payload: SignupRequest): Promise<SignupResponse> {
     const { data } = await apiClient.post<SignupResponse>('/auth/signup', payload);
     return data;
+}
+
+export async function updateMyPushEnabled(enabled: boolean): Promise<void> {
+    await apiClient.patch('/auth/me/push-enabled', { enabled });
 }

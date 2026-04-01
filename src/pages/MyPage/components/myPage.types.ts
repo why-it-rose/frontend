@@ -7,7 +7,6 @@ export type ScrapItem = {
   logoUrl?: string | null;
   ini: string;
   date: string;
-  eventType: string;
   chg: string;
 };
 
