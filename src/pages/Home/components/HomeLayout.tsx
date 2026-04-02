@@ -299,10 +299,10 @@ export default function HomeLayout({
             <div />
             <div className="text-center" />
             <div />
-            <div className="text-right">현재가</div>
-            <div className="text-right">등락률</div>
-            <div className="text-right">거래대금</div>
-            <div className="pr-[6px] text-right">거래량</div>
+            <div className="justify-self-center translate-x-[4px] text-center">현재가</div>
+            <div className="justify-self-center translate-x-[4px] text-center">등락률</div>
+            <div className="justify-self-center translate-x-[2px] text-center">거래대금</div>
+            <div className="justify-self-center translate-x-[4px] text-center">거래량</div>
           </div>
 
           <div

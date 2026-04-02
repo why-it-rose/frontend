@@ -75,8 +75,6 @@ function ScrapSortableEditRow({
             className={`flex w-full shrink-0 touch-none select-none items-center justify-between border-b border-[#eff1f8] bg-white px-[21px] py-3 ${
                 isDragging ? 'opacity-30' : ''
             }`}
-            {...attributes}
-            {...listeners}
         >
             <div className="flex min-w-0 flex-1 items-center gap-2.5">
                 <ScrapAvatar initials={row.ini} bg={row.color} logoUrl={row.logoUrl} />
@@ -85,7 +83,7 @@ function ScrapSortableEditRow({
                     <div className="mypage-scrap-kr text-[10px] leading-[15px] text-[#9ca3af]">{row.date}</div>
                 </div>
             </div>
-            <div className="flex shrink-0 cursor-grab items-center gap-2.5 pl-2 active:cursor-grabbing">
+            <div className="flex shrink-0 items-center gap-2.5 pl-2">
                 <button
                     type="button"
                     data-edit-delete
@@ -103,11 +101,23 @@ function ScrapSortableEditRow({
                         width={26}
                         height={26}
                         className="block h-[26px] w-[26px] shrink-0"
+                        draggable={false}
                         aria-hidden
                     />
                 </button>
-                <span className="inline-flex shrink-0 items-center justify-center" aria-hidden>
-          <img src={dragHandleIco} alt="" width={8} height={12} className="block h-3 w-2 shrink-0" />
+                <span
+                    className="inline-flex shrink-0 cursor-grab items-center justify-center touch-none active:cursor-grabbing"
+                    {...attributes}
+                    {...listeners}
+                >
+          <img
+            src={dragHandleIco}
+            alt=""
+            width={8}
+            height={12}
+            className="block h-3 w-2 shrink-0 pointer-events-none"
+            draggable={false}
+          />
         </span>
             </div>
         </div>
@@ -125,9 +135,24 @@ function ScrapEditRowOverlay({ row }: { row: ScrapRow }) {
                 </div>
             </div>
             <div className="flex shrink-0 items-center gap-2.5 pl-2 opacity-60">
-                <img src={deleteIco} alt="" width={26} height={26} className="block h-[26px] w-[26px] shrink-0" aria-hidden />
+                <img
+                  src={deleteIco}
+                  alt=""
+                  width={26}
+                  height={26}
+                  className="block h-[26px] w-[26px] shrink-0"
+                  draggable={false}
+                  aria-hidden
+                />
                 <span className="inline-flex shrink-0 items-center justify-center" aria-hidden>
-          <img src={dragHandleIco} alt="" width={8} height={12} className="block h-3 w-2 shrink-0" />
+          <img
+            src={dragHandleIco}
+            alt=""
+            width={8}
+            height={12}
+            className="block h-3 w-2 shrink-0 pointer-events-none"
+            draggable={false}
+          />
         </span>
             </div>
         </div>
