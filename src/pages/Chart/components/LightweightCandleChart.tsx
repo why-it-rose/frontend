@@ -195,6 +195,7 @@ export function LightweightCandleChart({
   onLearningPinClick,
   focusDate,
   activePeriod,
+  isMobile,
 }: {
   bars: OhlcBar[];
   visibleBars?: number;
@@ -204,6 +205,7 @@ export function LightweightCandleChart({
   onLearningPinClick?: () => void;
   focusDate?: string;
   activePeriod?: string;
+  isMobile?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const hoverRef = useRef(onHoverBar);
@@ -211,7 +213,7 @@ export function LightweightCandleChart({
   const learningPinClickRef = useRef(onLearningPinClick);
   const focusDateRef = useRef(focusDate);
   const activePeriodRef = useRef<string | undefined>(activePeriod);
-
+  const isMobileRef = useRef(isMobile);
 
   useEffect(() => {
     hoverRef.current = onHoverBar;
@@ -219,7 +221,8 @@ export function LightweightCandleChart({
     learningPinClickRef.current = onLearningPinClick;
     focusDateRef.current = focusDate;
     activePeriodRef.current = activePeriod;
-  }, [onHoverBar, onEventClick, onLearningPinClick, focusDate, activePeriod]);
+    isMobileRef.current = isMobile;
+  }, [onHoverBar, onEventClick, onLearningPinClick, focusDate, activePeriod, isMobile]);
 
   const processedBars = useMemo(() => {
     return aggregateBarsByPeriod(bars, activePeriod);
@@ -471,6 +474,15 @@ export function LightweightCandleChart({
         ].join(";");
 
         if (period === "일") {
+          if (isMobileRef.current) {
+            // 모바일: 버블 단계 없이 핀 탭 즉시 이벤트 오픈
+            const head = makePinHead(primary.positive, () => {
+              if (primary.eventId != null) {
+                eventClickRef.current?.(primary.eventId, primary.eventDate);
+              }
+            });
+            pin.appendChild(head);
+          } else {
           const hoverArea = document.createElement("div");
           hoverArea.style.cssText = [
             "display:none",
@@ -491,7 +503,7 @@ export function LightweightCandleChart({
               bubble.addEventListener("click", (e) => {
                 e.stopPropagation();
                 if (ev.eventId != null) {
-                  eventClickRef.current?.(ev.eventId, b.date);
+                  eventClickRef.current?.(ev.eventId, ev.eventDate);
                 }
               });
               hoverArea.appendChild(bubble);
@@ -510,7 +522,7 @@ export function LightweightCandleChart({
               bubble.addEventListener("click", (e) => {
                 e.stopPropagation();
                 if (primary.eventId != null) {
-                  eventClickRef.current?.(primary.eventId, b.date);
+                  eventClickRef.current?.(primary.eventId, primary.eventDate);
                 }
               });
             }
@@ -529,7 +541,7 @@ export function LightweightCandleChart({
                 }
               : () => {
                   if (primary.eventId != null) {
-                    eventClickRef.current?.(primary.eventId, b.date);
+                    eventClickRef.current?.(primary.eventId, primary.eventDate);
                   }
                 },
           );
@@ -544,6 +556,7 @@ export function LightweightCandleChart({
           });
 
           pin.appendChild(head);
+          }
         } else {
           const hoverArea = document.createElement("div");
           hoverArea.style.cssText = [
@@ -615,7 +628,7 @@ export function LightweightCandleChart({
 
           const head = makePinHead(primary.positive, () => {
             if (primary.eventId != null) {
-              eventClickRef.current?.(primary.eventId, b.date);
+              eventClickRef.current?.(primary.eventId, primary.eventDate);
             }
           });
 

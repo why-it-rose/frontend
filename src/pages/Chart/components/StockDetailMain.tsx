@@ -14,6 +14,7 @@ import { fetchEvents } from "@/features/event/api/eventApi";
 import { useInterestStocksQuery } from "@/features/stock/hooks/useInterestStocks";
 import { ROUTES } from "@/shared/constants/routes";
 import { stockEventKeys } from "@/shared/queryKeys";
+
 import type { OhlcBar, PeriodTab, StockDetailMainProps } from "../types";
 import {
   useChartPeriod,
@@ -23,7 +24,6 @@ import {
   ohlcBarToSummary,
 } from "../hook";
 import { LightweightCandleChart } from "./LightweightCandleChart";
-import { LearningPin } from "./LearningPin";
 import { StockInfoBar } from "./StockInfoBar";
 import { PeriodTabs } from "./PeriodTabs";
 import { OhlcSummaryBar } from "./OhlcSummaryBar";
@@ -34,6 +34,11 @@ import StockDetailAside from "@/pages/StockDetail/components/StockDetailaside";
 import { useEventDetail } from "@/features/event/hooks/useEventDetail";
 import { useMemos } from "@/features/event/hooks/useMemos";
 import { useLearningPin } from "@/features/news/hooks/useLearningPin";
+import {
+  sharedEventPanelTab,
+  pendingMobileNav,
+  requestResponsiveRouteNavigation,
+} from "@/features/event/sharedEventPanelTab";
 import TodayLearningSidebar from "@/features/news/components/TodayLearningSidebar";
 
 /** 기간별로 한 화면에 보일 최대 봉 수(많을수록 조금 더 축소된 느낌) — 봉이 적으면 전체 표시 */
@@ -92,6 +97,9 @@ export function StockDetailMain({
   const { refreshAuth, isLoggedIn } = useAuth();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [pendingEventId, setPendingEventId] = useState<number | null>(null);
+  const [pendingMobileTabAfterLogin, setPendingMobileTabAfterLogin] = useState<
+    "오늘의 학습" | null
+  >(null);
   const { stockCode: stockCodeParam } = useParams<{ stockCode?: string }>();
   const [searchParams] = useSearchParams();
   const mobileEventId = useMemo(() => {
@@ -101,7 +109,9 @@ export function StockDetailMain({
   const { data: interestItems = [] } = useInterestStocksQuery();
 
   const cachedRouteStockId =
-    stockId == null && stockCodeParam ? getCachedStockIdByTicker(stockCodeParam) : undefined;
+    stockId == null && stockCodeParam
+      ? getCachedStockIdByTicker(stockCodeParam)
+      : undefined;
   const [resolvedTickerStockId, setResolvedTickerStockId] = useState<
     number | undefined
   >(cachedRouteStockId);
@@ -166,7 +176,7 @@ export function StockDetailMain({
       ? "이벤트"
       : mobileMode === "today-learning"
         ? "오늘의 학습"
-      : "차트",
+        : "차트",
   );
   const { data: learningPinData } = useLearningPin(chartStockId);
 
@@ -182,12 +192,29 @@ export function StockDetailMain({
     remove: removeMemo,
   } = useMemos(mobileMode === "event" ? mobileEventId : null);
 
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile) return;
+    pendingMobileNav.path =
+      mobileTab === "오늘의 학습" ? "today-learning" : null;
+  }, [isMobile, mobileTab]);
+
   const [selectedEventId, setSelectedEventId] = useState<number | null>(
     mobileEventId ?? null,
   );
-  const [eventPanelTab, setEventPanelTab] = useState<"이벤트" | "메모">(
-    "이벤트",
+  const [eventPanelTab, setEventPanelTabState] = useState<"이벤트" | "메모">(
+    sharedEventPanelTab.value === "memo" ? "메모" : "이벤트",
   );
+  const setEventPanelTab = useCallback((t: "이벤트" | "메모") => {
+    sharedEventPanelTab.value = t === "메모" ? "memo" : "event";
+    setEventPanelTabState(t);
+  }, []);
   const {
     event: selectedEvent,
     scrapping: selectedScrapping,
@@ -266,7 +293,10 @@ export function StockDetailMain({
     holdEmptyChart,
   );
   const stock = stockProp ?? fetchedHeader;
-  const bars = useMemo(() => fetchedBars ?? barsProp ?? [], [fetchedBars, barsProp]);
+  const bars = useMemo(
+    () => fetchedBars ?? barsProp ?? [],
+    [fetchedBars, barsProp],
+  );
 
   const [hoverBar, setHoverBar] = useState<OhlcBar | null>(null);
 
@@ -285,7 +315,8 @@ export function StockDetailMain({
 
   useEffect(() => {
     if (selectedEventId === null) return;
-    if (typeof window === "undefined" || window.innerWidth < 768) return;
+    if (isMobile) return;
+    if (pathname.endsWith("/today-learning")) return;
     if (pathname.endsWith("/event")) return;
 
     const code = stockCodeParam ?? "";
@@ -298,7 +329,7 @@ export function StockDetailMain({
     }
 
     navigate(`/chart/${code}/event?${params.toString()}`, { replace: true });
-  }, [eventPanelTab, navigate, pathname, selectedEventId, stockCodeParam]);
+  }, [eventPanelTab, isMobile, navigate, pathname, selectedEventId, stockCodeParam]);
 
   const chartVisibleBars = visibleBarsForPeriod(activePeriod);
   const mobileChartVisibleBars = visibleBarsForPeriodMobile(activePeriod);
@@ -348,15 +379,6 @@ export function StockDetailMain({
 
           {mobileTab === "차트" && (
             <>
-              {learningPinData !== null && learningPinData !== undefined && (
-                <div className="scrollbar-hide flex flex-nowrap gap-2 overflow-x-auto border-b border-[#eef2f7] px-4 py-3">
-                  <LearningPin
-                    data={learningPinData}
-                    onClick={() => setMobileTab("오늘의 학습")}
-                  />
-                </div>
-              )}
-
               <div className="shrink-0 bg-white px-4 py-2.5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <PeriodTabs
@@ -380,6 +402,7 @@ export function StockDetailMain({
                   onLearningPinClick={() => setMobileTab("오늘의 학습")}
                   focusDate={focusDate}
                   activePeriod={activePeriod}
+                  isMobile
                 />
               </div>
             </>
@@ -391,7 +414,10 @@ export function StockDetailMain({
                 stockId={chartStockId}
                 isOpen
                 isLoggedIn={isLoggedIn}
-                onLoginRequired={() => setLoginModalOpen(true)}
+                onLoginRequired={() => {
+                  setPendingMobileTabAfterLogin("오늘의 학습");
+                  setLoginModalOpen(true);
+                }}
               />
             </div>
           )}
@@ -435,13 +461,13 @@ export function StockDetailMain({
           {selectedEventId !== null && (
             <div className="absolute inset-0 z-20 flex flex-col bg-white md:hidden">
               <div className="flex shrink-0 items-center justify-between border-b border-[#eff1f8] px-1">
-                <div className="flex">
+                <div className="flex flex-1">
                   {(["이벤트", "메모"] as const).map((tab) => (
                     <button
                       key={tab}
                       type="button"
                       onClick={() => setEventPanelTab(tab)}
-                      className={`px-5 py-2.5 text-sm font-medium border-b-2 ${
+                      className={`flex-1 py-2.5 text-center text-sm font-medium border-b-2 ${
                         eventPanelTab === tab
                           ? "border-primary text-primary"
                           : "border-transparent text-[#9ca3af]"
@@ -523,9 +549,7 @@ export function StockDetailMain({
               onHoverBar={handleHoverBar}
               onEventClick={handleEventClick}
               learningPin={learningPinData}
-              onLearningPinClick={() =>
-                navigate(`/chart/${stockCodeParam ?? ""}/today-learning`)
-              }
+              onLearningPinClick={() => requestResponsiveRouteNavigation("today-learning")}
               focusDate={focusDate}
               activePeriod={activePeriod}
             />
@@ -537,25 +561,33 @@ export function StockDetailMain({
         </div>
       </div>
 
-    {loginModalOpen && (
-      <LoginModal
-        onClose={() => setLoginModalOpen(false)}
-        onSignup={() => {
-          setLoginModalOpen(false);
-          navigate("/signup");
-        }}
-        onLoginSuccess={async () => {
-          await refreshAuth();
-          await invalidateAuthTransitionQueries(queryClient);
-          setLoginModalOpen(false);
-          if (pendingEventId !== null) {
-            setSelectedEventId(pendingEventId);
-            setEventPanelTab("이벤트");
-            setPendingEventId(null);
-          }
-        }}
-      />
-    )}
+      {loginModalOpen && (
+        <LoginModal
+          onClose={() => {
+            setLoginModalOpen(false);
+            setPendingMobileTabAfterLogin(null);
+          }}
+          onSignup={() => {
+            setLoginModalOpen(false);
+            setPendingMobileTabAfterLogin(null);
+            navigate("/signup");
+          }}
+          onLoginSuccess={async () => {
+            await refreshAuth();
+            await invalidateAuthTransitionQueries(queryClient);
+            setLoginModalOpen(false);
+            if (pendingMobileTabAfterLogin === "오늘의 학습") {
+              setMobileTab("오늘의 학습");
+              setPendingMobileTabAfterLogin(null);
+            }
+            if (pendingEventId !== null) {
+              setSelectedEventId(pendingEventId);
+              setEventPanelTab("이벤트");
+              setPendingEventId(null);
+            }
+          }}
+        />
+      )}
     </>
   );
 }

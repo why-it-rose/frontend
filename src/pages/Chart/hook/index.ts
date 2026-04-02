@@ -119,6 +119,7 @@ function groupEventsByBar(
       label: `${e.changePct > 0 ? "+" : ""}${e.changePct.toFixed(1)}%`,
       positive: e.eventType === "SURGE",
       eventId: e.eventId,
+      eventDate: e.startDate,
       changePct: e.changePct,
     };
 

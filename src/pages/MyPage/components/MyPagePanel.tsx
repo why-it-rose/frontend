@@ -362,9 +362,9 @@ export default function MyPagePanel({
                 <button
                     type="button"
                     onClick={() => void onLogout()}
-                    className="w-full cursor-pointer overflow-hidden rounded-lg border-0 bg-transparent p-0 shadow-none"
+                    className="w-full cursor-pointer overflow-hidden rounded-[10px] border-0 bg-transparent p-0 shadow-none"
                 >
-                  <img src={logoutButtonImg} alt="로그아웃" className="block h-auto w-full" width={348} height={37} />
+                  <img src={logoutButtonImg} alt="로그아웃" className="block h-11.25 w-full" width={348} height={37} />
                 </button>
                 <button
                     type="button"
@@ -387,9 +387,9 @@ export default function MyPagePanel({
                 <button
                     type="button"
                     onClick={() => void onLogout()}
-                    className="w-full cursor-pointer overflow-hidden rounded-lg border-0 bg-transparent p-0 shadow-none"
+                    className="w-full cursor-pointer overflow-hidden rounded-[10px] border-0 bg-transparent p-0 shadow-none"
                 >
-                  <img src={logoutButtonImg} alt="로그아웃" className="block h-auto w-full" width={348} height={37} />
+                  <img src={logoutButtonImg} alt="로그아웃" className="block h-11.25 w-full" width={348} height={37} />
                 </button>
                 <button
                     type="button"

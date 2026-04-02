@@ -61,7 +61,7 @@ export default function MobileLayout({
           <div className="fixed left-0 right-0 top-13.75 bottom-22.25 z-250">
             <GuestLockPanel
               title="알림센터"
-              message={<>로그인 후 관심 종목의<br />오늘의 학습 뉴스 알림을<br />받아보세요.</>}
+              message={<><span className="font-semibold text-[#9ca3af]">로그인</span> 후 관심 종목의<br />오늘의 학습 뉴스 알림을<br />받아보세요.</>}
               onClose={() => setAlertOpen(false)}
             />
           </div>
@@ -71,7 +71,7 @@ export default function MobileLayout({
         <div className="fixed left-0 right-0 top-13.75 bottom-22.25 z-250">
           <GuestLockPanel
             title="마이페이지"
-            message={<>로그인 후 내 예측 기록과<br />학습 메모를 관리해보세요.</>}
+            message={<><span className="font-semibold text-[#9ca3af]">로그인</span> 후 내 예측 기록과<br />학습 메모를 관리해보세요.</>}
             onClose={() => setMyPageOpen(false)}
           />
         </div>

@@ -48,7 +48,7 @@ export default function AlertCenter({ onClose, containerRef }: AlertCenterProps)
       aria-modal="true"
       aria-label="알림센터"
     >
-      <div className="flex shrink-0 items-center justify-between border-b border-border px-4.5 pb-3 pt-5">
+      <div className="flex shrink-0 items-center justify-between border-b border-border px-4.5 pb-3 pt-5 max-md:hidden">
         <span className="mypage-scrap-kr -translate-y-1 text-[14px] font-bold leading-tight text-text-primary">알림센터</span>
         {tab === 'all' ? (
           listFullyRead ? (

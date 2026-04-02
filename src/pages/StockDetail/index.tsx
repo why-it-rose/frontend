@@ -1,14 +1,17 @@
 import TabBar from '@/shared/components/common/TabBar';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
+import { sharedEventPanelTab } from '@/features/event/sharedEventPanelTab';
 import EventTab from '@/features/event/components/EventTab';
 import MemoTab from '@/features/event/components/MemoTab';
 import { useEventDetail } from '@/features/event/hooks/useEventDetail';
 import { useMemos } from '@/features/event/hooks/useMemos';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import GuestLockPanel from '@/shared/components/common/GuestLockPanel';
+import StockDetailAside from '@/pages/StockDetail/components/StockDetailaside';
 
 const TABS = [
+  { label: '기업 정보', value: 'overview' },
   { label: '이벤트', value: 'event' },
   { label: '메모', value: 'memo' },
 ];
@@ -25,12 +28,12 @@ export default function StockDetailPage() {
   const { event, loading, scrapping, error, scrapError, toggleScrap } = useEventDetail(gatedEventId, isLoggedIn);
   const { memos, save, update, remove } = useMemos(gatedEventId, isLoggedIn);
 
-  const requestedTab = searchParams.get('tab') === 'memo' ? 'memo' : 'event';
-  const [tab, setTab] = useState<'event' | 'memo'>(requestedTab);
-
-  useEffect(() => {
-    setTab(requestedTab);
-  }, [requestedTab]);
+  const [tab, setTab] = useState<'overview' | 'event' | 'memo'>(sharedEventPanelTab.value);
+  const handleTabChange = (v: string) => {
+    const next = v as 'overview' | 'event' | 'memo';
+    sharedEventPanelTab.value = next;
+    setTab(next);
+  };
 
   if (!isLoggedIn) {
     return (
@@ -52,18 +55,23 @@ export default function StockDetailPage() {
     return <div className="flex flex-1 items-center justify-center text-sm text-[#9ca3af]">불러오는 중...</div>;
   }
 
-  if (!event && error) {
+  if ((tab === 'event' || tab === 'memo') && !event && error) {
     return <div className="flex flex-1 items-center justify-center text-sm text-[#e03131]">{error}</div>;
   }
 
-  if (!event) {
+  if ((tab === 'event' || tab === 'memo') && !event) {
     return <div className="flex flex-1 items-center justify-center text-sm text-[#9ca3af]">이벤트를 선택해주세요.</div>;
   }
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <TabBar tabs={TABS} value={tab} onChange={(v) => setTab(v as 'event' | 'memo')} />
-      {tab === 'event' && (
+      <TabBar tabs={TABS} value={tab} onChange={handleTabChange} />
+      {tab === 'overview' && (
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <StockDetailAside hideHeader />
+          </div>
+      )}
+      {tab === 'event' && event && (
           <EventTab
               event={event}
               scrapping={scrapping}
@@ -71,10 +79,15 @@ export default function StockDetailPage() {
               scrapErrorMessage={scrapError}
           />
       )}
-      {tab === 'memo' && (
+
+      {tab === 'memo' && event && (
           <MemoTab
               memos={memos}
-              eventInfo={{ eventType: event.eventType, stockName: event.stockName, changeRate: event.changeRate }}
+              eventInfo={{
+                eventType: event.eventType,
+                stockName: event.stockName,
+                changeRate: event.changeRate,
+              }}
               onSave={save}
               onUpdate={update}
               onDelete={remove}
