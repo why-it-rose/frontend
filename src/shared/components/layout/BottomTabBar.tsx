@@ -15,6 +15,7 @@ export interface BottomTabBarProps {
   onMyPageClose?: () => void;
   myPageActive?: boolean;
   onAlertsOpen?: () => void;
+  onAlertsClose?: () => void;
   alertsActive?: boolean;
 }
 
@@ -30,6 +31,7 @@ export default function BottomTabBar({
   onMyPageClose,
   myPageActive,
   onAlertsOpen,
+  onAlertsClose,
   alertsActive,
 }: BottomTabBarProps) {
   const { pathname } = useLocation();
@@ -58,8 +60,8 @@ export default function BottomTabBar({
               else if (isAlerts) onAlertsOpen?.();
               else {
                 onMyPageClose?.();
-                if (isAlerts) onAlertsOpen?.();
-                else navigate(path);
+                onAlertsClose?.();
+                navigate(path);
               }
             }}
             className="flex flex-col items-center justify-start pt-3"
