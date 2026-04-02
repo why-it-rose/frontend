@@ -41,30 +41,15 @@ const PERIOD_ORDER = ["년", "월", "주", "일"] as const;
 function visibleBarsForPeriod(tab: PeriodTab): number {
   switch (tab) {
     case "일":
-      return 80;
+      return 100;
     case "주":
-      return 50;
+      return 88;
     case "월":
-      return 40;
+      return 48;
     case "년":
       return 28;
     default:
-      return 80;
-  }
-}
-
-function visibleBarsForPeriodMobile(tab: PeriodTab): number {
-  switch (tab) {
-    case "일":
-      return 16;
-    case "주":
-      return 12;
-    case "월":
-      return 10;
-    case "년":
-      return 7;
-    default:
-      return 70;
+      return 120;
   }
 }
 
@@ -276,7 +261,6 @@ export function StockDetailMain({
   }, []);
 
   const chartVisibleBars = visibleBarsForPeriod(activePeriod);
-  const mobileChartVisibleBars = visibleBarsForPeriodMobile(activePeriod);
   const mobileTabs =
     mobileMode === "event"
       ? (["차트", "이벤트", "메모"] as const)
@@ -350,7 +334,7 @@ export function StockDetailMain({
               >
                 <LightweightCandleChart
                   bars={bars}
-                  visibleBars={mobileChartVisibleBars}
+                  visibleBars={chartVisibleBars}
                   onHoverBar={handleHoverBar}
                   onEventClick={handleEventClick}
                   learningPin={learningPinData}

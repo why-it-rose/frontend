@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import type { OhlcBar, OhlcSummary, PeriodTab, TickerItem, StockInfo } from "../types";
 import { fetchTickers, fetchStockInfo, MOCK_TICKERS, MOCK_STOCK_INFO } from "../api";
 import { fetchStockDetail, fetchStockPrices } from "@/features/stock/api";
@@ -7,7 +6,6 @@ import { mapStockDetailToStockInfo } from "../lib/mapStockDetail";
 import type { StockChartPeriod, StockPriceCandleDto } from "@/features/stock/types";
 import { fetchEvents } from "@/features/event/api/eventApi";
 import type { ApiEventItem } from "@/features/event/api/eventApi";
-import { stockEventKeys } from "@/shared/queryKeys";
 import type { EventPin } from "../types";
 
 // ─── 기간 탭 → Swagger period ──────────────────────────────────────────────────
@@ -170,26 +168,34 @@ export function useOhlcDataWithEvents(
   authScope?: string,
 ) {
   const { bars: rawBars, loading, error, refetch } = useOhlcData(stockId, period, holdEmpty);
+  const [mergedBars, setMergedBars] = useState<OhlcBar[]>([]);
 
-  const { data: events = [] } = useQuery({
-    queryKey: stockEventKeys.list(stockId ?? 0),
-    queryFn: () => fetchEvents(stockId!, undefined, 0, 200),
-    enabled: !!stockId && stockId > 0 && !holdEmpty,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const mergedBars = useMemo(() => {
-    if (!rawBars.length || !events.length) return rawBars;
-    const grouped = groupEventsByBar(events, rawBars, period);
-    return rawBars.map((bar) => {
-      const evList = grouped.get(bar.date);
-      if (!evList?.length) return bar;
-      const sorted = [...evList].sort(
-        (a, b) => Math.abs(b.changePct) - Math.abs(a.changePct)
-      );
-      return { ...bar, events: sorted };
-    });
-  }, [rawBars, events, period]);
+  useEffect(() => {
+    if (!stockId || holdEmpty || !rawBars.length) {
+      setMergedBars(rawBars);
+      return;
+    }
+    let cancelled = false;
+    fetchEvents(stockId, undefined, 0, 200)
+      .then((events) => {
+        if (cancelled) return;
+        const grouped = groupEventsByBar(events, rawBars, period);
+        setMergedBars(
+          rawBars.map((bar) => {
+            const evList = grouped.get(bar.date);
+            if (!evList?.length) return bar;
+            const sorted = [...evList].sort(
+              (a, b) => Math.abs(b.changePct) - Math.abs(a.changePct)
+            );
+            return { ...bar, events: sorted };
+          })
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setMergedBars(rawBars);
+      });
+    return () => { cancelled = true; };
+  }, [rawBars, stockId, holdEmpty, period, authScope]);
 
   return { bars: mergedBars, loading, error, refetch };
 }

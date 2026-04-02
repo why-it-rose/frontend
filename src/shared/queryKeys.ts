@@ -29,10 +29,6 @@ export const interestStockKeys = {
     [...interestStockKeys.all, authScope] as const,
 };
 
-export const stockEventKeys = {
-  list: (stockId: number) => ['stock', stockId, 'events'] as const,
-};
-
 export const notificationKeys = {
   all: ['notifications'] as const,
   summary: (days?: number) =>
