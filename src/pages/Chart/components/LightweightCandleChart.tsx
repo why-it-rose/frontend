@@ -472,7 +472,7 @@ export function LightweightCandleChart({
             // 모바일: 버블 단계 없이 핀 탭 즉시 이벤트 오픈
             const head = makePinHead(primary.positive, () => {
               if (primary.eventId != null) {
-                eventClickRef.current?.(primary.eventId, b.date);
+                eventClickRef.current?.(primary.eventId, primary.eventDate);
               }
             });
             pin.appendChild(head);
@@ -497,7 +497,7 @@ export function LightweightCandleChart({
               bubble.addEventListener("click", (e) => {
                 e.stopPropagation();
                 if (ev.eventId != null) {
-                  eventClickRef.current?.(ev.eventId, b.date);
+                  eventClickRef.current?.(ev.eventId, ev.eventDate);
                 }
               });
               hoverArea.appendChild(bubble);
@@ -516,7 +516,7 @@ export function LightweightCandleChart({
               bubble.addEventListener("click", (e) => {
                 e.stopPropagation();
                 if (primary.eventId != null) {
-                  eventClickRef.current?.(primary.eventId, b.date);
+                  eventClickRef.current?.(primary.eventId, primary.eventDate);
                 }
               });
             }
@@ -535,7 +535,7 @@ export function LightweightCandleChart({
                 }
               : () => {
                   if (primary.eventId != null) {
-                    eventClickRef.current?.(primary.eventId, b.date);
+                    eventClickRef.current?.(primary.eventId, primary.eventDate);
                   }
                 },
           );
@@ -622,7 +622,7 @@ export function LightweightCandleChart({
 
           const head = makePinHead(primary.positive, () => {
             if (primary.eventId != null) {
-              eventClickRef.current?.(primary.eventId, b.date);
+              eventClickRef.current?.(primary.eventId, primary.eventDate);
             }
           });
 

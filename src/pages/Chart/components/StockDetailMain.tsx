@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useParams, useSearchParams } from "react-router";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router";
 import LoginModal from "@/features/auth/components/LoginModal";
 import { useAuth } from "@/features/auth/context/AuthContext";
 import { invalidateAuthTransitionQueries } from "@/features/auth/query/authQuerySync";
@@ -34,7 +34,11 @@ import StockDetailAside from "@/pages/StockDetail/components/StockDetailaside";
 import { useEventDetail } from "@/features/event/hooks/useEventDetail";
 import { useMemos } from "@/features/event/hooks/useMemos";
 import { useLearningPin } from "@/features/news/hooks/useLearningPin";
-import { sharedEventPanelTab } from "@/features/event/sharedEventPanelTab";
+import {
+  sharedEventPanelTab,
+  pendingMobileNav,
+  requestResponsiveRouteNavigation,
+} from "@/features/event/sharedEventPanelTab";
 import TodayLearningSidebar from "@/features/news/components/TodayLearningSidebar";
 
 /** 기간별로 한 화면에 보일 최대 봉 수(많을수록 조금 더 축소된 느낌) — 봉이 적으면 전체 표시 */
@@ -87,11 +91,15 @@ export function StockDetailMain({
   className = "",
   mobileMode = "stock-detail",
 }: StockDetailMainAllProps) {
+  const { pathname } = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { refreshAuth, isLoggedIn } = useAuth();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [pendingEventId, setPendingEventId] = useState<number | null>(null);
+  const [pendingMobileTabAfterLogin, setPendingMobileTabAfterLogin] = useState<
+    "오늘의 학습" | null
+  >(null);
   const { stockCode: stockCodeParam } = useParams<{ stockCode?: string }>();
   const [searchParams] = useSearchParams();
   const mobileEventId = useMemo(() => {
@@ -101,7 +109,9 @@ export function StockDetailMain({
   const { data: interestItems = [] } = useInterestStocksQuery();
 
   const cachedRouteStockId =
-    stockId == null && stockCodeParam ? getCachedStockIdByTicker(stockCodeParam) : undefined;
+    stockId == null && stockCodeParam
+      ? getCachedStockIdByTicker(stockCodeParam)
+      : undefined;
   const [resolvedTickerStockId, setResolvedTickerStockId] = useState<
     number | undefined
   >(cachedRouteStockId);
@@ -166,7 +176,7 @@ export function StockDetailMain({
       ? "이벤트"
       : mobileMode === "today-learning"
         ? "오늘의 학습"
-      : "차트",
+        : "차트",
   );
   const { data: learningPinData } = useLearningPin(chartStockId);
 
@@ -185,9 +195,15 @@ export function StockDetailMain({
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
   }, []);
+
+  useEffect(() => {
+    if (!isMobile) return;
+    pendingMobileNav.path =
+      mobileTab === "오늘의 학습" ? "today-learning" : null;
+  }, [isMobile, mobileTab]);
 
   const [selectedEventId, setSelectedEventId] = useState<number | null>(
     mobileEventId ?? null,
@@ -277,7 +293,10 @@ export function StockDetailMain({
     holdEmptyChart,
   );
   const stock = stockProp ?? fetchedHeader;
-  const bars = useMemo(() => fetchedBars ?? barsProp ?? [], [fetchedBars, barsProp]);
+  const bars = useMemo(
+    () => fetchedBars ?? barsProp ?? [],
+    [fetchedBars, barsProp],
+  );
 
   const [hoverBar, setHoverBar] = useState<OhlcBar | null>(null);
 
@@ -297,6 +316,8 @@ export function StockDetailMain({
   useEffect(() => {
     if (selectedEventId === null) return;
     if (isMobile) return;
+    if (pathname.endsWith("/today-learning")) return;
+    if (pathname.endsWith("/event")) return;
 
     const code = stockCodeParam ?? "";
     const params = new URLSearchParams({
@@ -308,7 +329,7 @@ export function StockDetailMain({
     }
 
     navigate(`/chart/${code}/event?${params.toString()}`, { replace: true });
-  }, [eventPanelTab, isMobile, navigate, selectedEventId, stockCodeParam]);
+  }, [eventPanelTab, isMobile, navigate, pathname, selectedEventId, stockCodeParam]);
 
   const chartVisibleBars = visibleBarsForPeriod(activePeriod);
   const mobileChartVisibleBars = visibleBarsForPeriodMobile(activePeriod);
@@ -393,7 +414,10 @@ export function StockDetailMain({
                 stockId={chartStockId}
                 isOpen
                 isLoggedIn={isLoggedIn}
-                onLoginRequired={() => setLoginModalOpen(true)}
+                onLoginRequired={() => {
+                  setPendingMobileTabAfterLogin("오늘의 학습");
+                  setLoginModalOpen(true);
+                }}
               />
             </div>
           )}
@@ -522,9 +546,7 @@ export function StockDetailMain({
               onHoverBar={handleHoverBar}
               onEventClick={handleEventClick}
               learningPin={learningPinData}
-              onLearningPinClick={() =>
-                navigate(`/chart/${stockCodeParam ?? ""}/today-learning`)
-              }
+              onLearningPinClick={() => requestResponsiveRouteNavigation("today-learning")}
               focusDate={focusDate}
               activePeriod={activePeriod}
             />
@@ -536,25 +558,33 @@ export function StockDetailMain({
         </div>
       </div>
 
-    {loginModalOpen && (
-      <LoginModal
-        onClose={() => setLoginModalOpen(false)}
-        onSignup={() => {
-          setLoginModalOpen(false);
-          navigate("/signup");
-        }}
-        onLoginSuccess={async () => {
-          await refreshAuth();
-          await invalidateAuthTransitionQueries(queryClient);
-          setLoginModalOpen(false);
-          if (pendingEventId !== null) {
-            setSelectedEventId(pendingEventId);
-            setEventPanelTab("이벤트");
-            setPendingEventId(null);
-          }
-        }}
-      />
-    )}
+      {loginModalOpen && (
+        <LoginModal
+          onClose={() => {
+            setLoginModalOpen(false);
+            setPendingMobileTabAfterLogin(null);
+          }}
+          onSignup={() => {
+            setLoginModalOpen(false);
+            setPendingMobileTabAfterLogin(null);
+            navigate("/signup");
+          }}
+          onLoginSuccess={async () => {
+            await refreshAuth();
+            await invalidateAuthTransitionQueries(queryClient);
+            setLoginModalOpen(false);
+            if (pendingMobileTabAfterLogin === "오늘의 학습") {
+              setMobileTab("오늘의 학습");
+              setPendingMobileTabAfterLogin(null);
+            }
+            if (pendingEventId !== null) {
+              setSelectedEventId(pendingEventId);
+              setEventPanelTab("이벤트");
+              setPendingEventId(null);
+            }
+          }}
+        />
+      )}
     </>
   );
 }

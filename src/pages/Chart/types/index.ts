@@ -15,6 +15,8 @@ export interface EventPin {
   positive: boolean;
   /** 백엔드 이벤트 ID — 클릭 시 상세 조회에 사용 */
   eventId?: number;
+  /** 실제 이벤트 발생일 — 드릴다운 시 다음 기간 포커스 기준 */
+  eventDate: string;
   /** 정렬/비교용 원본 변화율 */
   changePct: number;
 }
