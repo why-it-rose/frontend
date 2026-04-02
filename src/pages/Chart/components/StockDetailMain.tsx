@@ -202,6 +202,11 @@ export function StockDetailMain({
   const [selectedEventId, setSelectedEventId] = useState<number | null>(
     mobileEventId ?? null,
   );
+
+  useEffect(() => {
+    setSelectedEventId(null);
+  }, [chartStockId]);
+
   const [eventPanelTab, setEventPanelTabState] = useState<"이벤트" | "메모">(
     sharedEventPanelTab.value === "memo" ? "메모" : "이벤트",
   );
