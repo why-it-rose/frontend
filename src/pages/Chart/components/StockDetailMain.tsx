@@ -358,15 +358,6 @@ export function StockDetailMain({
 
           {mobileTab === "차트" && (
             <>
-              {learningPinData !== null && learningPinData !== undefined && (
-                <div className="scrollbar-hide flex flex-nowrap gap-2 overflow-x-auto border-b border-[#eef2f7] px-4 py-3">
-                  <LearningPin
-                    data={learningPinData}
-                    onClick={() => setMobileTab("오늘의 학습")}
-                  />
-                </div>
-              )}
-
               <div className="shrink-0 bg-white px-4 py-2.5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <PeriodTabs
