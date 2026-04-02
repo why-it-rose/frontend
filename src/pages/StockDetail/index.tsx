@@ -71,7 +71,7 @@ export default function StockDetailPage() {
             <StockDetailAside hideHeader />
           </div>
       )}
-      {tab === 'event' && (
+      {tab === 'event' && event && (
           <EventTab
               event={event}
               scrapping={scrapping}
@@ -79,10 +79,15 @@ export default function StockDetailPage() {
               scrapErrorMessage={scrapError}
           />
       )}
-      {tab === 'memo' && (
+
+      {tab === 'memo' && event && (
           <MemoTab
               memos={memos}
-              eventInfo={{ eventType: event.eventType, stockName: event.stockName, changeRate: event.changeRate }}
+              eventInfo={{
+                eventType: event.eventType,
+                stockName: event.stockName,
+                changeRate: event.changeRate,
+              }}
               onSave={save}
               onUpdate={update}
               onDelete={remove}
