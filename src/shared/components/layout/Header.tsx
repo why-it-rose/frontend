@@ -1,4 +1,4 @@
-import { useState, useRef, type RefObject } from "react";
+import { useRef, useState, type RefObject } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "@/features/auth/context/AuthContext";
@@ -42,12 +42,8 @@ export default function Header({
   const [myPageOpen, setMyPageOpen] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const [alertAnchor, setAlertAnchor] = useState<"mobile" | "desktop" | null>(
-    null,
-  );
-  const mobileAlertContainerRef = useRef<HTMLDivElement | null>(null);
+  const [alertAnchor, setAlertAnchor] = useState<"desktop" | null>(null);
   const desktopAlertContainerRef = useRef<HTMLDivElement | null>(null);
-
   const { count: unreadCount } = useNotificationBadge();
   const hasUnread = unreadCount > 0;
   const [withdrawMessage, setWithdrawMessage] = useState("");
@@ -56,7 +52,7 @@ export default function Header({
   >("");
 
   const renderAlertButton = (
-    anchor: "mobile" | "desktop",
+    anchor: "desktop",
     containerRef: RefObject<HTMLDivElement | null>,
     className: string,
   ) => (
@@ -107,7 +103,6 @@ export default function Header({
           </Link>
           {isLoggedIn ? (
             <div className="flex items-center gap-2">
-              {renderAlertButton("mobile", mobileAlertContainerRef, "")}
               <button
                 type="button"
                 onClick={() => setMobileSearchOpen(true)}
