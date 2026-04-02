@@ -31,16 +31,11 @@ export default function TodayLearningPage() {
     return () => { cancelled = true; };
   }, [stockCode]);
 
-  const handleClose = () => {
-    navigate(`/chart/${stockCode ?? ''}/stock-detail`);
-  };
-
   return (
     <>
       <TodayLearningSidebar
         stockId={stockId}
         isOpen
-        onClose={handleClose}
         isLoggedIn={isLoggedIn}
         onLoginRequired={() => setLoginModalOpen(true)}
       />

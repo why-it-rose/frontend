@@ -10,6 +10,7 @@ import BottomTabBar from './BottomTabBar';
 import { deleteMyAccount, getApiResponseCode, logoutFromServer } from '@/features/auth/api/authApi';
 import { clearAuthTransitionQueries } from '@/features/auth/query/authQuerySync';
 import AlertCenter from '@/features/alert/AlertCenter/AlertCenter';
+import GuestLockPanel from '@/shared/components/common/GuestLockPanel';
 
 
 /** 홈 등 내부에서 높이·스크롤을 쓰려면 main은 스크롤 금지 + min-h-0 (padding 없음) */
@@ -29,19 +30,11 @@ export default function MobileLayout({
 
 
   const openMyPage = () => {
-    if (!isLoggedIn) {
-      navigate('/login');
-      return;
-    }
     setAlertOpen(false);
     setMyPageOpen(true);
   };
 
   const openAlerts = () => {
-    if (!isLoggedIn) {
-      navigate('/login');
-      return;
-    }
     setMyPageOpen(false);
     setAlertOpen(true);
   };
@@ -55,15 +48,35 @@ export default function MobileLayout({
         onMyPageClose={() => setMyPageOpen(false)}
         myPageActive={myPageOpen}
         onAlertsOpen={openAlerts}
+        onAlertsClose={() => setAlertOpen(false)}
         alertsActive={alertOpen}
       />
-      {isLoggedIn && alertOpen && (
-        <AlertCenter
-          onClose={() => setAlertOpen(false)}
-          containerRef={mobileAlertContainerRef}
-        />
+      {alertOpen && (
+        isLoggedIn ? (
+          <AlertCenter
+            onClose={() => setAlertOpen(false)}
+            containerRef={mobileAlertContainerRef}
+          />
+        ) : (
+          <div className="fixed left-0 right-0 top-13.75 bottom-22.25 z-250">
+            <GuestLockPanel
+              title="알림센터"
+              message={<>로그인 후 관심 종목의<br />오늘의 학습 뉴스 알림을<br />받아보세요.</>}
+              onClose={() => setAlertOpen(false)}
+            />
+          </div>
+        )
       )}
-      {isLoggedIn && myPageOpen && (
+      {myPageOpen && !isLoggedIn && (
+        <div className="fixed left-0 right-0 top-13.75 bottom-22.25 z-250">
+          <GuestLockPanel
+            title="마이페이지"
+            message={<>로그인 후 내 예측 기록과<br />학습 메모를 관리해보세요.</>}
+            onClose={() => setMyPageOpen(false)}
+          />
+        </div>
+      )}
+      {myPageOpen && isLoggedIn && (
           <MyPagePanel
               onClose={() => {
                 setMyPageOpen(false);

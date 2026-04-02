@@ -1,5 +1,5 @@
 import TabBar from '@/shared/components/common/TabBar';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import EventTab from '@/features/event/components/EventTab';
 import MemoTab from '@/features/event/components/MemoTab';
@@ -25,7 +25,12 @@ export default function StockDetailPage() {
   const { event, loading, scrapping, error, scrapError, toggleScrap } = useEventDetail(gatedEventId, isLoggedIn);
   const { memos, save, update, remove } = useMemos(gatedEventId, isLoggedIn);
 
-  const [tab, setTab] = useState('event');
+  const requestedTab = searchParams.get('tab') === 'memo' ? 'memo' : 'event';
+  const [tab, setTab] = useState<'event' | 'memo'>(requestedTab);
+
+  useEffect(() => {
+    setTab(requestedTab);
+  }, [requestedTab]);
 
   if (!isLoggedIn) {
     return (

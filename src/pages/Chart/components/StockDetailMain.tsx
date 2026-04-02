@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useParams, useSearchParams } from "react-router";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router";
 import LoginModal from "@/features/auth/components/LoginModal";
 import { useAuth } from "@/features/auth/context/AuthContext";
 import { invalidateAuthTransitionQueries } from "@/features/auth/query/authQuerySync";
@@ -86,11 +86,12 @@ export function StockDetailMain({
   className = "",
   mobileMode = "stock-detail",
 }: StockDetailMainAllProps) {
+  const { pathname } = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { refreshAuth, isLoggedIn } = useAuth();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
-  const [pendingEventIdAfterLogin, setPendingEventIdAfterLogin] = useState<number | null>(null);
+  const [pendingEventId, setPendingEventId] = useState<number | null>(null);
   const { stockCode: stockCodeParam } = useParams<{ stockCode?: string }>();
   const [searchParams] = useSearchParams();
   const mobileEventId = useMemo(() => {
@@ -163,25 +164,26 @@ export function StockDetailMain({
   >(
     mobileMode === "event"
       ? "이벤트"
+      : mobileMode === "today-learning"
+        ? "오늘의 학습"
       : "차트",
   );
   const { data: learningPinData } = useLearningPin(chartStockId);
-  const mobileEventQueryId = isLoggedIn ? (mobileMode === "event" ? mobileEventId : null) : null;
 
   const {
     event: mobileEvent,
     scrapping: mobileEventScrapping,
     toggleScrap,
-  } = useEventDetail(mobileEventQueryId, isLoggedIn);
+  } = useEventDetail(mobileMode === "event" ? mobileEventId : null);
   const {
     memos,
     save: saveMemo,
     update: updateMemo,
     remove: removeMemo,
-  } = useMemos(mobileEventQueryId, isLoggedIn);
+  } = useMemos(mobileMode === "event" ? mobileEventId : null);
 
   const [selectedEventId, setSelectedEventId] = useState<number | null>(
-    mobileMode === "event" && mobileEventId ? mobileEventId : null,
+    mobileEventId ?? null,
   );
   const [eventPanelTab, setEventPanelTab] = useState<"이벤트" | "메모">(
     "이벤트",
@@ -190,13 +192,13 @@ export function StockDetailMain({
     event: selectedEvent,
     scrapping: selectedScrapping,
     toggleScrap: toggleSelectedScrap,
-  } = useEventDetail(isLoggedIn ? selectedEventId : null, isLoggedIn);
+  } = useEventDetail(selectedEventId);
   const {
     memos: selectedMemos,
     save: saveSelected,
     update: updateSelected,
     remove: removeSelected,
-  } = useMemos(isLoggedIn ? selectedEventId : null, isLoggedIn);
+  } = useMemos(selectedEventId);
 
   const [focusDate, setFocusDate] = useState<string | undefined>(undefined);
   const [chartAnimClass, setChartAnimClass] = useState<
@@ -237,14 +239,14 @@ export function StockDetailMain({
         changePeriod("일", activePeriod);
         setFocusDate(date);
       } else {
-        if (!isLoggedIn) {
-          setPendingEventIdAfterLogin(eventId);
-          setLoginModalOpen(true);
-          return;
-        }
         if (window.innerWidth < 768) {
-          setSelectedEventId(eventId);
-          setEventPanelTab("이벤트");
+          if (!isLoggedIn) {
+            setPendingEventId(eventId);
+            setLoginModalOpen(true);
+          } else {
+            setSelectedEventId(eventId);
+            setEventPanelTab("이벤트");
+          }
         } else {
           const code = stockCodeParam ?? "";
           navigate(`/chart/${code}/event?eventId=${eventId}`);
@@ -280,6 +282,23 @@ export function StockDetailMain({
   const handleHoverBar = useCallback((bar: OhlcBar | null) => {
     setHoverBar(bar);
   }, []);
+
+  useEffect(() => {
+    if (selectedEventId === null) return;
+    if (typeof window === "undefined" || window.innerWidth < 768) return;
+    if (pathname.endsWith("/event")) return;
+
+    const code = stockCodeParam ?? "";
+    const params = new URLSearchParams({
+      eventId: String(selectedEventId),
+    });
+
+    if (eventPanelTab === "메모") {
+      params.set("tab", "memo");
+    }
+
+    navigate(`/chart/${code}/event?${params.toString()}`, { replace: true });
+  }, [eventPanelTab, navigate, pathname, selectedEventId, stockCodeParam]);
 
   const chartVisibleBars = visibleBarsForPeriod(activePeriod);
   const mobileChartVisibleBars = visibleBarsForPeriodMobile(activePeriod);
@@ -371,7 +390,6 @@ export function StockDetailMain({
               <TodayLearningSidebar
                 stockId={chartStockId}
                 isOpen
-                onClose={() => setMobileTab("차트")}
                 isLoggedIn={isLoggedIn}
                 onLoginRequired={() => setLoginModalOpen(true)}
               />
@@ -518,29 +536,20 @@ export function StockDetailMain({
 
     {loginModalOpen && (
       <LoginModal
-        onClose={() => {
-          setLoginModalOpen(false);
-          setPendingEventIdAfterLogin(null);
-        }}
+        onClose={() => setLoginModalOpen(false)}
         onSignup={() => {
           setLoginModalOpen(false);
-          setPendingEventIdAfterLogin(null);
           navigate("/signup");
         }}
         onLoginSuccess={async () => {
           await refreshAuth();
           await invalidateAuthTransitionQueries(queryClient);
-          if (pendingEventIdAfterLogin !== null) {
-            if (window.innerWidth < 768) {
-              setSelectedEventId(pendingEventIdAfterLogin);
-              setEventPanelTab("이벤트");
-            } else {
-              const code = stockCodeParam ?? "";
-              navigate(`/chart/${code}/event?eventId=${pendingEventIdAfterLogin}`);
-            }
-            setPendingEventIdAfterLogin(null);
-          }
           setLoginModalOpen(false);
+          if (pendingEventId !== null) {
+            setSelectedEventId(pendingEventId);
+            setEventPanelTab("이벤트");
+            setPendingEventId(null);
+          }
         }}
       />
     )}

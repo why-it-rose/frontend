@@ -42,9 +42,10 @@ const PX = 18;
 
 export interface AlertCenterDetailFeedProps {
   notificationId: number | null;
+  onNavigate?: () => void;
 }
 
-export default function AlertCenterDetailFeed({ notificationId }: AlertCenterDetailFeedProps) {
+export default function AlertCenterDetailFeed({ notificationId, onNavigate }: AlertCenterDetailFeedProps) {
   const navigate = useNavigate();
   const [collapsedByGroup, setCollapsedByGroup] = useState<Record<string, boolean>>({});
   const { data: allDetails } = useNotificationDetail({ days: 7 });
@@ -101,7 +102,7 @@ export default function AlertCenterDetailFeed({ notificationId }: AlertCenterDet
                             <button
                               type="button"
                               className="flex min-w-0 flex-1 items-center gap-3 text-left"
-                              onClick={() => navigate(`/chart/${encodeURIComponent(group.code)}/today-learning`)}
+                              onClick={() => { onNavigate?.(); navigate(`/chart/${encodeURIComponent(group.code)}/today-learning`); }}
                             >
                               <div className="relative shrink-0">
                                 <AlertStockAvatar color={group.color} ini={group.ini} logoUrl={group.logoUrl} />
