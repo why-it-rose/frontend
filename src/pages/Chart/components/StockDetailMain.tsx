@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useLocation, useNavigate, useParams, useSearchParams } from "react-router";
+import { useNavigate, useParams, useSearchParams } from "react-router";
 import LoginModal from "@/features/auth/components/LoginModal";
 import { useAuth } from "@/features/auth/context/AuthContext";
 import { invalidateAuthTransitionQueries } from "@/features/auth/query/authQuerySync";
@@ -34,6 +34,7 @@ import StockDetailAside from "@/pages/StockDetail/components/StockDetailaside";
 import { useEventDetail } from "@/features/event/hooks/useEventDetail";
 import { useMemos } from "@/features/event/hooks/useMemos";
 import { useLearningPin } from "@/features/news/hooks/useLearningPin";
+import { sharedEventPanelTab } from "@/features/event/sharedEventPanelTab";
 import TodayLearningSidebar from "@/features/news/components/TodayLearningSidebar";
 
 /** 기간별로 한 화면에 보일 최대 봉 수(많을수록 조금 더 축소된 느낌) — 봉이 적으면 전체 표시 */
@@ -86,7 +87,6 @@ export function StockDetailMain({
   className = "",
   mobileMode = "stock-detail",
 }: StockDetailMainAllProps) {
-  const { pathname } = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { refreshAuth, isLoggedIn } = useAuth();
@@ -182,12 +182,23 @@ export function StockDetailMain({
     remove: removeMemo,
   } = useMemos(mobileMode === "event" ? mobileEventId : null);
 
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+
   const [selectedEventId, setSelectedEventId] = useState<number | null>(
     mobileEventId ?? null,
   );
-  const [eventPanelTab, setEventPanelTab] = useState<"이벤트" | "메모">(
-    "이벤트",
+  const [eventPanelTab, setEventPanelTabState] = useState<"이벤트" | "메모">(
+    sharedEventPanelTab.value === "memo" ? "메모" : "이벤트",
   );
+  const setEventPanelTab = useCallback((t: "이벤트" | "메모") => {
+    sharedEventPanelTab.value = t === "메모" ? "memo" : "event";
+    setEventPanelTabState(t);
+  }, []);
   const {
     event: selectedEvent,
     scrapping: selectedScrapping,
@@ -285,8 +296,7 @@ export function StockDetailMain({
 
   useEffect(() => {
     if (selectedEventId === null) return;
-    if (typeof window === "undefined" || window.innerWidth < 768) return;
-    if (pathname.endsWith("/event")) return;
+    if (isMobile) return;
 
     const code = stockCodeParam ?? "";
     const params = new URLSearchParams({
@@ -298,7 +308,7 @@ export function StockDetailMain({
     }
 
     navigate(`/chart/${code}/event?${params.toString()}`, { replace: true });
-  }, [eventPanelTab, navigate, pathname, selectedEventId, stockCodeParam]);
+  }, [eventPanelTab, isMobile, navigate, selectedEventId, stockCodeParam]);
 
   const chartVisibleBars = visibleBarsForPeriod(activePeriod);
   const mobileChartVisibleBars = visibleBarsForPeriodMobile(activePeriod);

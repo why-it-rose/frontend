@@ -1,6 +1,7 @@
 import TabBar from '@/shared/components/common/TabBar';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
+import { sharedEventPanelTab } from '@/features/event/sharedEventPanelTab';
 import EventTab from '@/features/event/components/EventTab';
 import MemoTab from '@/features/event/components/MemoTab';
 import { useEventDetail } from '@/features/event/hooks/useEventDetail';
@@ -25,12 +26,12 @@ export default function StockDetailPage() {
   const { event, loading, scrapping, error, scrapError, toggleScrap } = useEventDetail(gatedEventId, isLoggedIn);
   const { memos, save, update, remove } = useMemos(gatedEventId, isLoggedIn);
 
-  const requestedTab = searchParams.get('tab') === 'memo' ? 'memo' : 'event';
-  const [tab, setTab] = useState<'event' | 'memo'>(requestedTab);
-
-  useEffect(() => {
-    setTab(requestedTab);
-  }, [requestedTab]);
+  const [tab, setTab] = useState<'event' | 'memo'>(sharedEventPanelTab.value);
+  const handleTabChange = (v: string) => {
+    const next = v as 'event' | 'memo';
+    sharedEventPanelTab.value = next;
+    setTab(next);
+  };
 
   if (!isLoggedIn) {
     return (
@@ -62,7 +63,7 @@ export default function StockDetailPage() {
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <TabBar tabs={TABS} value={tab} onChange={(v) => setTab(v as 'event' | 'memo')} />
+      <TabBar tabs={TABS} value={tab} onChange={handleTabChange} />
       {tab === 'event' && (
           <EventTab
               event={event}
