@@ -458,13 +458,13 @@ export function StockDetailMain({
           {selectedEventId !== null && (
             <div className="absolute inset-0 z-20 flex flex-col bg-white md:hidden">
               <div className="flex shrink-0 items-center justify-between border-b border-[#eff1f8] px-1">
-                <div className="flex">
+                <div className="flex flex-1">
                   {(["이벤트", "메모"] as const).map((tab) => (
                     <button
                       key={tab}
                       type="button"
                       onClick={() => setEventPanelTab(tab)}
-                      className={`px-5 py-2.5 text-sm font-medium border-b-2 ${
+                      className={`flex-1 py-2.5 text-center text-sm font-medium border-b-2 ${
                         eventPanelTab === tab
                           ? "border-primary text-primary"
                           : "border-transparent text-[#9ca3af]"
