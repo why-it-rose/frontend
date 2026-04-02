@@ -4,6 +4,7 @@ export {
   fetchStockSearch,
   fetchStockDetail,
   fetchStockCompany,
+  fetchStockMarketBottomBar,
   getCachedStockIdByTicker,
   resolveStockIdByTicker,
 } from './stockApi';

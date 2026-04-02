@@ -3,6 +3,7 @@ import type {
   StockDetailDto,
   StockListParams,
   StockListResponseDto,
+  StockMarketBottomBarDto,
   StockChartPeriod,
   StockPricesDataDto,
   StockSearchItemDto,
@@ -18,6 +19,8 @@ const stockDetailCache = new Map<number, StockDetailDto>();
 const stockDetailInflight = new Map<number, Promise<StockDetailDto>>();
 const stockPricesCache = new Map<string, StockPricesDataDto>();
 const stockPricesInflight = new Map<string, Promise<StockPricesDataDto>>();
+const stockMarketBottomBarCache = new Map<string, StockMarketBottomBarDto>();
+const stockMarketBottomBarInflight = new Map<string, Promise<StockMarketBottomBarDto>>();
 const resolvedStockIdCache = new Map<string, number>();
 const resolvedStockIdInflight = new Map<string, Promise<number | undefined>>();
 
@@ -50,6 +53,16 @@ function writeSessionNumber(key: string, value: number): void {
 
 function stockPricesKey(stockId: number, period: StockChartPeriod): string {
   return `${stockId}:${period}`;
+}
+
+function marketBottomBarKey(): string {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const hh = String(now.getHours()).padStart(2, '0');
+  const bucket = Math.floor(now.getMinutes() / 10);
+  return `${yyyy}${mm}${dd}${hh}${bucket}`;
 }
 
 function mapPeriodToApi(period?: StockListPeriod): StockListPeriod | undefined {
@@ -252,4 +265,40 @@ export async function fetchStockCompany(stockId: number): Promise<StockCompanyDt
     return row as StockCompanyDto;
   }
   throw new Error('fetchStockCompany failed: invalid response shape');
+}
+
+/**
+ * 하단 마켓 바 — Swagger: GET /api/stocks/market-bottom-bar
+ */
+export async function fetchStockMarketBottomBar(): Promise<StockMarketBottomBarDto> {
+  const key = marketBottomBarKey();
+  const cached = stockMarketBottomBarCache.get(key);
+  if (cached) return cached;
+
+  const inflight = stockMarketBottomBarInflight.get(key);
+  if (inflight) return inflight;
+
+  const request = (async () => {
+    const url = `${BASE_URL}/api/stocks/market-bottom-bar`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`fetchStockMarketBottomBar failed: ${res.status}`);
+    }
+    const json = await res.json();
+    const row = json?.result ?? json?.data;
+    if (row?.items && Array.isArray(row.items)) {
+      const data = row as StockMarketBottomBarDto;
+      stockMarketBottomBarCache.clear();
+      stockMarketBottomBarCache.set(key, data);
+      return data;
+    }
+    throw new Error('fetchStockMarketBottomBar failed: invalid response shape');
+  })();
+
+  stockMarketBottomBarInflight.set(key, request);
+  try {
+    return await request;
+  } finally {
+    stockMarketBottomBarInflight.delete(key);
+  }
 }
