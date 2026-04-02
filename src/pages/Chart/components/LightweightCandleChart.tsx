@@ -387,13 +387,19 @@ export function LightweightCandleChart({
       positive: boolean,
       onClick?: () => void,
     ): HTMLDivElement {
+      const accent = positive ? "#be123c" : "#1d4ed8";
       const ringBg = positive ? "rgba(190,18,60,0.12)" : "rgba(29,78,216,0.12)";
-      const innerBg = positive ? "#be123c" : "#1d4ed8";
+      const innerBg = accent;
+      const compactPin = window.innerWidth >= 980;
+      const outerSize = compactPin ? 28 : 32;
+      const innerSize = compactPin ? 18 : 22;
+      const arrowHalfWidth = compactPin ? 3.25 : 4;
+      const arrowHeight = compactPin ? 4.25 : 5;
 
       const outer = document.createElement("div");
       outer.style.cssText = [
-        "width:32px",
-        "height:32px",
+        `width:${outerSize}px`,
+        `height:${outerSize}px`,
         "border-radius:50%",
         `background:${ringBg}`,
         "display:flex",
@@ -404,8 +410,8 @@ export function LightweightCandleChart({
 
       const inner = document.createElement("div");
       inner.style.cssText = [
-        "width:22px",
-        "height:22px",
+        `width:${innerSize}px`,
+        `height:${innerSize}px`,
         "border-radius:50%",
         `background:${innerBg}`,
         "display:flex",
@@ -415,8 +421,8 @@ export function LightweightCandleChart({
 
       const arrow = document.createElement("div");
       arrow.style.cssText = positive
-        ? "width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:5px solid white;margin-bottom:1px"
-        : "width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid white;margin-top:1px";
+        ? `width:0;height:0;border-left:${arrowHalfWidth}px solid transparent;border-right:${arrowHalfWidth}px solid transparent;border-bottom:${arrowHeight}px solid white;margin-bottom:1px`
+        : `width:0;height:0;border-left:${arrowHalfWidth}px solid transparent;border-right:${arrowHalfWidth}px solid transparent;border-top:${arrowHeight}px solid white;margin-top:1px`;
 
       inner.appendChild(arrow);
       outer.appendChild(inner);
@@ -658,6 +664,10 @@ export function LightweightCandleChart({
     function renderLearningPin() {
       learningPinEl.innerHTML = "";
       if (!learningPin || activePeriodRef.current !== "일") return;
+      const compactPin = window.innerWidth >= 980;
+      const outerSize = compactPin ? 28 : 32;
+      const innerSize = compactPin ? 18 : 22;
+      const diamondSize = compactPin ? 7 : 8;
 
       const targetDate = parseBarDate(learningPin.digestDate);
       let targetBar = clean[clean.length - 1];
@@ -709,8 +719,8 @@ export function LightweightCandleChart({
       const head = (() => {
         const outer = document.createElement("div");
         outer.style.cssText = [
-          "width:32px",
-          "height:32px",
+          `width:${outerSize}px`,
+          `height:${outerSize}px`,
           "border-radius:50%",
           "background:rgba(234,179,8,0.15)",
           "display:flex",
@@ -722,8 +732,8 @@ export function LightweightCandleChart({
 
         const inner = document.createElement("div");
         inner.style.cssText = [
-          "width:22px",
-          "height:22px",
+          `width:${innerSize}px`,
+          `height:${innerSize}px`,
           "border-radius:50%",
           "background:#EAB308",
           "display:flex",
@@ -733,8 +743,8 @@ export function LightweightCandleChart({
 
         const icon = document.createElement("div");
         icon.style.cssText = [
-          "width:8px",
-          "height:8px",
+          `width:${diamondSize}px`,
+          `height:${diamondSize}px`,
           "background:white",
           "transform:rotate(45deg)",
           "border-radius:1px",

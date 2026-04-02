@@ -200,7 +200,7 @@ export default function TodayLearningSidebar({
 
         {!isLoading && !isError && data !== null && data !== undefined && (
           <>
-            <div className="mb-2.5 mt-3 rounded-[14px] p-4" style={{ background: '#014D9D' }}>
+            <div className="mb-2.5 mt-5 rounded-[14px] p-4" style={{ background: '#014D9D' }}>
               <p className="mb-1 text-[11px] text-[#93c5fd]">{data.digestDate}</p>
               <div className="mb-1 flex items-baseline gap-2">
                 <span className="text-[20px] font-bold text-white">{data.stockName}</span>

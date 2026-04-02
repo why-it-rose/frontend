@@ -18,6 +18,7 @@ export function MobileSearchSheet({ open, onClose }: Props) {
     inputRef,
     showResults,
     goToStock,
+    goToFirstResult,
     removeRecent,
   } = useStockSearchPanel({
     active: open,
@@ -75,6 +76,7 @@ export function MobileSearchSheet({ open, onClose }: Props) {
         results={results}
         recent={recent}
         onPickStock={goToStock}
+        onPickFirstResult={goToFirstResult}
         onRemoveRecent={removeRecent}
       />
     </div>

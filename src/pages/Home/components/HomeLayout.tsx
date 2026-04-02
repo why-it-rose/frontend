@@ -35,7 +35,6 @@ interface HomeStockRow {
   changeRate: number;
   tradingAmount: string;
   tradingVolume: string;
-  eventType?: 'SURGE' | 'DROP';
 }
 
 const MARKET_LABEL: Record<StockMarket, string> = {
@@ -108,7 +107,6 @@ function toHomeStockRow(item: HomeStockItemDto): HomeStockRow {
     changeRate: item.changeRate,
     tradingAmount: formatTradingAmountKR(item.tradingAmount),
     tradingVolume: formatTradingVolumeKR(item.tradingVolume),
-    eventType: item.eventType ?? undefined,
   };
 }
 
@@ -297,7 +295,7 @@ export default function HomeLayout({
             </div>
           </div>
 
-          <div className="hidden grid-cols-[28px_44px_1fr_110px_88px_100px_100px_112px] items-center border-b border-[#eff1f8] bg-[#f0f4f9] px-4 py-2 text-[11px] font-semibold text-[#9ca3af] lg:grid">
+          <div className="hidden grid-cols-[28px_44px_1fr_110px_88px_100px_100px] items-center border-b border-[#eff1f8] bg-[#f0f4f9] px-4 py-2 text-[11px] font-semibold text-[#9ca3af] lg:grid">
             <div />
             <div className="text-center" />
             <div />
@@ -305,7 +303,6 @@ export default function HomeLayout({
             <div className="text-right">등락률</div>
             <div className="text-right">거래대금</div>
             <div className="pr-[6px] text-right">거래량</div>
-            <div className="translate-x-[6px] text-center">이벤트</div>
           </div>
 
           <div
@@ -333,7 +330,7 @@ export default function HomeLayout({
                       navigate(toChartStockDetail(stock.ticker));
                     }
                   }}
-                  className="grid cursor-pointer grid-cols-[28px_44px_1fr_110px_88px_100px_100px_92px] items-center border-b border-[#eff1f8] px-4 py-2.5 transition-colors duration-150 hover:bg-[#f4f6fb]"
+                  className="grid cursor-pointer grid-cols-[28px_44px_1fr_110px_88px_100px_100px] items-center border-b border-[#eff1f8] px-4 py-2.5 transition-colors duration-150 hover:bg-[#f4f6fb]"
                 >
                   <button
                     type="button"
@@ -375,15 +372,6 @@ export default function HomeLayout({
                   <div className={`pr-[5px] text-right text-xs font-semibold ${changeColor(stock.changeRate)}`}>{changeText(stock.changeRate)}</div>
                   <div className="pr-[5px] text-right text-xs text-[#4b5563]">{stock.tradingAmount}</div>
                   <div className="pr-[9px] text-right text-xs text-[#4b5563]">{stock.tradingVolume}</div>
-                  <div className="translate-x-[6px] text-center">
-                    {stock.eventType ? (
-                      <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${stock.eventType === 'SURGE' ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-blue-500'}`}>
-                        {stock.eventType === 'SURGE' ? '▲ 급등' : '▼ 급락'}
-                      </span>
-                    ) : (
-                      <span className="text-xs text-[#9ca3af]">-</span>
-                    )}
-                  </div>
                 </div>
               ))}
             </div>

@@ -290,7 +290,7 @@ export default function InterestStockAside() {
             </div>
           )}
           {!isLoading && !isError && items.length === 0 && (
-            <div className="px-4 py-8 text-center text-sm text-[#9ca3af]">
+            <div className="flex flex-1 items-center justify-center px-4 text-center text-sm text-[#9ca3af]">
               등록된 관심 종목이 없습니다.
             </div>
           )}

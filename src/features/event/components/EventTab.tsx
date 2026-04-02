@@ -49,7 +49,7 @@ export default function EventTab({
       >
         {/* 이벤트 헤더 카드 */}
         <div
-          className="mt-3 mb-2.5 rounded-[14px] p-4"
+          className="mt-5 mb-2.5 rounded-[14px] p-4"
           style={{ background: "#fff", border: "1px solid #e5e7eb" }}
         >
           <div className="flex justify-between items-center mb-1.5">
@@ -118,7 +118,7 @@ export default function EventTab({
         </div>
 
         {/* 관련 뉴스 */}
-        <div>
+        <div className="mt-2.5">
           <p className="font-semibold text-sm text-[#374151] mb-2.5">
             관련 뉴스
           </p>

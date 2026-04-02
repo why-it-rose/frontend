@@ -32,12 +32,15 @@ function toNumber(value: unknown): number | null {
 }
 
 function formatEok(eok: number): string {
-  if (!Number.isFinite(eok) || eok <= 0) return '—';
-  const jo = Math.floor(eok / 10000);
-  const restEok = Math.floor(eok % 10000);
-  if (jo > 0 && restEok > 0) return `${jo.toLocaleString('ko-KR')}조 ${restEok.toLocaleString('ko-KR')}억`;
-  if (jo > 0) return `${jo.toLocaleString('ko-KR')}조`;
-  return `${Math.round(eok).toLocaleString('ko-KR')}억`;
+  if (!Number.isFinite(eok)) return '—';
+  if (eok === 0) return '0억';
+  const abs = Math.abs(eok);
+  const jo = Math.floor(abs / 10000);
+  const restEok = Math.floor(abs % 10000);
+  const sign = eok < 0 ? '-' : '';
+  if (jo > 0 && restEok > 0) return `${sign}${jo.toLocaleString('ko-KR')}조 ${restEok.toLocaleString('ko-KR')}억`;
+  if (jo > 0) return `${sign}${jo.toLocaleString('ko-KR')}조`;
+  return `${sign}${Math.round(abs).toLocaleString('ko-KR')}억`;
 }
 
 function formatWonAsJoEok(won: number): string {

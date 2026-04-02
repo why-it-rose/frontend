@@ -1,9 +1,9 @@
-export const RECENT_KEY = "why-it-rose-search-recent-v1";
+export const RECENT_KEY = "why-it-rose-search-recent-v2";
 export const MAX_RECENT = 8;
 export const DEBOUNCE_MS = 280;
 export const SEARCH_LIMIT = 20;
 
-export type RecentItem = { ticker: string; name: string };
+export type RecentItem = { ticker: string; name: string; logoUrl?: string | null };
 
 export function readRecent(): RecentItem[] {
   try {
