@@ -62,7 +62,7 @@ export default function StockDetailPage() {
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <TabBar tabs={TABS} value={tab} onChange={setTab} />
+      <TabBar tabs={TABS} value={tab} onChange={(v) => setTab(v as 'event' | 'memo')} />
       {tab === 'event' && (
           <EventTab
               event={event}
