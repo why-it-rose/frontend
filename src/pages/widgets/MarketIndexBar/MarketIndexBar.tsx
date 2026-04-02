@@ -14,13 +14,14 @@ function TickerStrip({ stripKey, rows }: { stripKey: string; rows: TickerRow[] }
   return (
     <div className="flex shrink-0 items-center gap-6 px-5 py-2 text-[11px] text-[#4b5563] md:gap-8 md:text-xs">
       {rows.map((item) => {
-        const q = item.quote;
-        const titleName = (q?.hname && q.hname.trim()) || item.label;
+        const titleName = item.label;
         const pending = !item.loaded && !item.error;
-        const priceStr = pending ? '…' : q != null ? formatPrice(q.price) : '—';
-        const changeStr = pending ? '…' : q != null ? formatChange(q.change, q.sign) : '—';
-        const pctStr = pending ? '…' : q != null ? `(${formatPct(q.diffPct)})` : '(—)';
-        const up = q != null ? isUpQuote(q.sign, q.change) : true;
+        const priceStr = pending ? '…' : item.currentPrice != null ? formatPrice(item.currentPrice) : '—';
+        const changeStr =
+          pending ? '…' : item.priceChange != null ? formatChange(item.priceChange, item.changeDirection) : '—';
+        const pctStr =
+          pending ? '…' : item.changeRate != null ? `(${formatPct(item.changeRate)})` : '(—)';
+        const up = item.changeDirection != null ? isUpQuote(item.changeDirection) : true;
 
         return (
           <a

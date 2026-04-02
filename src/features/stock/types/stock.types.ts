@@ -152,3 +152,19 @@ export interface StockCompanyDto {
   financials?: StockCompanyFinancialsDto | null;
   investorTrading?: StockCompanyInvestorTradingDto | null;
 }
+
+/** Swagger: GET /api/stocks/market-bottom-bar */
+export interface StockMarketBottomBarItemDto {
+  id: string;
+  label: string;
+  shcode: string;
+  infoUrl: string;
+  currentPrice: number;
+  priceChange: number;
+  changeRate: number;
+  changeDirection: StockChangeDirection;
+}
+
+export interface StockMarketBottomBarDto {
+  items: StockMarketBottomBarItemDto[];
+}

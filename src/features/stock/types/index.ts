@@ -17,6 +17,8 @@ export type {
   StockCompanyDto,
   StockCompanyFinancialsDto,
   StockCompanyInvestorTradingDto,
+  StockMarketBottomBarDto,
+  StockMarketBottomBarItemDto,
   StockDetailDto,
   StockSort,
 } from './stock.types';
