@@ -6,7 +6,6 @@ import { useAuth } from "@/features/auth/context/AuthContext";
 import { invalidateAuthTransitionQueries } from "@/features/auth/query/authQuerySync";
 import { fetchStockSearch } from "@/features/stock/api";
 import { useInterestStocksQuery } from "@/features/stock/hooks/useInterestStocks";
-import { buildAuthQueryScope } from "@/shared/queryKeys";
 import { ROUTES } from "@/shared/constants/routes";
 import type { OhlcBar, PeriodTab, StockDetailMainProps } from "../types";
 import {
@@ -87,7 +86,7 @@ export function StockDetailMain({
 }: StockDetailMainAllProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { refreshAuth, isLoggedIn, user } = useAuth();
+  const { refreshAuth, isLoggedIn } = useAuth();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const { stockCode: stockCodeParam } = useParams<{ stockCode?: string }>();
   const [searchParams] = useSearchParams();
@@ -137,8 +136,6 @@ export function StockDetailMain({
   const displayCode = stockCodeParam ?? code ?? "";
   const routeHasTicker = Boolean(stockCodeParam);
   const holdEmptyChart = Boolean(stockCodeParam && !stockId && !searchSettled);
-  const authScope = buildAuthQueryScope(isLoggedIn, user?.userId);
-
   const isInterested = useMemo(
     () =>
       chartStockId != null &&
@@ -248,10 +245,9 @@ export function StockDetailMain({
     chartStockId,
     activePeriod,
     holdEmptyChart,
-    authScope,
   );
   const stock = stockProp ?? fetchedHeader;
-  const bars = fetchedBars ?? barsProp ?? [];
+  const bars = useMemo(() => fetchedBars ?? barsProp ?? [], [fetchedBars, barsProp]);
 
   useEffect(() => {
     if (!routeHasTicker) return;

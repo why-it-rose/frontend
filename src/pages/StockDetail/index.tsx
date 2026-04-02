@@ -1,10 +1,12 @@
 import TabBar from '@/shared/components/common/TabBar';
 import { useState } from 'react';
-import { useSearchParams } from 'react-router';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
 import EventTab from '@/features/event/components/EventTab';
 import MemoTab from '@/features/event/components/MemoTab';
 import { useEventDetail } from '@/features/event/hooks/useEventDetail';
 import { useMemos } from '@/features/event/hooks/useMemos';
+import { useAuth } from '@/features/auth/context/AuthContext';
+import GuestLockPanel from '@/shared/components/common/GuestLockPanel';
 
 const TABS = [
   { label: '이벤트', value: 'event' },
@@ -15,10 +17,30 @@ export default function StockDetailPage() {
   const [searchParams] = useSearchParams();
   const eventId = searchParams.get('eventId') ? Number(searchParams.get('eventId')) : null;
 
+  const { isLoggedIn } = useAuth();
+  const navigate = useNavigate();
+  const { stockCode } = useParams<{ stockCode?: string }>();
+
   const { event, loading, scrapping, error, scrapError, toggleScrap } = useEventDetail(eventId);
   const { memos, save, update, remove } = useMemos(eventId);
 
   const [tab, setTab] = useState('event');
+
+  if (!isLoggedIn) {
+    return (
+      <GuestLockPanel
+        title="이벤트"
+        message={
+          <>
+            <span className="font-semibold text-text-primary">로그인</span> 후 급등락 이벤트<br />
+            관련 뉴스를 확인하고<br />
+            학습 내용을 메모해보세요.
+          </>
+        }
+        onClose={() => navigate(stockCode ? `/chart/${stockCode}/stock-detail` : -1 as never)}
+      />
+    );
+  }
 
   if (loading) {
     return <div className="flex flex-1 items-center justify-center text-sm text-[#9ca3af]">불러오는 중...</div>;

@@ -167,7 +167,6 @@ export function useOhlcDataWithEvents(
   stockId: number | undefined,
   period: PeriodTab,
   holdEmpty = false,
-  authScope?: string,
 ) {
   const { bars: rawBars, loading, error, refetch } = useOhlcData(stockId, period, holdEmpty);
 
