@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 import type { CompanyInfo } from '@/pages/StockDetail/types/companyInfo';
 import { useCompanyInfoPanel } from '@/pages/StockDetail/hooks/useCompanyInfoPanel';
@@ -44,7 +44,9 @@ export default function StockDetailAside({
   const company = companyProp ?? fromRoute;
 
   const [expanded, setExpanded] = useState(false);
+  const [canExpandOverview, setCanExpandOverview] = useState(false);
   const [useCompactPerfValue, setUseCompactPerfValue] = useState(false);
+  const overviewRef = useRef<HTMLParagraphElement | null>(null);
   const latestPerf = company.performance.at(-1);
   const maxAbs = Math.max(
     ...(company.investorTrends.length
@@ -52,8 +54,6 @@ export default function StockDetailAside({
       : [0]),
     1,
   );
-
-  const isLongText = company.overview.length > 100;
 
   useEffect(() => {
     const updateCompactFlag = () => {
@@ -63,6 +63,29 @@ export default function StockDetailAside({
     window.addEventListener('resize', updateCompactFlag);
     return () => window.removeEventListener('resize', updateCompactFlag);
   }, []);
+
+  useEffect(() => {
+    const el = overviewRef.current;
+    if (!el) return;
+
+    const updateExpandable = () => {
+      setCanExpandOverview(el.scrollHeight > el.clientHeight + 1);
+    };
+
+    updateExpandable();
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateExpandable();
+    });
+
+    resizeObserver.observe(el);
+    window.addEventListener('resize', updateExpandable);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateExpandable);
+    };
+  }, [company.overview, expanded]);
 
   const toCompactJo = (raw: string): string => {
     const m = raw.match(/^([\d,]+)조(?:\s*([\d,]+)억)?$/);
@@ -198,6 +221,7 @@ export default function StockDetailAside({
           </p>
           <div className="rounded-xl bg-[#f4f6fb] px-3 py-3">
             <p
+              ref={overviewRef}
               className={`text-[12px] leading-[1.72] text-[#475467] ${
                 !expanded ? 'line-clamp-3' : ''
               }`}
@@ -206,7 +230,7 @@ export default function StockDetailAside({
             </p>
           </div>
 
-          {isLongText && (
+          {canExpandOverview && (
             <div className="mt-2 flex justify-end">
               <button
                 type="button"
