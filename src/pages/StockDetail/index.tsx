@@ -1,5 +1,5 @@
 import TabBar from '@/shared/components/common/TabBar';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { sharedEventPanelTab } from '@/features/event/sharedEventPanelTab';
 import EventTab from '@/features/event/components/EventTab';
@@ -19,6 +19,7 @@ const TABS = [
 export default function StockDetailPage() {
   const [searchParams] = useSearchParams();
   const eventId = searchParams.get('eventId') ? Number(searchParams.get('eventId')) : null;
+  const requestedTab = searchParams.get('tab');
 
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
@@ -28,7 +29,19 @@ export default function StockDetailPage() {
   const { event, loading, scrapping, error, scrapError, toggleScrap } = useEventDetail(gatedEventId, isLoggedIn);
   const { memos, save, update, remove } = useMemos(gatedEventId, isLoggedIn);
 
-  const [tab, setTab] = useState<'overview' | 'event' | 'memo'>(sharedEventPanelTab.value);
+  const initialTab: 'overview' | 'event' | 'memo' =
+    requestedTab === 'event' || requestedTab === 'memo' || requestedTab === 'overview'
+      ? requestedTab
+      : sharedEventPanelTab.value;
+  const [tab, setTab] = useState<'overview' | 'event' | 'memo'>(initialTab);
+
+  useEffect(() => {
+    if (requestedTab !== 'event' && requestedTab !== 'memo' && requestedTab !== 'overview') {
+      return;
+    }
+    sharedEventPanelTab.value = requestedTab;
+    setTab(requestedTab);
+  }, [requestedTab]);
   const handleTabChange = (v: string) => {
     const next = v as 'overview' | 'event' | 'memo';
     sharedEventPanelTab.value = next;
