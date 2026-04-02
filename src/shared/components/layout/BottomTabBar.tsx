@@ -8,20 +8,28 @@ import newsIco from '@/assets/today-news.svg';
 import newsClickIco from '@/assets/today-news-click.svg';
 import mypageIco from '@/assets/mypage.svg';
 import mypageClickIco from '@/assets/mypage_click.svg';
+import { NotificationBadge } from '@/features/alert/components/NotificationBadge';
 
 export interface BottomTabBarProps {
   onMyPageOpen?: () => void;
   myPageActive?: boolean;
+  onAlertsOpen?: () => void;
+  alertsActive?: boolean;
 }
 
 const TABS = [
   { label: '홈', icon: homeIco, iconActive: homeClickIco, path: ROUTES.HOME },
   { label: '관심 종목', icon: favoriteIco, iconActive: favoriteClickIco, path: ROUTES.INTEREST_STOCK },
-  { label: '오늘의 뉴스', icon: newsIco, iconActive: newsClickIco, path: ROUTES.NEWS },
+  { label: '알림 센터', icon: newsIco, iconActive: newsClickIco, path: ROUTES.ALERTS },
   { label: '마이페이지', icon: mypageIco, iconActive: mypageClickIco, path: ROUTES.MY },
 ] as const;
 
-export default function BottomTabBar({ onMyPageOpen, myPageActive }: BottomTabBarProps) {
+export default function BottomTabBar({
+  onMyPageOpen,
+  myPageActive,
+  onAlertsOpen,
+  alertsActive,
+}: BottomTabBarProps) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
@@ -31,9 +39,12 @@ export default function BottomTabBar({ onMyPageOpen, myPageActive }: BottomTabBa
     <nav className="bottom-tab-bar grid lg:hidden shrink-0 bg-white border-t border-[#f0f2f8]">
       {TABS.map(({ label, icon, iconActive, path }) => {
         const isMyPage = path === ROUTES.MY;
+        const isAlerts = path === ROUTES.ALERTS;
         const isActive = myPageActive
           ? isMyPage
-          : isMyPage
+          : alertsActive
+            ? isAlerts
+            : isMyPage
             ? false
             : activePath === path;
         return (
@@ -42,15 +53,19 @@ export default function BottomTabBar({ onMyPageOpen, myPageActive }: BottomTabBa
             type="button"
             onClick={() => {
               if (isMyPage) onMyPageOpen?.();
+              else if (isAlerts) onAlertsOpen?.();
               else navigate(path);
             }}
             className="flex flex-col items-center justify-start pt-3"
           >
-            <img
-              src={isActive ? iconActive : icon}
-              alt={label}
-              className="block h-8 w-8"
-            />
+            <span className="relative block h-8 w-8">
+              <img
+                src={isActive ? iconActive : icon}
+                alt={label}
+                className="block h-8 w-8"
+              />
+              {isAlerts && <NotificationBadge className="-top-0.5 -right-1" />}
+            </span>
             <span
               className="text-[10px] font-medium mt-1"
               style={{ color: isActive ? '#014D9D' : '#9ca3af' }}

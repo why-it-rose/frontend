@@ -1,4 +1,4 @@
-import { useState, useRef, type RefObject } from "react";
+import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "@/features/auth/context/AuthContext";
@@ -8,17 +8,12 @@ import {
 } from "@/features/auth/query/authQuerySync";
 import { ROUTES } from "@/shared/constants/routes";
 import logoSrc from "@/assets/logo.svg";
-import bellSrc from "@/assets/bell.svg";
-import bellNotSrc from "@/assets/bell_not.svg";
 import searchMobileSrc from "@/assets/search_mobile.svg";
 import SearchDropdown from "@/pages/widgets/SearchDropdown/SearchDropdown";
 import { MobileSearchSheet } from "@/pages/widgets/SearchDropdown/MobileSearchSheet";
 import LoginModal from "@/features/auth/components/LoginModal";
 import SignupModal from "@/features/auth/components/SignupModal";
 import MyPagePanel from "@/pages/MyPage/components/MyPagePanel";
-import AlertCenter from "@/features/alert/AlertCenter/AlertCenter";
-import { NotificationBadge } from "@/features/alert/components/NotificationBadge";
-import { useNotificationBadge } from "@/features/alert/hooks/useNotificationBadge";
 import {
   deleteMyAccount,
   getApiResponseCode,
@@ -40,53 +35,11 @@ export default function Header({
   const navigate = useNavigate();
   const [modal, setModal] = useState<"login" | "signup" | null>(null);
   const [myPageOpen, setMyPageOpen] = useState(false);
-  const [alertOpen, setAlertOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const [alertAnchor, setAlertAnchor] = useState<"mobile" | "desktop" | null>(
-    null,
-  );
-  const mobileAlertContainerRef = useRef<HTMLDivElement | null>(null);
-  const desktopAlertContainerRef = useRef<HTMLDivElement | null>(null);
-
-  const { count: unreadCount } = useNotificationBadge();
-  const hasUnread = unreadCount > 0;
   const [withdrawMessage, setWithdrawMessage] = useState("");
   const [withdrawMessageType, setWithdrawMessageType] = useState<
     "success" | "error" | ""
   >("");
-
-  const renderAlertButton = (
-    anchor: "mobile" | "desktop",
-    containerRef: RefObject<HTMLDivElement | null>,
-    className: string,
-  ) => (
-    <div
-      ref={containerRef}
-      className={`relative flex items-center justify-center ${className}`}
-    >
-      <button
-        type="button"
-        onClick={() => {
-          setAlertAnchor(anchor);
-          setAlertOpen((prev) => (alertAnchor === anchor ? !prev : true));
-        }}
-        className="relative flex items-center justify-center"
-      >
-        <img
-          src={hasUnread ? bellSrc : bellNotSrc}
-          alt="알림"
-          className="w-8.5 h-8.5"
-        />
-        <NotificationBadge />
-      </button>
-      {alertOpen && alertAnchor === anchor && (
-        <AlertCenter
-          onClose={() => setAlertOpen(false)}
-          containerRef={containerRef}
-        />
-      )}
-    </div>
-  );
 
   return (
     <>
@@ -107,7 +60,6 @@ export default function Header({
           </Link>
           {isLoggedIn ? (
             <div className="flex items-center gap-2">
-              {renderAlertButton("mobile", mobileAlertContainerRef, "")}
               <button
                 type="button"
                 onClick={() => setMobileSearchOpen(true)}
@@ -168,11 +120,6 @@ export default function Header({
           <div className="flex items-center justify-end gap-2.5">
             {isLoggedIn ? (
               <>
-                {renderAlertButton(
-                  "desktop",
-                  desktopAlertContainerRef,
-                  "w-8.5 h-8.5",
-                )}
                 <button
                   onClick={() => {
                     if (onMyPageOpen) {

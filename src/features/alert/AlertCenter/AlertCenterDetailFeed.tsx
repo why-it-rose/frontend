@@ -1,4 +1,5 @@
 import { Fragment, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router';
 import type { AlertItemRow, AlertTag } from './alertCenter.types';
 import { isTodayNotifiedDate, notificationDetailToAlertGroups } from './alertCenterDetailAdapter';
 import AlertStockAvatar from './AlertStockAvatar';
@@ -44,6 +45,7 @@ export interface AlertCenterDetailFeedProps {
 }
 
 export default function AlertCenterDetailFeed({ notificationId }: AlertCenterDetailFeedProps) {
+  const navigate = useNavigate();
   const [collapsedByGroup, setCollapsedByGroup] = useState<Record<string, boolean>>({});
   const { data: allDetails } = useNotificationDetail({ days: 7 });
 
@@ -95,36 +97,46 @@ export default function AlertCenterDetailFeed({ notificationId }: AlertCenterDet
                     return (
                       <>
                         <div className="relative z-10 border-b border-[#f3f4f6] last:border-b-0">
-                          <div
-                            className="-mx-[18px] flex w-[calc(100%+36px)] cursor-pointer items-center gap-3 px-[18px] py-3 transition-colors hover:bg-[#F0F2F8]"
-                            onClick={() =>
-                              setCollapsedByGroup((prev) => ({
-                                ...prev,
-                                [groupKey]: !isCollapsed,
-                              }))
-                            }
-                          >
-                            <div className="relative shrink-0">
-                              <AlertStockAvatar color={group.color} ini={group.ini} logoUrl={group.logoUrl} />
-                            </div>
-
-                            <div className="min-w-0 flex-1">
-                              <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-                                <span className="text-[13px] font-bold text-[#111827]">{group.name}</span>
-                                <span className="font-mono text-[11px] text-[#9ca3af]">{group.code}</span>
-                              </div>
-                              {group.summaryLine && (
-                                <div className="mt-0 text-[11px] leading-4 text-[#6b7280]">{group.summaryLine}</div>
-                              )}
-                            </div>
-
-                            <span
-                              className={`shrink-0 text-[10px] text-[#9ca3af] transition-transform duration-200 ${
-                                isCollapsed ? '' : 'rotate-180'
-                              }`}
+                          <div className="-mx-[18px] flex w-[calc(100%+36px)] items-center gap-3 px-[18px] py-3 transition-colors hover:bg-[#F0F2F8]">
+                            <button
+                              type="button"
+                              className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                              onClick={() => navigate(`/chart/${encodeURIComponent(group.code)}/today-learning`)}
                             >
-                              ▼
-                            </span>
+                              <div className="relative shrink-0">
+                                <AlertStockAvatar color={group.color} ini={group.ini} logoUrl={group.logoUrl} />
+                              </div>
+
+                              <div className="min-w-0 flex-1">
+                                <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+                                  <span className="text-[13px] font-bold text-[#111827]">{group.name}</span>
+                                  <span className="font-mono text-[11px] text-[#9ca3af]">{group.code}</span>
+                                </div>
+                                {group.summaryLine && (
+                                  <div className="mt-0 text-[11px] leading-4 text-[#6b7280]">{group.summaryLine}</div>
+                                )}
+                              </div>
+                            </button>
+
+                            <button
+                              type="button"
+                              className="shrink-0 p-1 text-[10px] text-[#9ca3af]"
+                              onClick={() =>
+                                setCollapsedByGroup((prev) => ({
+                                  ...prev,
+                                  [groupKey]: !isCollapsed,
+                                }))
+                              }
+                              aria-label={isCollapsed ? '뉴스 펼치기' : '뉴스 접기'}
+                            >
+                              <span
+                                className={`block transition-transform duration-200 ${
+                                  isCollapsed ? '' : 'rotate-180'
+                                }`}
+                              >
+                                ▼
+                              </span>
+                            </button>
                           </div>
 
                           <div

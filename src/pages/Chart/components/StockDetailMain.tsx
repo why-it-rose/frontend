@@ -158,13 +158,11 @@ export function StockDetailMain({
 
   const { activePeriod, setActivePeriod } = useChartPeriod("일");
   const [mobileTab, setMobileTab] = useState<
-    "차트" | "기업 정보" | "이벤트" | "메모" | "오늘의 뉴스" | "오늘의 학습"
+    "차트" | "기업 정보" | "이벤트" | "메모" | "오늘의 학습"
   >(
     mobileMode === "event"
       ? "이벤트"
-      : mobileMode === "news"
-        ? "오늘의 뉴스"
-        : "차트",
+      : "차트",
   );
   const { data: learningPinData } = useLearningPin(chartStockId);
 
@@ -281,11 +279,9 @@ export function StockDetailMain({
   const mobileTabs =
     mobileMode === "event"
       ? (["차트", "이벤트", "메모"] as const)
-      : mobileMode === "news"
-        ? (["차트", "오늘의 뉴스"] as const)
-        : learningPinData !== null
-          ? (["차트", "기업 정보", "오늘의 학습"] as const)
-          : (["차트", "기업 정보"] as const);
+      : learningPinData !== null
+        ? (["차트", "기업 정보", "오늘의 학습"] as const)
+        : (["차트", "기업 정보"] as const);
 
   return (
     <>

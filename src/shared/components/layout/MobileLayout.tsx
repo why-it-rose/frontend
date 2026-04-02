@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import { useAuth } from '@/features/auth/context/AuthContext';
@@ -9,6 +9,7 @@ import Header from './Header';
 import BottomTabBar from './BottomTabBar';
 import { deleteMyAccount, getApiResponseCode, logoutFromServer } from '@/features/auth/api/authApi';
 import { clearAuthTransitionQueries } from '@/features/auth/query/authQuerySync';
+import AlertCenter from '@/features/alert/AlertCenter/AlertCenter';
 
 
 /** 홈 등 내부에서 높이·스크롤을 쓰려면 main은 스크롤 금지 + min-h-0 (padding 없음) */
@@ -21,8 +22,10 @@ export default function MobileLayout({
   const queryClient = useQueryClient();
   const { isLoggedIn, clearAuth } = useAuth();
   const [myPageOpen, setMyPageOpen] = useState(false);
+  const [alertOpen, setAlertOpen] = useState(false);
   const [withdrawMessage, setWithdrawMessage] = useState('');
   const [withdrawMessageType, setWithdrawMessageType] = useState<'success' | 'error' | ''>('');
+  const mobileAlertContainerRef = useRef<HTMLDivElement | null>(null);
 
 
   const openMyPage = () => {
@@ -30,14 +33,35 @@ export default function MobileLayout({
       navigate('/login');
       return;
     }
+    setAlertOpen(false);
     setMyPageOpen(true);
   };
 
+  const openAlerts = () => {
+    if (!isLoggedIn) {
+      navigate('/login');
+      return;
+    }
+    setMyPageOpen(false);
+    setAlertOpen(true);
+  };
+
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div ref={mobileAlertContainerRef} className="relative flex min-h-0 flex-1 flex-col">
       <Header onMyPageOpen={openMyPage} disableMyPagePanel />
       <main className="flex min-h-0 flex-1 flex-col overflow-hidden">{content}</main>
-      <BottomTabBar onMyPageOpen={openMyPage} myPageActive={myPageOpen} />
+      <BottomTabBar
+        onMyPageOpen={openMyPage}
+        myPageActive={myPageOpen}
+        onAlertsOpen={openAlerts}
+        alertsActive={alertOpen}
+      />
+      {isLoggedIn && alertOpen && (
+        <AlertCenter
+          onClose={() => setAlertOpen(false)}
+          containerRef={mobileAlertContainerRef}
+        />
+      )}
       {isLoggedIn && myPageOpen && (
           <MyPagePanel
               onClose={() => {
