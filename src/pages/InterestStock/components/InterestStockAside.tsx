@@ -130,11 +130,9 @@ function SortableEditRow({
       className={`box-border grid h-[58px] w-full shrink-0 grid-cols-[minmax(0,1fr)_74px] items-center overflow-hidden border-b border-[#e5e7eb] bg-white px-4 touch-none select-none ${
         isDragging ? 'opacity-30' : ''
       }`}
-      {...attributes}
-      {...listeners}
     >
       <WatchIdentityBlock row={row} />
-      <div className="ml-auto flex w-[74px] shrink-0 cursor-grab items-center justify-end gap-2.5 active:cursor-grabbing">
+      <div className="ml-auto flex w-[74px] shrink-0 items-center justify-end gap-2.5">
         <button
           type="button"
           data-edit-delete
@@ -152,11 +150,23 @@ function SortableEditRow({
             width={26}
             height={26}
             className="block h-[26px] w-[26px] shrink-0"
+            draggable={false}
             aria-hidden
           />
         </button>
-        <span className="inline-flex shrink-0 items-center justify-center" aria-hidden>
-          <img src={dragHandleIco} alt="" width={8} height={12} className="block h-3 w-2 shrink-0" />
+        <span
+          className="inline-flex shrink-0 cursor-grab items-center justify-center touch-none active:cursor-grabbing"
+          {...attributes}
+          {...listeners}
+        >
+          <img
+            src={dragHandleIco}
+            alt=""
+            width={8}
+            height={12}
+            className="block h-3 w-2 shrink-0 pointer-events-none"
+            draggable={false}
+          />
         </span>
       </div>
     </div>
@@ -174,10 +184,18 @@ function EditRowOverlay({ row }: { row: WatchRow }) {
           width={26}
           height={26}
           className="block h-[26px] w-[26px] shrink-0"
+          draggable={false}
           aria-hidden
         />
         <span className="inline-flex shrink-0 items-center justify-center" aria-hidden>
-          <img src={dragHandleIco} alt="" width={8} height={12} className="block h-3 w-2 shrink-0" />
+          <img
+            src={dragHandleIco}
+            alt=""
+            width={8}
+            height={12}
+            className="block h-3 w-2 shrink-0 pointer-events-none"
+            draggable={false}
+          />
         </span>
       </div>
     </div>

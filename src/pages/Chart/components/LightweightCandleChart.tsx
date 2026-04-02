@@ -861,6 +861,11 @@ export function LightweightCandleChart({
     <div
       ref={containerRef}
       className="h-full w-full min-h-70"
+      style={{
+        touchAction: "none",
+        userSelect: "none",
+        WebkitUserSelect: "none",
+      }}
       aria-label="종목 캔들 차트"
     />
   );
