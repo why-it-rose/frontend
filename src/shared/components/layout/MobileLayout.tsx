@@ -37,7 +37,7 @@ export default function MobileLayout({
     <div className="flex min-h-0 flex-1 flex-col">
       <Header onMyPageOpen={openMyPage} disableMyPagePanel />
       <main className="flex min-h-0 flex-1 flex-col overflow-hidden">{content}</main>
-      <BottomTabBar onMyPageOpen={openMyPage} myPageActive={myPageOpen} />
+      <BottomTabBar onMyPageOpen={openMyPage} onMyPageClose={() => setMyPageOpen(false)} myPageActive={myPageOpen} />
       {isLoggedIn && myPageOpen && (
           <MyPagePanel
               onClose={() => {

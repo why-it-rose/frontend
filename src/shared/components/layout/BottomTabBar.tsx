@@ -11,6 +11,7 @@ import mypageClickIco from '@/assets/mypage_click.svg';
 
 export interface BottomTabBarProps {
   onMyPageOpen?: () => void;
+  onMyPageClose?: () => void;
   myPageActive?: boolean;
 }
 
@@ -21,7 +22,7 @@ const TABS = [
   { label: '마이페이지', icon: mypageIco, iconActive: mypageClickIco, path: ROUTES.MY },
 ] as const;
 
-export default function BottomTabBar({ onMyPageOpen, myPageActive }: BottomTabBarProps) {
+export default function BottomTabBar({ onMyPageOpen, onMyPageClose, myPageActive }: BottomTabBarProps) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
@@ -42,7 +43,10 @@ export default function BottomTabBar({ onMyPageOpen, myPageActive }: BottomTabBa
             type="button"
             onClick={() => {
               if (isMyPage) onMyPageOpen?.();
-              else navigate(path);
+              else {
+                onMyPageClose?.();
+                navigate(path);
+              }
             }}
             className="flex flex-col items-center justify-start pt-3"
           >
