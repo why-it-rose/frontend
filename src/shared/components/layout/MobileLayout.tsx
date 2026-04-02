@@ -52,6 +52,7 @@ export default function MobileLayout({
       <main className="flex min-h-0 flex-1 flex-col overflow-hidden">{content}</main>
       <BottomTabBar
         onMyPageOpen={openMyPage}
+        onMyPageClose={() => setMyPageOpen(false)}
         myPageActive={myPageOpen}
         onAlertsOpen={openAlerts}
         alertsActive={alertOpen}

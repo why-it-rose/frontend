@@ -12,6 +12,7 @@ import { NotificationBadge } from '@/features/alert/components/NotificationBadge
 
 export interface BottomTabBarProps {
   onMyPageOpen?: () => void;
+  onMyPageClose?: () => void;
   myPageActive?: boolean;
   onAlertsOpen?: () => void;
   alertsActive?: boolean;
@@ -26,6 +27,7 @@ const TABS = [
 
 export default function BottomTabBar({
   onMyPageOpen,
+  onMyPageClose,
   myPageActive,
   onAlertsOpen,
   alertsActive,
@@ -54,7 +56,11 @@ export default function BottomTabBar({
             onClick={() => {
               if (isMyPage) onMyPageOpen?.();
               else if (isAlerts) onAlertsOpen?.();
-              else navigate(path);
+              else {
+                onMyPageClose?.();
+                if (isAlerts) onAlertsOpen?.();
+                else navigate(path);
+              }
             }}
             className="flex flex-col items-center justify-start pt-3"
           >

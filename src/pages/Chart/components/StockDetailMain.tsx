@@ -257,7 +257,7 @@ export function StockDetailMain({
     holdEmptyChart,
   );
   const stock = stockProp ?? fetchedHeader;
-  const bars = fetchedBars ?? barsProp ?? [];
+  const bars = useMemo(() => fetchedBars ?? barsProp ?? [], [fetchedBars, barsProp]);
 
   const [hoverBar, setHoverBar] = useState<OhlcBar | null>(null);
 
