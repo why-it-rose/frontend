@@ -102,6 +102,8 @@ export function StockDetailMain({
   >(null);
   const { stockCode: stockCodeParam } = useParams<{ stockCode?: string }>();
   const [searchParams] = useSearchParams();
+  const requestedEventId = searchParams.get("eventId");
+  const requestedEventTab = searchParams.get("tab");
   const mobileEventId = useMemo(() => {
     const p = searchParams.get("eventId");
     return p ? Number(p) : null;
@@ -192,18 +194,10 @@ export function StockDetailMain({
     remove: removeMemo,
   } = useMemos(mobileMode === "event" ? mobileEventId : null);
 
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener("resize", handler);
-    return () => window.removeEventListener("resize", handler);
-  }, []);
-
-  useEffect(() => {
-    if (!isMobile) return;
     pendingMobileNav.path =
       mobileTab === "오늘의 학습" ? "today-learning" : null;
-  }, [isMobile, mobileTab]);
+  }, [mobileTab]);
 
   const [selectedEventId, setSelectedEventId] = useState<number | null>(
     mobileEventId ?? null,
@@ -316,21 +310,34 @@ export function StockDetailMain({
 
   useEffect(() => {
     if (selectedEventId === null) return;
-    if (isMobile) return;
+    if (typeof window !== "undefined" && window.innerWidth < 768) return;
     if (pathname.endsWith("/today-learning")) return;
-    if (pathname.endsWith("/event")) return;
 
     const code = stockCodeParam ?? "";
     const params = new URLSearchParams({
       eventId: String(selectedEventId),
+      tab: eventPanelTab === "메모" ? "memo" : "event",
     });
 
-    if (eventPanelTab === "메모") {
-      params.set("tab", "memo");
+    const nextUrl = `/chart/${code}/event?${params.toString()}`;
+    const currentEventIdMatches = requestedEventId === String(selectedEventId);
+    const currentTabMatches =
+      requestedEventTab === (eventPanelTab === "메모" ? "memo" : "event");
+
+    if (pathname.endsWith("/event") && currentEventIdMatches && currentTabMatches) {
+      return;
     }
 
-    navigate(`/chart/${code}/event?${params.toString()}`, { replace: true });
-  }, [eventPanelTab, isMobile, navigate, pathname, selectedEventId, stockCodeParam]);
+    navigate(nextUrl, { replace: true });
+  }, [
+    eventPanelTab,
+    navigate,
+    pathname,
+    requestedEventId,
+    requestedEventTab,
+    selectedEventId,
+    stockCodeParam,
+  ]);
 
   const chartVisibleBars = visibleBarsForPeriod(activePeriod);
   const mobileChartVisibleBars = visibleBarsForPeriodMobile(activePeriod);
