@@ -390,6 +390,7 @@ export function StockDetailMain({
                   onLearningPinClick={() => setMobileTab("오늘의 학습")}
                   focusDate={focusDate}
                   activePeriod={activePeriod}
+                  isMobile
                 />
               </div>
             </>

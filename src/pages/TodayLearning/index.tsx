@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { invalidateAuthTransitionQueries } from '@/features/auth/query/authQuerySync';
-import { fetchStockSearch } from '@/features/stock/api';
+import { getCachedStockIdByTicker, fetchStockSearch } from '@/features/stock/api';
 import LoginModal from '@/features/auth/components/LoginModal';
 import TodayLearningSidebar from '@/features/news/components/TodayLearningSidebar';
 
@@ -14,10 +14,13 @@ export default function TodayLearningPage() {
   const { isLoggedIn, refreshAuth } = useAuth();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
 
-  const [stockId, setStockId] = useState<number | undefined>(undefined);
+  const [stockId, setStockId] = useState<number | undefined>(
+    stockCode ? getCachedStockIdByTicker(stockCode) : undefined,
+  );
 
   useEffect(() => {
     if (!stockCode) return;
+    if (stockId != null) return;
     let cancelled = false;
     fetchStockSearch(stockCode, 20)
       .then((items) => {
@@ -29,7 +32,7 @@ export default function TodayLearningPage() {
         if (!cancelled) setStockId(undefined);
       });
     return () => { cancelled = true; };
-  }, [stockCode]);
+  }, [stockCode, stockId]);
 
   return (
     <>
