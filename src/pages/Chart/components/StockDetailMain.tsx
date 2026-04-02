@@ -14,6 +14,7 @@ import { fetchEvents } from "@/features/event/api/eventApi";
 import { useInterestStocksQuery } from "@/features/stock/hooks/useInterestStocks";
 import { ROUTES } from "@/shared/constants/routes";
 import { stockEventKeys } from "@/shared/queryKeys";
+
 import type { OhlcBar, PeriodTab, StockDetailMainProps } from "../types";
 import {
   useChartPeriod,
@@ -23,7 +24,6 @@ import {
   ohlcBarToSummary,
 } from "../hook";
 import { LightweightCandleChart } from "./LightweightCandleChart";
-import { LearningPin } from "./LearningPin";
 import { StockInfoBar } from "./StockInfoBar";
 import { PeriodTabs } from "./PeriodTabs";
 import { OhlcSummaryBar } from "./OhlcSummaryBar";
