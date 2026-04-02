@@ -276,7 +276,8 @@ export function StockDetailMain({
           }
         } else {
           const code = stockCodeParam ?? "";
-          navigate(`/chart/${code}/event?eventId=${eventId}`);
+          sharedEventPanelTab.value = "event";
+          navigate(`/chart/${code}/event?eventId=${eventId}&tab=event`);
         }
       }
     },
