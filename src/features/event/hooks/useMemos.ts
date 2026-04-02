@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import type { StockMemo } from '../types/event.types';
 import { fetchMemos, createMemo, deleteMemo, updateMemo } from '../api/memoApi';
 
-export function useMemos(eventId: number | null) {
+export function useMemos(eventId: number | null, authSyncKey?: boolean) {
   const [memos, setMemos] = useState<StockMemo[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (eventId === null) { setMemos([]); return; }
+    if (eventId === null) { setMemos([]); setError(null); return; }
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -17,7 +17,7 @@ export function useMemos(eventId: number | null) {
       .catch((e: unknown) => { if (!cancelled) setError(e instanceof Error ? e.message : '오류가 발생했습니다.'); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [eventId]);
+  }, [eventId, authSyncKey]);
 
   const save = async (content: string) => {
     if (eventId === null) return;

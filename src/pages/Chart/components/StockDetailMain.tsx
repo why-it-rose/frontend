@@ -88,6 +88,7 @@ export function StockDetailMain({
   const queryClient = useQueryClient();
   const { refreshAuth, isLoggedIn } = useAuth();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [pendingEventIdAfterLogin, setPendingEventIdAfterLogin] = useState<number | null>(null);
   const { stockCode: stockCodeParam } = useParams<{ stockCode?: string }>();
   const [searchParams] = useSearchParams();
   const mobileEventId = useMemo(() => {
@@ -155,18 +156,19 @@ export function StockDetailMain({
         : "차트",
   );
   const { data: learningPinData } = useLearningPin(chartStockId);
+  const mobileEventQueryId = isLoggedIn ? (mobileMode === "event" ? mobileEventId : null) : null;
 
   const {
     event: mobileEvent,
     scrapping: mobileEventScrapping,
     toggleScrap,
-  } = useEventDetail(mobileMode === "event" ? mobileEventId : null);
+  } = useEventDetail(mobileEventQueryId, isLoggedIn);
   const {
     memos,
     save: saveMemo,
     update: updateMemo,
     remove: removeMemo,
-  } = useMemos(mobileMode === "event" ? mobileEventId : null);
+  } = useMemos(mobileEventQueryId, isLoggedIn);
 
   const [selectedEventId, setSelectedEventId] = useState<number | null>(
     mobileMode === "event" && mobileEventId ? mobileEventId : null,
@@ -178,13 +180,13 @@ export function StockDetailMain({
     event: selectedEvent,
     scrapping: selectedScrapping,
     toggleScrap: toggleSelectedScrap,
-  } = useEventDetail(selectedEventId);
+  } = useEventDetail(isLoggedIn ? selectedEventId : null, isLoggedIn);
   const {
     memos: selectedMemos,
     save: saveSelected,
     update: updateSelected,
     remove: removeSelected,
-  } = useMemos(selectedEventId);
+  } = useMemos(isLoggedIn ? selectedEventId : null, isLoggedIn);
 
   const [focusDate, setFocusDate] = useState<string | undefined>(undefined);
   const [chartAnimClass, setChartAnimClass] = useState<
@@ -225,6 +227,11 @@ export function StockDetailMain({
         changePeriod("일", activePeriod);
         setFocusDate(date);
       } else {
+        if (!isLoggedIn) {
+          setPendingEventIdAfterLogin(eventId);
+          setLoginModalOpen(true);
+          return;
+        }
         if (window.innerWidth < 768) {
           setSelectedEventId(eventId);
           setEventPanelTab("이벤트");
@@ -234,7 +241,7 @@ export function StockDetailMain({
         }
       }
     },
-    [activePeriod, navigate, stockCodeParam, changePeriod],
+    [activePeriod, navigate, stockCodeParam, changePeriod, isLoggedIn],
   );
   const { stock: fetchedHeader } = useChartStockHeader(
     chartStockId,
@@ -510,14 +517,28 @@ export function StockDetailMain({
 
     {loginModalOpen && (
       <LoginModal
-        onClose={() => setLoginModalOpen(false)}
+        onClose={() => {
+          setLoginModalOpen(false);
+          setPendingEventIdAfterLogin(null);
+        }}
         onSignup={() => {
           setLoginModalOpen(false);
+          setPendingEventIdAfterLogin(null);
           navigate("/signup");
         }}
         onLoginSuccess={async () => {
           await refreshAuth();
           await invalidateAuthTransitionQueries(queryClient);
+          if (pendingEventIdAfterLogin !== null) {
+            if (window.innerWidth < 768) {
+              setSelectedEventId(pendingEventIdAfterLogin);
+              setEventPanelTab("이벤트");
+            } else {
+              const code = stockCodeParam ?? "";
+              navigate(`/chart/${code}/event?eventId=${pendingEventIdAfterLogin}`);
+            }
+            setPendingEventIdAfterLogin(null);
+          }
           setLoginModalOpen(false);
         }}
       />

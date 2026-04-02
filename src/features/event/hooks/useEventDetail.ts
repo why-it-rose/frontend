@@ -5,7 +5,7 @@ import { addEventScrap, fetchMyScraps, removeEventScrap, type ScrapApiError } fr
 
 const DEFAULT_ERROR_MESSAGE = 'Something went wrong.';
 
-export function useEventDetail(eventId: number | null) {
+export function useEventDetail(eventId: number | null, authSyncKey?: boolean) {
   const [event, setEvent] = useState<StockEvent | null>(null);
   const [loading, setLoading] = useState(false);
   const [scrapping, setScrapping] = useState(false);
@@ -15,6 +15,7 @@ export function useEventDetail(eventId: number | null) {
   useEffect(() => {
     if (eventId === null) {
       setEvent(null);
+      setError(null);
       setScrapError(null);
       return;
     }
@@ -35,7 +36,7 @@ export function useEventDetail(eventId: number | null) {
           setError(e instanceof Error ? e.message : DEFAULT_ERROR_MESSAGE);
         })
         .finally(() => setLoading(false));
-  }, [eventId]);
+  }, [eventId, authSyncKey]);
 
   const toggleScrap = async (targetEventId: number, isScrapped: boolean) => {
     const nextScrapped = !isScrapped;

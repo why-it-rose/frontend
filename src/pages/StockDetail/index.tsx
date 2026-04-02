@@ -21,8 +21,9 @@ export default function StockDetailPage() {
   const navigate = useNavigate();
   const { stockCode } = useParams<{ stockCode?: string }>();
 
-  const { event, loading, scrapping, error, scrapError, toggleScrap } = useEventDetail(eventId);
-  const { memos, save, update, remove } = useMemos(eventId);
+  const gatedEventId = isLoggedIn ? eventId : null;
+  const { event, loading, scrapping, error, scrapError, toggleScrap } = useEventDetail(gatedEventId, isLoggedIn);
+  const { memos, save, update, remove } = useMemos(gatedEventId, isLoggedIn);
 
   const [tab, setTab] = useState('event');
 
