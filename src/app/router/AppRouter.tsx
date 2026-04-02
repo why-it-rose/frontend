@@ -44,7 +44,7 @@ const router = createBrowserRouter([
       <SplitRoute
         left={<StockDetailMain />}
         right={<StockDetailPage />}
-        mobile={<StockDetailMain key="event" mobileMode="event" />}
+        mobile={<StockDetailMain />}
       />
     ),
   },
@@ -64,7 +64,7 @@ const router = createBrowserRouter([
       <SplitRoute
         left={<StockDetailMain />}
         right={<TodayLearningPage />}
-        mobile={<StockDetailMain key="stock-detail" mobileMode="stock-detail" />}
+        mobile={<StockDetailMain key="today-learning" mobileMode="today-learning" />}
       />
     ),
   },

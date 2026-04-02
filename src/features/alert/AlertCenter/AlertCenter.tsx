@@ -43,13 +43,13 @@ export default function AlertCenter({ onClose, containerRef }: AlertCenterProps)
 
   return (
     <div
-      className={`${PANEL_CLASS} absolute right-0 top-full z-[250] mt-1 translate-x-2`}
+      className={`${PANEL_CLASS} absolute right-0 top-full z-250 mt-1 translate-x-2`}
       role="dialog"
       aria-modal="true"
       aria-label="알림센터"
     >
-      <div className="flex shrink-0 items-center justify-between border-b border-[#e5e7eb] px-[18px] pb-3 pt-5">
-        <span className="mypage-scrap-kr -translate-y-1 text-[14px] font-bold leading-tight text-[#111827]">알림센터</span>
+      <div className="flex shrink-0 items-center justify-between border-b border-border px-4.5 pb-3 pt-5">
+        <span className="mypage-scrap-kr -translate-y-1 text-[14px] font-bold leading-tight text-text-primary">알림센터</span>
         {tab === 'all' ? (
           listFullyRead ? (
             <span
@@ -61,7 +61,7 @@ export default function AlertCenter({ onClose, containerRef }: AlertCenterProps)
           ) : (
             <button
               type="button"
-              className="mypage-scrap-kr shrink-0 border-0 bg-transparent p-0 text-[11.5px] font-bold leading-tight text-[#014d9d]"
+              className="mypage-scrap-kr shrink-0 border-0 bg-transparent p-0 text-[11.5px] font-bold leading-tight text-primary"
               onClick={() => markAllRead()}
             >
               전체 읽음 처리
@@ -70,13 +70,13 @@ export default function AlertCenter({ onClose, containerRef }: AlertCenterProps)
         ) : null}
       </div>
 
-      <div className="grid w-full shrink-0 grid-cols-2 border-b border-[#e5e7eb]">
+      <div className="grid w-full shrink-0 grid-cols-2 border-b border-border">
         <button
           type="button"
           onClick={() => setTab('all')}
           className={`mypage-scrap-kr -mb-px cursor-pointer border-0 border-b-[2.5px] bg-transparent py-3.5 text-center text-[13px] transition-colors ${
             tab === 'all'
-              ? 'border-[#014d9d] font-bold text-[#014d9d]'
+              ? 'border-primary font-bold text-primary'
               : 'border-transparent font-medium text-[#9ca3af]'
           }`}
         >
@@ -87,7 +87,7 @@ export default function AlertCenter({ onClose, containerRef }: AlertCenterProps)
           onClick={() => setTab('detail')}
           className={`mypage-scrap-kr -mb-px cursor-pointer border-0 border-b-[2.5px] bg-transparent py-3.5 text-center text-[13px] transition-colors ${
             tab === 'detail'
-              ? 'border-[#014d9d] font-bold text-[#014d9d]'
+              ? 'border-primary font-bold text-primary'
               : 'border-transparent font-medium text-[#9ca3af]'
           }`}
         >
@@ -99,12 +99,12 @@ export default function AlertCenter({ onClose, containerRef }: AlertCenterProps)
         {tab === 'all' ? (
           <div className="scrollbar-hide h-full overflow-y-auto">
             {isLoading && (
-              <div className="mypage-scrap-kr flex min-h-[120px] items-center justify-center text-[13px] text-[#9ca3af]">
+              <div className="mypage-scrap-kr flex min-h-30 items-center justify-center text-[13px] text-[#9ca3af]">
                 불러오는 중...
               </div>
             )}
             {!isLoading && summaryList.length === 0 && (
-              <div className="mypage-scrap-kr flex min-h-[120px] items-center justify-center text-[13px] text-[#9ca3af]">
+              <div className="mypage-scrap-kr flex min-h-30 items-center justify-center text-[13px] text-[#9ca3af]">
                 최근 알림이 없습니다.
               </div>
             )}
@@ -117,7 +117,7 @@ export default function AlertCenter({ onClose, containerRef }: AlertCenterProps)
                   setSelectedNotificationId(item.notificationId);
                   setTab('detail');
                 }}
-                className={`mypage-scrap-kr flex h-[81px] min-h-[81px] w-full shrink-0 cursor-pointer items-center gap-3 border-b border-[#f3f4f6] px-[18px] text-left transition-colors hover:bg-[#F0F2F8] ${
+                className={`mypage-scrap-kr flex h-20.25 min-h-20.25 w-full shrink-0 cursor-pointer items-center gap-3 border-b border-[#f3f4f6] px-4.5 text-left transition-colors hover:bg-[#F0F2F8] ${
                   item.isRead ? 'bg-[#F0F2F8]' : ''
                 }`}
               >
@@ -125,7 +125,7 @@ export default function AlertCenter({ onClose, containerRef }: AlertCenterProps)
                   <img src={bellAlarmSrc} alt="" aria-hidden className="h-6 w-6" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-[12px] leading-snug text-[#111827]">
+                  <div className="text-[12px] leading-snug text-text-primary">
                     {item.message.split(/\*\*(.*?)\*\*/g).map((part, i) =>
                       i % 2 === 1 ? <strong key={i}>{part}</strong> : part
                     )}
@@ -139,7 +139,7 @@ export default function AlertCenter({ onClose, containerRef }: AlertCenterProps)
           </div>
         ) : (
           <div className="scrollbar-faint h-full overflow-y-auto overflow-x-hidden">
-            <AlertCenterDetailFeed notificationId={effectiveDetailId} />
+            <AlertCenterDetailFeed notificationId={effectiveDetailId} onNavigate={onClose} />
           </div>
         )}
       </div>

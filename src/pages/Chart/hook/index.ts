@@ -166,7 +166,7 @@ function groupEventsByBar(
 export function useOhlcDataWithEvents(
   stockId: number | undefined,
   period: PeriodTab,
-  holdEmpty = false,
+  holdEmpty = false
 ) {
   const { bars: rawBars, loading, error, refetch } = useOhlcData(stockId, period, holdEmpty);
 
