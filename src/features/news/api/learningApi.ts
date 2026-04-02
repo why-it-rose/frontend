@@ -1,6 +1,6 @@
 import type { LearningPinResult, TodayLearningResult } from '@/features/news/types/news.types';
 
-const BASE_URL = '';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() ?? '';
 
 /**
  * 차트 핀 표시용 — 인증 불필요
