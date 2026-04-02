@@ -44,6 +44,7 @@ const MARKET_LABEL: Record<StockMarket, string> = {
 };
 
 const SORT_LABEL: Record<StockSort, string> = {
+  MARKET_CAP: '시가총액',
   TRADING_AMOUNT: '거래대금',
   TRADING_VOLUME: '거래량',
   SURGE: '급상승',
@@ -129,7 +130,7 @@ export default function HomeLayout({
   const addInterestMut = useAddInterestStockMutation();
   const removeInterestMut = useRemoveInterestStockMutation();
   const marketOptions: StockMarket[] = ['ALL', 'KOSPI', 'KOSDAQ'];
-  const sortOptions: StockSort[] = ['TRADING_AMOUNT', 'TRADING_VOLUME', 'SURGE', 'DROP'];
+  const sortOptions: StockSort[] = ['MARKET_CAP', 'TRADING_AMOUNT', 'TRADING_VOLUME', 'SURGE', 'DROP'];
   /** 리스트 등락률 기준 기간(스톡 프라이스 차트 기간과 다름) */
   const periodOptions: Array<{ value: StockPeriod; label: string }> = [
     { value: '1D', label: '1일' },
@@ -250,7 +251,7 @@ export default function HomeLayout({
                     key={option}
                     type="button"
                     onClick={() => onChangeMarket(option)}
-                    className={`rounded-md px-3 py-1 text-xs font-medium ${
+                    className={`cursor-pointer rounded-md px-3 py-1 text-xs font-medium ${
                       market === option ? 'bg-white text-[#4e5968]' : 'text-[#9ca3af]'
                     }`}
                   >
@@ -267,7 +268,7 @@ export default function HomeLayout({
                     key={option}
                     type="button"
                     onClick={() => onChangeSort(option)}
-                    className={`rounded-md px-3 py-1 text-xs font-medium ${
+                    className={`cursor-pointer rounded-md px-3 py-1 text-xs font-medium ${
                       sort === option ? 'bg-white text-[#4e5968]' : 'text-[#9ca3af]'
                     }`}
                   >
@@ -284,7 +285,7 @@ export default function HomeLayout({
                     key={option.value}
                     type="button"
                     onClick={() => onChangePeriod(option.value)}
-                    className={`inline-flex min-w-[44px] justify-center rounded-md px-2 py-1 text-[11px] font-semibold ${
+                    className={`inline-flex min-w-[44px] cursor-pointer justify-center rounded-md px-2 py-1 text-[11px] font-semibold ${
                       period === option.value ? 'bg-[#014d9d] text-white' : 'text-[#9ca3af]'
                     }`}
                   >

@@ -1,6 +1,6 @@
 export type StockMarket = 'ALL' | 'KOSPI' | 'KOSDAQ';
 
-export type StockSort = 'TRADING_AMOUNT' | 'TRADING_VOLUME' | 'SURGE' | 'DROP';
+export type StockSort = 'MARKET_CAP' | 'TRADING_AMOUNT' | 'TRADING_VOLUME' | 'SURGE' | 'DROP';
 
 export type StockPeriod = '1D' | '1W' | '1M' | '3M' | '6M';
 
