@@ -57,7 +57,7 @@ export default function StockDetailAside({
 
   useEffect(() => {
     const updateCompactFlag = () => {
-      setUseCompactPerfValue(window.innerWidth < 1360);
+      setUseCompactPerfValue(window.innerWidth < 768);
     };
     updateCompactFlag();
     window.addEventListener('resize', updateCompactFlag);
@@ -78,6 +78,15 @@ export default function StockDetailAside({
     return `${compactStr}조`;
   };
 
+  const formatShareCount = (amount: number): string => {
+    const abs = Math.abs(Math.round(amount));
+    if (abs === 0) return '0주';
+    const man = Math.floor(abs / 10000);
+    const rest = abs % 10000;
+    if (man > 0 && rest > 0) return `${man.toLocaleString('ko-KR')}만 ${rest.toLocaleString('ko-KR')}주`;
+    if (man > 0) return `${man.toLocaleString('ko-KR')}만주`;
+    return `${abs.toLocaleString('ko-KR')}주`;
+  };
   return (
     <aside className="flex h-full w-full flex-col overflow-hidden bg-[#f4f6fb]">
       {!hideHeader && (
@@ -291,6 +300,7 @@ export default function StockDetailAside({
               company.investorTrends.map(({ label, amount }) => {
                 const isPos = amount >= 0;
                 const barH = (Math.abs(amount) / maxAbs) * 56;
+                const formattedAmount = formatShareCount(amount);
 
                 return (
                   <div key={label} className="flex flex-1 flex-col items-center">
@@ -320,7 +330,7 @@ export default function StockDetailAside({
                             }`}
                           >
                             {isPos ? '+' : ''}
-                            {amount}억
+                            {formattedAmount}
                           </span>
                         </div>
 

@@ -114,3 +114,41 @@ export interface StockDetailDto {
   };
   isInterested?: boolean;
 }
+
+export interface StockCompanyFinancialsDto {
+  baseDate: string;
+  revenue: number;
+  revenueGrowthRate: number;
+  operatingProfit: number;
+  operatingProfitGrowthRate: number;
+  netProfit: number;
+  netProfitGrowthRate: number;
+}
+
+export interface StockCompanyInvestorTradingDto {
+  baseDate: string;
+  foreign: number;
+  institution: number;
+  individual: number;
+}
+
+/** Swagger: GET /api/stocks/{stockId}/company */
+export interface StockCompanyDto {
+  stockId: number;
+  ticker: string;
+  name: string;
+  market: string;
+  logoUrl?: string | null;
+  sectorTags: string[];
+  marketCap: number;
+  marketRank: number;
+  totalShares: number;
+  foreignRatio: number;
+  industryGroup: string;
+  subIndustry: string;
+  week52Low: number;
+  week52High: number;
+  overview: string;
+  financials?: StockCompanyFinancialsDto | null;
+  investorTrading?: StockCompanyInvestorTradingDto | null;
+}

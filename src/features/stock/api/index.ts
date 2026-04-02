@@ -3,10 +3,7 @@ export {
   fetchStockPrices,
   fetchStockSearch,
   fetchStockDetail,
-  fetchKisMarketCapRankByTicker,
-  fetchKisFinancialRatioGrowth,
-  fetchKisIncomeStatementLatest,
-  fetchKisStockIndustryDetail,
-  fetchKisInvestorTradeTrend,
+  fetchStockCompany,
+  getCachedStockIdByTicker,
+  resolveStockIdByTicker,
 } from './stockApi';
-

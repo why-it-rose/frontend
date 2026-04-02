@@ -4,9 +4,16 @@ import { useNavigate, useParams, useSearchParams } from "react-router";
 import LoginModal from "@/features/auth/components/LoginModal";
 import { useAuth } from "@/features/auth/context/AuthContext";
 import { invalidateAuthTransitionQueries } from "@/features/auth/query/authQuerySync";
-import { fetchStockSearch } from "@/features/stock/api";
+import {
+  fetchStockDetail,
+  fetchStockPrices,
+  getCachedStockIdByTicker,
+  resolveStockIdByTicker,
+} from "@/features/stock/api";
+import { fetchEvents } from "@/features/event/api/eventApi";
 import { useInterestStocksQuery } from "@/features/stock/hooks/useInterestStocks";
 import { ROUTES } from "@/shared/constants/routes";
+import { stockEventKeys } from "@/shared/queryKeys";
 import type { OhlcBar, PeriodTab, StockDetailMainProps } from "../types";
 import {
   useChartPeriod,
@@ -24,15 +31,10 @@ import MarketIndexBar from "@/pages/widgets/MarketIndexBar/MarketIndexBar";
 import EventTab from "@/features/event/components/EventTab";
 import MemoTab from "@/features/event/components/MemoTab";
 import StockDetailAside from "@/pages/StockDetail/components/StockDetailaside";
-import { prefetchFssCompanyOverview } from "@/features/corp/fetchCorpBasicInfo";
 import { useEventDetail } from "@/features/event/hooks/useEventDetail";
 import { useMemos } from "@/features/event/hooks/useMemos";
 import { useLearningPin } from "@/features/news/hooks/useLearningPin";
 import TodayLearningSidebar from "@/features/news/components/TodayLearningSidebar";
-
-function normalizeTicker(t: string): string {
-  return t.replace(/\D/g, "").padStart(6, "0").slice(-6);
-}
 
 /** 기간별로 한 화면에 보일 최대 봉 수(많을수록 조금 더 축소된 느낌) — 봉이 적으면 전체 표시 */
 const PERIOD_ORDER = ["년", "월", "주", "일"] as const;
@@ -96,25 +98,35 @@ export function StockDetailMain({
   }, [searchParams]);
   const { data: interestItems = [] } = useInterestStocksQuery();
 
+  const cachedRouteStockId =
+    stockId == null && stockCodeParam ? getCachedStockIdByTicker(stockCodeParam) : undefined;
   const [resolvedTickerStockId, setResolvedTickerStockId] = useState<
     number | undefined
-  >(undefined);
+  >(cachedRouteStockId);
   // 검색이 완료된 코드 — stockCodeParam과 다르면 아직 검색 중
   const [searchedCode, setSearchedCode] = useState<string | undefined>(
-    undefined,
+    cachedRouteStockId != null && stockCodeParam ? stockCodeParam : undefined,
   );
 
   useEffect(() => {
     if (stockId != null || !stockCodeParam) return;
 
     let cancelled = false;
-    fetchStockSearch(stockCodeParam, 20)
-      .then((items) => {
+    resolveStockIdByTicker(stockCodeParam, 20)
+      .then((resolvedStockId) => {
         if (cancelled) return;
-        const codeNorm = normalizeTicker(stockCodeParam);
-        const exact = items.find((i) => normalizeTicker(i.ticker) === codeNorm);
-        setResolvedTickerStockId(exact?.stockId);
+        setResolvedTickerStockId(resolvedStockId);
         setSearchedCode(stockCodeParam);
+
+        if (resolvedStockId == null || resolvedStockId <= 0) return;
+
+        void fetchStockDetail(resolvedStockId).catch(() => undefined);
+        void fetchStockPrices(resolvedStockId, "1D").catch(() => undefined);
+        void queryClient.prefetchQuery({
+          queryKey: stockEventKeys.list(resolvedStockId),
+          queryFn: () => fetchEvents(resolvedStockId, undefined, 0, 200),
+          staleTime: 5 * 60 * 1000,
+        });
       })
       .catch(() => {
         if (!cancelled) {
@@ -125,7 +137,7 @@ export function StockDetailMain({
     return () => {
       cancelled = true;
     };
-  }, [stockId, stockCodeParam]);
+  }, [stockId, stockCodeParam, queryClient]);
 
   // 검색 완료 여부: stockId 직접 제공 / stockCodeParam 없음 / 현재 코드 검색 완료
   const searchSettled =
@@ -146,13 +158,11 @@ export function StockDetailMain({
 
   const { activePeriod, setActivePeriod } = useChartPeriod("일");
   const [mobileTab, setMobileTab] = useState<
-    "차트" | "기업 정보" | "이벤트" | "메모" | "오늘의 뉴스" | "오늘의 학습"
+    "차트" | "기업 정보" | "이벤트" | "메모" | "오늘의 학습"
   >(
     mobileMode === "event"
       ? "이벤트"
-      : mobileMode === "news"
-        ? "오늘의 뉴스"
-        : "차트",
+      : "차트",
   );
   const { data: learningPinData } = useLearningPin(chartStockId);
 
@@ -249,13 +259,6 @@ export function StockDetailMain({
   const stock = stockProp ?? fetchedHeader;
   const bars = useMemo(() => fetchedBars ?? barsProp ?? [], [fetchedBars, barsProp]);
 
-  useEffect(() => {
-    if (!routeHasTicker) return;
-    const nm = stock?.name?.trim();
-    if (!nm || nm === "—") return;
-    prefetchFssCompanyOverview(nm);
-  }, [routeHasTicker, stock?.name]);
-
   const [hoverBar, setHoverBar] = useState<OhlcBar | null>(null);
 
   const baseSummary = useOhlcSummary(bars);
@@ -276,11 +279,9 @@ export function StockDetailMain({
   const mobileTabs =
     mobileMode === "event"
       ? (["차트", "이벤트", "메모"] as const)
-      : mobileMode === "news"
-        ? (["차트", "오늘의 뉴스"] as const)
-        : learningPinData !== null
-          ? (["차트", "기업 정보", "오늘의 학습"] as const)
-          : (["차트", "기업 정보"] as const);
+      : learningPinData !== null
+        ? (["차트", "기업 정보", "오늘의 학습"] as const)
+        : (["차트", "기업 정보"] as const);
 
   return (
     <>

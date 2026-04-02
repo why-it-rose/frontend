@@ -12,7 +12,7 @@ export interface AlertCenterProps {
 }
 
 const PANEL_CLASS =
-  'flex h-[581px] max-h-[min(581px,85vh)] w-[380px] max-w-[calc(100vw-24px)] flex-col overflow-hidden rounded-[14px] border border-[#e5e7eb] bg-white shadow-[0_8px_32px_rgba(0,0,0,0.1)] max-md:fixed max-md:left-0 max-md:right-0 max-md:top-[55px] max-md:mt-0 max-md:h-[calc(100dvh-55px)] max-md:max-h-none max-md:w-screen max-md:max-w-none max-md:translate-x-0 max-md:rounded-none max-md:border-x-0 max-md:border-b-0 max-md:shadow-none';
+  'flex h-[581px] max-h-[min(581px,85vh)] w-[380px] max-w-[calc(100vw-24px)] flex-col overflow-hidden rounded-[14px] border border-[#e5e7eb] bg-white shadow-[0_8px_32px_rgba(0,0,0,0.1)] max-md:fixed max-md:left-0 max-md:right-0 max-md:top-[55px] max-md:bottom-[89px] max-md:mt-0 max-md:h-auto max-md:max-h-none max-md:w-screen max-md:max-w-none max-md:translate-x-0 max-md:rounded-none max-md:border-x-0 max-md:border-b-0 max-md:shadow-none';
 
 export default function AlertCenter({ onClose, containerRef }: AlertCenterProps) {
   const [tab, setTab] = useState<AlertCenterTab>('all');
