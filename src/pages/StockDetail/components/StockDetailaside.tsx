@@ -100,7 +100,10 @@ export default function StockDetailAside({
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+      <div
+        className="scrollbar-subtle flex-1 overflow-y-auto overflow-x-hidden"
+        style={{ scrollbarGutter: "stable" }}
+      >
         <div className="bg-white px-4 pb-3 pt-4">
           <div className="flex items-center gap-3">
             {company.logoUrl ? (
@@ -290,7 +293,7 @@ export default function StockDetailAside({
 
           <div
             className="flex items-end justify-center gap-4"
-            style={{ height: 160 }}
+            style={{ height: 176 }}
           >
             {company.investorTrends.length === 0 ? (
               <span className="self-center text-[13px] font-semibold text-[#98a2b3]">
@@ -299,18 +302,18 @@ export default function StockDetailAside({
             ) : (
               company.investorTrends.map(({ label, amount }) => {
                 const isPos = amount >= 0;
-                const barH = (Math.abs(amount) / maxAbs) * 56;
+                const barH = (Math.abs(amount) / maxAbs) * 48;
                 const formattedAmount = formatShareCount(amount);
 
                 return (
-                  <div key={label} className="flex flex-1 flex-col items-center">
+                  <div key={label} className="flex min-w-0 flex-1 flex-col items-center">
                     <div
                       className="relative flex w-full flex-col items-center"
-                      style={{ height: 82 }}
+                      style={{ height: 140 }}
                     >
                       <div
                         className="absolute left-0 right-0 flex items-center justify-center"
-                        style={{ top: 22, height: 56 }}
+                        style={{ top: 36, height: 48 }}
                       >
                         <div className="absolute left-0 right-0 top-1/2 h-px bg-[#e5e7eb]" />
 
@@ -325,7 +328,7 @@ export default function StockDetailAside({
                           }}
                         >
                           <span
-                            className={`text-[10px] font-semibold leading-none ${
+                            className={`block max-w-[72px] px-1 text-center text-[10px] font-semibold leading-[1.15] ${
                               isPos ? 'text-[#d92d20]' : 'text-[#1971c2]'
                             }`}
                           >
@@ -349,7 +352,7 @@ export default function StockDetailAside({
                       </div>
                     </div>
 
-                    <span className="mt-10 text-[10px] text-[#98a2b3]">
+                    <span className="mt-4 whitespace-nowrap text-[10px] text-[#98a2b3]">
                       {label}
                     </span>
                   </div>

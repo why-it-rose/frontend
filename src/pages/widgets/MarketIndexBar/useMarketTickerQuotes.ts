@@ -43,7 +43,10 @@ export type TickerRow = MarketTickerDef &
     loaded: boolean;
   };
 
-export function isUpQuote(direction?: string): boolean {
+export function isUpQuote(changeRate?: number, direction?: string): boolean {
+  if (typeof changeRate === 'number' && Number.isFinite(changeRate) && changeRate !== 0) {
+    return changeRate > 0;
+  }
   return direction !== 'DOWN';
 }
 
@@ -51,9 +54,12 @@ export function formatPrice(n: number): string {
   return Math.round(n).toLocaleString('ko-KR');
 }
 
-export function formatChange(change: number, direction?: string): string {
+export function formatChange(change: number, changeRate?: number, direction?: string): string {
   if (change === 0) return '0';
   const abs = Math.abs(change);
+  if (typeof changeRate === 'number' && Number.isFinite(changeRate) && changeRate !== 0) {
+    return changeRate < 0 ? `-${formatPrice(abs)}` : `+${formatPrice(abs)}`;
+  }
   if (direction === 'DOWN') return `-${formatPrice(abs)}`;
   return `+${formatPrice(abs)}`;
 }

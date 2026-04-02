@@ -80,9 +80,9 @@ export function useStockSearchPanel({ active, onAfterPick }: Options) {
   }, []);
 
   const pushRecent = useCallback(
-    (ticker: string, name: string) => {
+    (ticker: string, name: string, logoUrl?: string | null) => {
       const next = [
-        { ticker, name },
+        { ticker, name, logoUrl: logoUrl ?? null },
         ...readRecent().filter((x) => x.ticker !== ticker),
       ].slice(0, MAX_RECENT);
       persistRecent(next);
@@ -91,8 +91,8 @@ export function useStockSearchPanel({ active, onAfterPick }: Options) {
   );
 
   const goToStock = useCallback(
-    (ticker: string, name: string) => {
-      pushRecent(ticker, name);
+    (ticker: string, name: string, logoUrl?: string | null) => {
+      pushRecent(ticker, name, logoUrl);
       navigate(toChartStockDetail(ticker));
       onAfterPickRef.current?.();
     },
@@ -105,6 +105,32 @@ export function useStockSearchPanel({ active, onAfterPick }: Options) {
     },
     [persistRecent]
   );
+
+  const goToFirstResult = useCallback(async () => {
+    const trimmed = query.trim();
+    if (!trimmed) return;
+
+    const firstLoaded = results?.[0];
+    if (firstLoaded) {
+      goToStock(firstLoaded.ticker, firstLoaded.name, firstLoaded.logoUrl);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const items = await fetchStockSearch(trimmed, SEARCH_LIMIT);
+      setResults(items);
+      const first = items[0];
+      if (!first) return;
+      goToStock(first.ticker, first.name, first.logoUrl);
+    } catch {
+      setError("검색에 실패했습니다.");
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [query, results, goToStock]);
 
   const showResults = debounced.length >= 1;
 
@@ -119,6 +145,7 @@ export function useStockSearchPanel({ active, onAfterPick }: Options) {
     inputRef,
     showResults,
     goToStock,
+    goToFirstResult,
     removeRecent,
   };
 }

@@ -18,10 +18,14 @@ function TickerStrip({ stripKey, rows }: { stripKey: string; rows: TickerRow[] }
         const pending = !item.loaded && !item.error;
         const priceStr = pending ? '…' : item.currentPrice != null ? formatPrice(item.currentPrice) : '—';
         const changeStr =
-          pending ? '…' : item.priceChange != null ? formatChange(item.priceChange, item.changeDirection) : '—';
+          pending
+            ? '…'
+            : item.priceChange != null
+              ? formatChange(item.priceChange, item.changeRate, item.changeDirection)
+              : '—';
         const pctStr =
           pending ? '…' : item.changeRate != null ? `(${formatPct(item.changeRate)})` : '(—)';
-        const up = item.changeDirection != null ? isUpQuote(item.changeDirection) : true;
+        const up = isUpQuote(item.changeRate, item.changeDirection);
 
         return (
           <a
