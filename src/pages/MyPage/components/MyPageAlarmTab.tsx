@@ -6,7 +6,6 @@ import { useNotificationDetail } from '@/features/alert/hooks/useNotificationDet
 import { useMarkNotificationRead } from '@/features/alert/hooks/useNotificationMutations';
 import { useNotificationSummary } from '@/features/alert/hooks/useNotificationSummary';
 import type { AlertGroup, AlertItemRow, AlertTag } from '@/features/alert/AlertCenter/alertCenter.types';
-import MyPageSearchPlaceholder from './MyPageSearchPlaceholder';
 
 type AlarmSubTab = 'all' | 'detail';
 
@@ -41,24 +40,12 @@ function EventContent({ item }: { item: AlertItemRow }) {
 // ─── 전체 탭 ─────────────────────────────────────────────────────────────────
 
 interface AllTabProps {
-  searchQuery: string;
   onSelectNotification: (id: number) => void;
 }
 
-function AllTab({ searchQuery, onSelectNotification }: AllTabProps) {
+function AllTab({ onSelectNotification }: AllTabProps) {
   const { data: summaryList, isLoading } = useNotificationSummary();
   const { mutate: markRead } = useMarkNotificationRead();
-
-  const filtered = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return summaryList;
-    return summaryList.filter((item) =>
-      [item.stockNames, item.message, item.relativeTime, item.date]
-        .join(' ')
-        .toLowerCase()
-        .includes(q),
-    );
-  }, [summaryList, searchQuery]);
 
   if (isLoading) {
     return (
@@ -68,17 +55,17 @@ function AllTab({ searchQuery, onSelectNotification }: AllTabProps) {
     );
   }
 
-  if (filtered.length === 0) {
+  if (summaryList.length === 0) {
     return (
       <div className="flex min-h-[120px] items-center justify-center text-[13px] text-[#9ca3af]">
-        {searchQuery ? '검색 결과가 없습니다.' : '최근 알림이 없습니다.'}
+        최근 알림이 없습니다.
       </div>
     );
   }
 
   return (
     <>
-      {filtered.map((item) => (
+      {summaryList.map((item) => (
         <button
           key={item.notificationId}
           type="button"
@@ -253,7 +240,6 @@ function DetailTab({ selectedNotificationId }: DetailTabProps) {
 export default function MyPageAlarmTab() {
   const [subTab, setSubTab] = useState<AlarmSubTab>('all');
   const [selectedNotificationId, setSelectedNotificationId] = useState<number | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
 
 
   function handleSelectNotification(id: number) {
@@ -264,14 +250,6 @@ export default function MyPageAlarmTab() {
   return (
     <div className="mypage-scrap-kr flex w-full flex-col overflow-x-hidden">
       {/* 헤더: 검색 */}
-      <div className="shrink-0 px-[21px] pt-4 pb-2">
-        <MyPageSearchPlaceholder
-          placeholder="종목명, 이벤트 검색"
-          value={searchQuery}
-          onChange={setSearchQuery}
-        />
-      </div>
-
       {/* 서브탭 */}
       <div className="grid w-full shrink-0 grid-cols-2 border-b border-[#e5e7eb]">
         <button
@@ -301,7 +279,7 @@ export default function MyPageAlarmTab() {
       {/* 탭 콘텐츠 */}
       <div className="min-h-0 flex-1">
         {subTab === 'all' ? (
-          <AllTab searchQuery={searchQuery} onSelectNotification={handleSelectNotification} />
+          <AllTab onSelectNotification={handleSelectNotification} />
         ) : (
           <DetailTab selectedNotificationId={selectedNotificationId} />
         )}
