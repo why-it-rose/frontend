@@ -23,6 +23,7 @@ import deleteIco from '@/assets/delete.svg';
 import dragHandleIco from '@/assets/button.svg';
 import { removeEventScrap, type MyScrapSearchItemDto } from '@/features/scrap/api/scrapApi';
 import { useMyScrapSearch } from '@/features/scrap/hooks/useMyScrapSearch';
+import { emitScrapSync } from '@/features/scrap/scrapSync';
 import type { ScrapItem } from './myPage.types';
 import MyPageSearchPlaceholder from './MyPageSearchPlaceholder';
 import { useNavigate } from 'react-router';
@@ -221,6 +222,11 @@ export default function MyPageScrapTab({
             try {
                 await removeEventScrap(target.eventId);
                 setRows((prev) => prev.filter((row) => row.id !== id));
+                emitScrapSync({
+                    eventId: target.eventId,
+                    isScrapped: false,
+                    delta: -1,
+                });
             } catch {
                 setLocalErrorMessage('스크랩 해제 중 오류가 발생했습니다.');
             }

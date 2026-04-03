@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import type { StockEvent } from '../types/event.types';
 import { fetchEventDetail } from '../api/eventApi';
 import { addEventScrap, fetchMyScraps, removeEventScrap, type ScrapApiError } from '@/features/scrap/api/scrapApi';
+import { predictionKeys } from '@/shared/queryKeys';
+import { emitScrapSync } from '@/features/scrap/scrapSync';
 
 const DEFAULT_ERROR_MESSAGE = 'Something went wrong.';
 
 export function useEventDetail(eventId: number | null, authSyncKey?: boolean) {
+  const queryClient = useQueryClient();
   const [event, setEvent] = useState<StockEvent | null>(null);
   const [loading, setLoading] = useState(false);
   const [scrapping, setScrapping] = useState(false);
@@ -40,6 +44,7 @@ export function useEventDetail(eventId: number | null, authSyncKey?: boolean) {
 
   const toggleScrap = async (targetEventId: number, isScrapped: boolean) => {
     const nextScrapped = !isScrapped;
+    const statsQueryKey = predictionKeys.myStats();
 
     setScrapping(true);
     setScrapError(null);
@@ -55,6 +60,12 @@ export function useEventDetail(eventId: number | null, authSyncKey?: boolean) {
       } else {
         await removeEventScrap(targetEventId);
       }
+      emitScrapSync({
+        eventId: targetEventId,
+        isScrapped: nextScrapped,
+        delta: nextScrapped ? 1 : -1,
+      });
+      void queryClient.invalidateQueries({ queryKey: statsQueryKey });
     } catch (e: unknown) {
       setEvent((prev) => {
         if (!prev || prev.eventId !== targetEventId) return prev;

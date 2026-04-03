@@ -5,6 +5,7 @@ import {
     type MyScrapSearchItemDto,
     type ScrapEventDto,
 } from '@/features/scrap/api/scrapApi';
+import { subscribeScrapSync } from '@/features/scrap/scrapSync';
 
 type UseMyScrapSearchParams = {
     query: string;
@@ -67,6 +68,12 @@ export function useMyScrapSearch({
         const t = window.setTimeout(() => setDebouncedQuery(query), debounceMs);
         return () => window.clearTimeout(t);
     }, [query, debounceMs]);
+
+    useEffect(() => {
+        return subscribeScrapSync(() => {
+            setRefreshTick((v) => v + 1);
+        });
+    }, []);
 
     useEffect(() => {
         const controller = new AbortController();
